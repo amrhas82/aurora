@@ -4,8 +4,9 @@ These tests are written BEFORE implementation (TDD).
 They should fail until the mem_search tool is implemented.
 """
 
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
 
 
 class TestMemSearch:

@@ -11,6 +11,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 # Lazy-loaded instances
@@ -45,8 +46,8 @@ def _get_retriever(workspace: Path | None = None):
     global _retriever
 
     if _retriever is None:
-        from aurora_cli.memory.retrieval import MemoryRetriever
         from aurora_cli.config import Config
+        from aurora_cli.memory.retrieval import MemoryRetriever
 
         store = _get_store(workspace)
         if store is None:

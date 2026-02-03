@@ -6,11 +6,13 @@ import subprocess
 import sys
 from pathlib import Path
 
+
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from aurora_lsp.client import AuroraLSPClient
 from aurora_lsp.analysis import CodeAnalyzer
+from aurora_lsp.client import AuroraLSPClient
 from aurora_lsp.filters import ImportFilter
+
 
 WORKSPACE = Path("/home/hamr/PycharmProjects/aurora")
 
@@ -42,7 +44,7 @@ async def test_import_usage_accuracy(client: AuroraLSPClient, analyzer: CodeAnal
         refs = await client.request_references(filepath, line, 6)
 
         if not refs:
-            print(f"  ⚠ No references found")
+            print("  ⚠ No references found")
             continue
 
         # Filter imports vs usages

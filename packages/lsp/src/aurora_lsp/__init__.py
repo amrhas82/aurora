@@ -9,11 +9,12 @@ Provides:
 Built on multilspy (Microsoft) with custom import filtering and analysis layers.
 """
 
-from aurora_lsp.client import AuroraLSPClient
 from aurora_lsp.analysis import CodeAnalyzer, SymbolKind
-from aurora_lsp.filters import ImportFilter
+from aurora_lsp.client import AuroraLSPClient
 from aurora_lsp.diagnostics import DiagnosticsFormatter
 from aurora_lsp.facade import AuroraLSP
+from aurora_lsp.filters import ImportFilter
+
 
 __all__ = [
     "AuroraLSP",

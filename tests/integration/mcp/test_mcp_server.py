@@ -4,8 +4,9 @@ These tests verify that the MCP server correctly initializes and registers tools
 Written BEFORE implementation (TDD).
 """
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
 
 
 class TestMCPServerStartup:
@@ -77,18 +78,18 @@ class TestMCPServerToolRegistration:
 
     @patch("aurora_mcp.server.FastMCP")
     def test_tools_registered_with_fastmcp(self, mock_fastmcp):
-        """Test tools are registered using FastMCP."""
+        """Test tools are registered using FastMCP (when not in test mode)."""
         # Arrange
         mock_mcp_instance = Mock()
         mock_fastmcp.return_value = mock_mcp_instance
 
         from aurora_mcp.server import AuroraMCPServer
 
-        # Act
-        server = AuroraMCPServer(test_mode=True)
+        # Act - use test_mode=False to actually initialize FastMCP
+        server = AuroraMCPServer(test_mode=False)
 
         # Assert
-        # FastMCP should be initialized
+        # FastMCP should be initialized when not in test mode
         mock_fastmcp.assert_called_once()
 
 

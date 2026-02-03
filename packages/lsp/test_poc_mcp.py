@@ -5,6 +5,7 @@ Run: python packages/lsp/test_poc_mcp.py
 """
 
 import json
+
 from poc_mcp_server import lsp, mem_search
 
 

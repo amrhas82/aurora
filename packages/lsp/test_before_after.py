@@ -11,8 +11,9 @@ import asyncio
 import re
 import subprocess
 import sys
-from pathlib import Path
 from dataclasses import dataclass
+from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
@@ -191,7 +192,7 @@ async def test_repo(workspace: Path, extension: str, repo_name: str) -> list[Com
                 print(f"\n{result.symbol} ({result.symbol_kind}) in {result.file}:{result.symbol_line}")
                 print(f"  BEFORE (grep): {result.grep_matches} matches")
                 if result.grep_false_positives:
-                    print(f"    False positives found:")
+                    print("    False positives found:")
                     for fp in result.grep_false_positives:
                         print(f"      - {fp}")
                 print(f"  AFTER (LSP):   {result.lsp_refs} refs ({result.lsp_imports} imports + {result.lsp_usages} usages)")
@@ -218,11 +219,11 @@ def print_final_summary(js_results: list[ComparisonResult], ts_results: list[Com
     total_fp = sum(len(r.grep_false_positives) for r in all_results)
 
     print(f"\nSymbols analyzed: {len(all_results)}")
-    print(f"\nGREP (Before):")
+    print("\nGREP (Before):")
     print(f"  Total matches: {total_grep}")
     print(f"  False positives detected: {total_fp}")
 
-    print(f"\nLSP (After):")
+    print("\nLSP (After):")
     print(f"  Total references: {total_lsp}")
     print(f"  Imports: {total_imports}")
     print(f"  Usages: {total_usages}")

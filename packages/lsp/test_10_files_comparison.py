@@ -9,8 +9,9 @@ Shows exact improvements LSP provides over grep for:
 import asyncio
 import re
 import sys
-from pathlib import Path
 from dataclasses import dataclass, field
+from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
@@ -196,7 +197,7 @@ async def test_repo(workspace: Path, extension: str, name: str, max_files: int =
 
             if result.best_symbol:
                 print(f"\n    Analysis of '{result.best_symbol}' ({result.best_symbol_kind}):")
-                print(f"    ┌─────────────────────────────────────────────────────────")
+                print("    ┌─────────────────────────────────────────────────────────")
                 print(f"    │ BEFORE (grep):  {result.grep_matches:>4} matches ({result.false_positives} in comments)")
                 print(f"    │ AFTER  (LSP):   {result.lsp_refs:>4} refs = {result.lsp_imports} imports + {result.lsp_usages} usages")
 
@@ -204,14 +205,14 @@ async def test_repo(workspace: Path, extension: str, name: str, max_files: int =
                 if result.false_positives > 0:
                     improvement = f"Avoided {result.false_positives} false positives"
                 elif result.lsp_imports > 0:
-                    improvement = f"Separated imports from usages"
+                    improvement = "Separated imports from usages"
                 elif result.grep_matches > result.lsp_refs:
                     improvement = f"Filtered {result.grep_matches - result.lsp_refs} noise"
                 else:
                     improvement = "Semantic accuracy"
 
                 print(f"    │ → {improvement}")
-                print(f"    └─────────────────────────────────────────────────────────")
+                print("    └─────────────────────────────────────────────────────────")
 
     finally:
         await client.close()

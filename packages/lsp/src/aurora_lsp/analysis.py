@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 
 from aurora_lsp.filters import ImportFilter, get_filter_for_file
 
+
 if TYPE_CHECKING:
     from aurora_lsp.client import AuroraLSPClient
 

@@ -8,15 +8,16 @@ import argparse
 import sys
 from pathlib import Path
 
+
 try:
     from fastmcp import FastMCP
 except ImportError:
     print("Error: FastMCP not installed. Install with: pip install fastmcp", file=sys.stderr)
     sys.exit(1)
 
-from aurora_mcp.tools import AuroraMCPTools
 from aurora_mcp.lsp_tool import lsp as lsp_tool
 from aurora_mcp.mem_search_tool import mem_search as mem_search_tool
+from aurora_mcp.tools import AuroraMCPTools
 
 
 class AuroraMCPServer:

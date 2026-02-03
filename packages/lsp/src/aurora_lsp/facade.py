@@ -10,9 +10,10 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from aurora_lsp.client import AuroraLSPClient
 from aurora_lsp.analysis import CodeAnalyzer
+from aurora_lsp.client import AuroraLSPClient
 from aurora_lsp.diagnostics import DiagnosticsFormatter
+
 
 logger = logging.getLogger(__name__)
 

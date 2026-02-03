@@ -192,7 +192,7 @@ def doctor_command(fix: bool, fix_ml: bool) -> None:
             console.print("  [yellow]⚠[/] Project not initialized")
             console.print()
             console.print("  [dim]To initialize this project:[/]")
-            console.print("    [cyan]cd {path}[/]".format(path=project_path))
+            console.print(f"    [cyan]cd {project_path}[/]")
             console.print("    [cyan]aur init[/]")
 
         console.print()

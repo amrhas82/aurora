@@ -8,12 +8,13 @@ import asyncio
 import sys
 from pathlib import Path
 
+
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
+from aurora_lsp.analysis import CodeAnalyzer, SymbolKind
 from aurora_lsp.client import AuroraLSPClient
 from aurora_lsp.filters import ImportFilter
-from aurora_lsp.analysis import CodeAnalyzer, SymbolKind
 
 
 WORKSPACE = Path("/home/hamr/PycharmProjects/aurora")

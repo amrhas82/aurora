@@ -309,26 +309,26 @@
     - tdd: no
     - verify: `grep -l "lsp\|MCP" CLAUDE.md .aurora/AGENTS.md docs/02-features/mcp/MCP.md README.md docs/02-features/lsp/LSP.md | wc -l` equals 5
 
-- [ ] 8.0 Integration testing and validation
+- [x] 8.0 Integration testing and validation
   <!-- @agent: @code-developer -->
-  - [ ] 8.1 Run full MCP integration test suite
+  - [x] 8.1 Run full MCP integration test suite
     - tdd: no
     - verify: `pytest tests/integration/mcp/ -v`
-  - [ ] 8.2 Run existing LSP package tests
+  - [x] 8.2 Run existing LSP package tests
     - tdd: no
     - Ensure 7/7 filter tests still pass
     - verify: `pytest packages/lsp/tests/test_filters.py -v`
-  - [ ] 8.3 Run full test suite
+  - [x] 8.3 Run full test suite
     - tdd: no
     - verify: `make test`
-  - [ ] 8.4 Run linter and type checker
+  - [x] 8.4 Run linter and type checker
     - tdd: no
     - verify: `make format && make type-check`
-  - [ ] 8.5 Verify MCP server starts with both tools
+  - [x] 8.5 Verify MCP server starts with both tools
     - tdd: no
     - Test MCP server can be started
     - verify: `python -c "from aurora_mcp.server import AuroraMCPServer; s = AuroraMCPServer(test_mode=True); s.list_tools()" | grep -q "lsp"`
-  - [ ] 8.6 Verify: all success metrics met
+  - [x] 8.6 Verify: all success metrics met
     - tdd: no
     - MCP tools: 2 (lsp, mem_search)
     - Slash commands: 4 (plan, tasks, implement, archive)

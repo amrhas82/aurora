@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Callable, Awaitable
+from typing import Awaitable, Callable
 
 
 class ImportFilter:

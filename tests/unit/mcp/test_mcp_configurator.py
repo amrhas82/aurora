@@ -4,9 +4,10 @@ Tests that MCP tools are properly integrated with the configurator infrastructur
 Written BEFORE implementation (TDD).
 """
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
 from pathlib import Path
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 
 
 class TestMCPConfiguratorIntegration:

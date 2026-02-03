@@ -10,6 +10,7 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+
 if TYPE_CHECKING:
     from multilspy.language_server import LanguageServer
 
@@ -17,9 +18,9 @@ logger = logging.getLogger(__name__)
 
 # Import multilspy components
 try:
-    from multilspy.multilspy_config import MultilspyConfig, Language
-    from multilspy.multilspy_logger import MultilspyLogger
     from multilspy.language_server import LanguageServer
+    from multilspy.multilspy_config import Language, MultilspyConfig
+    from multilspy.multilspy_logger import MultilspyLogger
     MULTILSPY_AVAILABLE = True
 except ImportError:
     MULTILSPY_AVAILABLE = False

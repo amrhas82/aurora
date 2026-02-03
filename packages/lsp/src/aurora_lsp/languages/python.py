@@ -77,6 +77,12 @@ PYTHON_IMPORT_PATTERNS = [
     r"^\s*from\s+[\w.]+\s+import\s+",
 ]
 
+# Function definition types for AST parsing
+PYTHON_FUNCTION_DEF_TYPES = {
+    "function_definition",
+    "class_definition",
+}
+
 
 # The Python language configuration
 PYTHON = LanguageConfig(
@@ -95,4 +101,8 @@ PYTHON = LanguageConfig(
 
     # Import filtering (for reference, actual patterns in filters.py)
     import_patterns=PYTHON_IMPORT_PATTERNS,
+
+    # Call graph analysis
+    call_node_type="call",  # Python call expressions
+    function_def_types=PYTHON_FUNCTION_DEF_TYPES,
 )

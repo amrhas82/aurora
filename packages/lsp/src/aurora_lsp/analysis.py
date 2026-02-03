@@ -14,7 +14,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from aurora_lsp.filters import ImportFilter, get_filter_for_file
-from aurora_lsp.languages import get_config, is_entry_point, is_nested_helper
+from aurora_lsp.languages import (
+    get_config,
+    get_call_node_type,
+    get_function_def_types,
+    is_entry_point,
+    is_nested_helper,
+)
 
 
 if TYPE_CHECKING:
@@ -557,8 +563,11 @@ class CodeAnalyzer:
     ) -> list[dict]:
         """Find functions called by this symbol (outgoing calls).
 
-        Note: This is limited without full AST parsing. Returns empty
-        list if call hierarchy is not supported by the language server.
+        Uses tree-sitter to parse the function body and find all call expressions.
+
+        LANGUAGE SUPPORT:
+        - Python: Full (tree-sitter-python)
+        - Others: Not yet implemented (returns empty)
 
         Args:
             file_path: Path to file containing the symbol.
@@ -566,12 +575,119 @@ class CodeAnalyzer:
             col: Column number (0-indexed).
 
         Returns:
-            List of called functions (may be empty).
+            List of called functions with name, file (if local), line.
         """
-        # Outgoing calls require parsing the function body
-        # which is beyond basic LSP. Return empty for now.
-        # Could be implemented with tree-sitter in the future.
-        return []
+        file_path = Path(file_path)
+        if not file_path.is_absolute():
+            file_path = self.workspace / file_path
+
+        # Check language support
+        call_node_type = get_call_node_type(str(file_path))
+        func_def_types = get_function_def_types(str(file_path))
+
+        if not call_node_type or not func_def_types:
+            return []  # Language not supported
+
+        try:
+            # Lazy import tree-sitter
+            import tree_sitter
+            import tree_sitter_python
+
+            # Initialize parser
+            python_lang = tree_sitter.Language(tree_sitter_python.language())
+            parser = tree_sitter.Parser(python_lang)
+
+            # Read and parse file
+            source = file_path.read_bytes()
+            tree = parser.parse(source)
+            source_text = source.decode("utf-8")
+
+            # Find the function/class at the given line
+            target_node = None
+            target_line = line  # 0-indexed
+
+            def find_containing_def(node):
+                nonlocal target_node
+                node_start = node.start_point[0]
+                node_end = node.end_point[0]
+
+                if node.type in func_def_types:
+                    if node_start <= target_line <= node_end:
+                        # This def contains our line - check if there's a more specific one
+                        target_node = node
+                        for child in node.children:
+                            find_containing_def(child)
+                        return
+
+                for child in node.children:
+                    find_containing_def(child)
+
+            find_containing_def(tree.root_node)
+
+            if target_node is None:
+                return []
+
+            # Find all call expressions within the target function
+            callees = []
+            seen_names = set()
+
+            # Built-ins and common methods to skip
+            skip_names = {
+                # Built-in functions
+                "int", "str", "float", "bool", "list", "dict", "set", "tuple",
+                "len", "range", "enumerate", "zip", "map", "filter", "sorted",
+                "print", "isinstance", "hasattr", "getattr", "setattr",
+                "min", "max", "sum", "abs", "round", "type", "id", "hash",
+                "open", "super", "next", "iter",
+                # Common dict/list methods (too noisy)
+                "get", "items", "keys", "values", "update", "pop", "append",
+                "extend", "insert", "remove", "clear", "copy",
+                # String methods
+                "format", "join", "split", "strip", "replace", "lower", "upper",
+                "startswith", "endswith",
+            }
+
+            def find_calls(node):
+                if node.type == call_node_type:
+                    # Extract the function name being called
+                    func_node = node.child_by_field_name("function")
+                    if func_node:
+                        call_name = source_text[func_node.start_byte:func_node.end_byte]
+
+                        # Clean up the name
+                        # For "self.method()", extract "method"
+                        # For "obj.method()", extract "obj.method" or just method
+                        base_name = call_name
+                        if "." in call_name:
+                            parts = call_name.split(".")
+                            if parts[0] == "self":
+                                base_name = parts[-1]  # Just the method name
+                            else:
+                                base_name = parts[-1]  # Last part for filtering
+
+                        # Skip duplicates, built-ins, and dunder methods
+                        if (call_name not in seen_names
+                            and base_name not in skip_names
+                            and not base_name.startswith("__")):
+                            seen_names.add(call_name)
+                            callees.append({
+                                "name": call_name,
+                                "line": node.start_point[0] + 1,  # 1-indexed for output
+                            })
+
+                for child in node.children:
+                    find_calls(child)
+
+            find_calls(target_node)
+
+            return callees[:20]  # Limit to 20 callees
+
+        except ImportError:
+            logger.debug("tree-sitter not available for get_callees")
+            return []
+        except Exception as e:
+            logger.debug(f"get_callees failed: {e}")
+            return []
 
     async def _get_containing_symbol(
         self,

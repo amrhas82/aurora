@@ -7,11 +7,11 @@
 
 | Category | Live | Partial | Missing | Total |
 |----------|------|---------|---------|-------|
-| Reference Analysis | 4 | 1 | 1 | 6 |
+| Reference Analysis | 5 | 1 | 0 | 6 |
 | Code Quality Markers | 4 | 0 | 2 | 6 |
 | File Relationships | 1 | 1 | 1 | 3 |
 | Auto-Triggers | 0 | 0 | 1 | 1 |
-| **Total** | **9** | **2** | **5** | **16** |
+| **Total** | **10** | **2** | **4** | **16** |
 
 ---
 
@@ -38,7 +38,7 @@
 |---------|--------|----------------|-----------|-------|-------|
 | **used_by** (usage count) | ✅ LIVE | LSP `get_usage_summary()` via multilspy | Python (tested), others via multilspy | ~1000ms/symbol | Returns files + refs count |
 | **called_by** (incoming) | ✅ LIVE | LSP `get_callers()` + import filtering | Python only (filter) | ~1500ms/symbol | Filters import statements |
-| **calling** (outgoing) | ❌ STUB | Returns `[]` - needs tree-sitter AST | - | - | Would need per-language parsers |
+| **calling** (outgoing) | ✅ LIVE | Tree-sitter AST parsing | **Python only** | ~50ms/symbol | Filters built-ins, shows meaningful calls |
 | **references** (raw) | ✅ LIVE | LSP `request_references()` | All via multilspy | ~800ms/symbol | Raw LSP, no filtering |
 | **definition** | ✅ LIVE (unused) | LSP `request_definition()` | All via multilspy | ~200ms | Not exposed via MCP |
 | **hover** | ✅ LIVE (unused) | LSP `request_hover()` | All via multilspy | ~200ms | Not exposed via MCP |

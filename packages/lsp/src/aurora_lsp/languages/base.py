@@ -51,6 +51,10 @@ class LanguageConfig:
     # Import filtering - regex patterns with {symbol} placeholder
     import_patterns: list[str] = field(default_factory=list)
 
+    # Call graph analysis - AST node types
+    call_node_type: str = ""  # Node type for function calls (e.g., "call" in Python)
+    function_def_types: set[str] = field(default_factory=set)  # Node types for function defs
+
     def matches_extension(self, file_path: str) -> bool:
         """Check if file path matches this language's extensions."""
         from pathlib import Path

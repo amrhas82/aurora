@@ -134,12 +134,44 @@ def supported_extensions() -> set[str]:
     return set(EXTENSION_MAP.keys())
 
 
+def get_call_node_type(file_path: str | Path) -> str:
+    """Get the AST node type for function calls.
+
+    Args:
+        file_path: Path to file
+
+    Returns:
+        Node type string (e.g., "call" for Python), or empty string if unsupported
+    """
+    config = get_config(file_path)
+    if config:
+        return config.call_node_type
+    return ""
+
+
+def get_function_def_types(file_path: str | Path) -> set[str]:
+    """Get AST node types for function definitions.
+
+    Args:
+        file_path: Path to file
+
+    Returns:
+        Set of node types (e.g., {"function_definition", "class_definition"})
+    """
+    config = get_config(file_path)
+    if config:
+        return config.function_def_types
+    return set()
+
+
 __all__ = [
     "LanguageConfig",
     "LANGUAGES",
     "get_config",
     "get_language",
     "get_complexity_branch_types",
+    "get_call_node_type",
+    "get_function_def_types",
     "is_entry_point",
     "is_nested_helper",
     "supported_extensions",

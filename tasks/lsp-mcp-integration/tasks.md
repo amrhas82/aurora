@@ -254,19 +254,19 @@
     - tdd: no
     - verify: `pip install -e . && python -c "from aurora_lsp.facade import AuroraLSP"` exits 0
 
-- [ ] 6.0 Update aur doctor command
+- [x] 6.0 Update aur doctor command
   <!-- @agent: @code-developer -->
-  - [ ] 6.1 Add MCP tools status check to doctor
+  - [x] 6.1 Add MCP tools status check to doctor
     - tdd: yes
     - Check that MCP server has `lsp` and `mem_search` tools
     - Show installed MCP tools count
     - Write test first in `tests/unit/cli/test_doctor.py`
     - verify: `pytest tests/unit/cli/test_doctor.py::test_doctor_mcp_tools -v`
-  - [ ] 6.2 Update slash command count detection
+  - [x] 6.2 Update slash command count detection
     - tdd: no
     - Doctor should expect 4 slash commands (not 6)
     - verify: `aur doctor 2>&1 | grep -q "4"` or similar validation
-  - [ ] 6.3 Add LSP package installation check
+  - [x] 6.3 Add LSP package installation check
     - tdd: no
     - Verify aurora-lsp is importable
     - Show warning if LSP not available

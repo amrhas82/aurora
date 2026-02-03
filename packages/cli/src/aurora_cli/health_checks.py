@@ -679,6 +679,9 @@ class ToolIntegrationChecks:
         # Check slash command integration
         results.append(self._check_slash_commands())
 
+        # Check MCP tools registration
+        results.append(self._check_mcp_tools())
+
         return results
 
     def _check_cli_tools(self) -> HealthCheckResult:
@@ -717,6 +720,17 @@ class ToolIntegrationChecks:
         """Check slash command configuration status."""
         try:
             from aurora_cli.commands.init_helpers import detect_configured_slash_tools
+            from aurora_cli.templates.slash_commands import COMMAND_TEMPLATES
+
+            # Verify COMMAND_TEMPLATES count (should be 4: plan, tasks, implement, archive)
+            expected_commands = 4
+            actual_count = len(COMMAND_TEMPLATES)
+            if actual_count != expected_commands:
+                return (
+                    "fail",
+                    f"Slash command templates count mismatch: expected {expected_commands}, got {actual_count}",
+                    {"expected": expected_commands, "actual": actual_count},
+                )
 
             project_path = Path.cwd()
             configured_tools = detect_configured_slash_tools(project_path)
@@ -729,16 +743,43 @@ class ToolIntegrationChecks:
             if configured_count == 0:
                 return (
                     "warning",
-                    "Slash commands not configured",
-                    {"configured": False, "count": 0},
+                    f"Slash commands available ({actual_count}) but not configured in project",
+                    {"configured": False, "available": actual_count, "configured_count": 0},
                 )
             return (
                 "pass",
-                f"Slash commands configured ({configured_count} tools)",
-                {"configured": True, "count": configured_count},
+                f"Slash commands available ({actual_count}) and configured ({configured_count} tools)",
+                {"configured": True, "available": actual_count, "configured_count": configured_count},
             )
         except Exception as e:
             return ("fail", f"Slash command check failed: {e}", {})
+
+    def _check_mcp_tools(self) -> HealthCheckResult:
+        """Check MCP tools registration status."""
+        try:
+            from aurora_mcp.server import AuroraMCPServer
+
+            # Initialize MCP server in test mode to check registered tools
+            server = AuroraMCPServer(test_mode=True)
+            tools = server.list_tools()
+
+            tool_names = [tool["name"] for tool in tools]
+            required_tools = {"lsp", "mem_search"}
+            missing_tools = required_tools - set(tool_names)
+
+            if not missing_tools:
+                return (
+                    "pass",
+                    f"MCP tools registered ({len(tools)} tools: {', '.join(tool_names)})",
+                    {"tools": tool_names, "count": len(tools)},
+                )
+            return (
+                "warning",
+                f"MCP tools missing required tools: {', '.join(missing_tools)}",
+                {"tools": tool_names, "missing": list(missing_tools), "count": len(tools)},
+            )
+        except Exception as e:
+            return ("warning", f"MCP tools check failed: {e}", {"error": str(e)})
 
     def get_fixable_issues(self) -> list[dict[str, Any]]:
         """Get list of automatically fixable issues.
@@ -827,15 +868,22 @@ class InstallationChecks:
 
     def _check_core_packages(self) -> list[HealthCheckResult]:
         """Check core Aurora packages are importable."""
-        packages = [
-            ("aurora_core", "Core components"),
-            ("aurora_context_code", "Context & parsing"),
-            ("aurora_soar", "SOAR orchestrator"),
-            ("aurora_reasoning", "Reasoning engine"),
-            ("aurora_cli", "CLI tools"),
+        # Core packages (required)
+        core_packages = [
+            ("aurora_core", "Core components", False),
+            ("aurora_context_code", "Context & parsing", False),
+            ("aurora_soar", "SOAR orchestrator", False),
+            ("aurora_reasoning", "Reasoning engine", False),
+            ("aurora_cli", "CLI tools", False),
         ]
+        # Optional packages (show warning if missing)
+        optional_packages = [
+            ("aurora_lsp", "LSP integration", True),
+        ]
+        packages = core_packages + optional_packages
+
         results = []
-        for pkg, desc in packages:
+        for pkg, desc, is_optional in packages:
             try:
                 __import__(pkg)
                 # Get package version
@@ -852,7 +900,10 @@ class InstallationChecks:
                     # If version not found, just show package without version
                     results.append(("pass", f"{desc} ({pkg})", {"package": pkg}))
             except ImportError:
-                results.append(("fail", f"{desc} MISSING ({pkg})", {"package": pkg}))
+                if is_optional:
+                    results.append(("warning", f"{desc} not available ({pkg})", {"package": pkg, "optional": True}))
+                else:
+                    results.append(("fail", f"{desc} MISSING ({pkg})", {"package": pkg}))
         return results
 
     def get_fixable_issues(self) -> list[dict[str, Any]]:

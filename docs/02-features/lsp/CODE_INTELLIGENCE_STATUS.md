@@ -15,6 +15,75 @@
 
 ---
 
+## How Code Intelligence Works
+
+### Relationship Flow
+
+```
+                              IMPORTS                           CALLS
+                         ┌──────────────┐                 ┌──────────────┐
+                         │              │                 │              │
+                         ▼              │                 ▼              │
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│  module_a   │───▶│  module_b   │───▶│  function   │◀───│  caller_1   │
+│             │    │             │    │             │    │             │
+│ imports     │    │ imports     │    │ calls ────────▶  │  caller_2   │
+│ module_b    │    │ module_c    │    │ helper()    │    │             │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+                         │                   │
+                         │ imported_by       │ called_by
+                         ▼                   ▼
+                   "Who imports me?"    "Who calls me?"
+
+                         │                   │
+                         │ imports           │ calling
+                         ▼                   ▼
+                   "What do I import?"  "What do I call?"
+```
+
+### Metrics Explained
+
+| Metric | Direction | Question Answered | Example | Used For |
+|--------|-----------|-------------------|---------|----------|
+| **called_by** | ← incoming | "Who calls this function?" | `get_user()` ← `login()`, `signup()` | Impact analysis before refactoring |
+| **calling** | → outgoing | "What does this function call?" | `login()` → `get_user()`, `validate()` | Understanding dependencies |
+| **imported_by** | ← incoming | "What files import this module?" | `utils.py` ← `api.py`, `cli.py` | Safe to modify? Who depends on me? |
+| **imports** | → outgoing | "What modules does this file import?" | `api.py` → `utils`, `models`, `config` | Dependency tracking |
+| **used_by** | summary | "How widely used is this?" | `"3f 12r c:45"` = 3 files, 12 refs, 45% complexity | Quick usage overview |
+| **refs** | count | "Total reference count" | `12` references across codebase | Raw usage metric |
+| **unused** | flag | "Is this dead code?" | `refs <= 2` → `unused: true` | Dead code detection |
+| **complexity** | score | "How complex is this code?" | `c:45` = 45th percentile | Risk assessment |
+| **risk** | level | "How risky to change?" | HIGH (11+ refs), MED (3-10), LOW (0-2) | Change impact |
+
+### Reading the `used_by` Format
+
+```
+"3f 12r c:45"
+ │   │    │
+ │   │    └── complexity: 45th percentile (higher = more complex)
+ │   └─────── refs: 12 total references across codebase
+ └─────────── files: referenced in 3 different files
+```
+
+### Risk Calculation
+
+| Risk Level | Criteria | Action |
+|------------|----------|--------|
+| **LOW** | 0-2 refs | Safe to change, minimal impact |
+| **MEDIUM** | 3-10 refs | Review callers before changing |
+| **HIGH** | 11+ refs | Careful refactoring needed, many dependents |
+
+### Usage Markers
+
+| Marker | Condition | Meaning |
+|--------|-----------|---------|
+| `#DEADCODE` | 0 external refs | Safe to remove |
+| `#UNUSED` | refs ≤ 2 | Low usage, consider removing |
+| `#REFAC` | refs > 10 | High usage, careful refactoring needed |
+| `#COMPLEX` | complexity > 80% | High cyclomatic complexity |
+
+---
+
 ## Language Support Matrix
 
 | Feature | Python | JS/TS | Go | Rust | Java | Ruby |

@@ -10,8 +10,8 @@
  ┳┳┓┏┓┳┳┓┏┓┳┓┓┏  ┏┓┓ ┏┏┓┳┓┏┓  ┏┓┳┓┏┓┳┳┓┏┓┓ ┏┏┓┳┓┓┏
  ┃┃┃┣ ┃┃┃┃┃┣┫┗┫━━┣┫┃┃┃┣┫┣┫┣ ━━┣ ┣┫┣┫┃┃┃┣ ┃┃┃┃┃┣┫┃┫
  ┛ ┗┗┛┛ ┗┗┛┛┗┗┛  ┛┗┗┻┛┛┗┛┗┗┛  ┻ ┛┗┛┗┛ ┗┗┛┗┻┛┗┛┛┗┛┗
-Aurora gives AI coding assistants persistent memory and code intelligence.
-Index once, search semantically, plan with context.
+Lightweight, private memory and code intelligence for AI coding assistants.
+Multi-agent orchestration that runs locally.
 </pre>
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
@@ -24,12 +24,12 @@ Index once, search semantically, plan with context.
 
 ## Summary
 
-### Aurora - Memory & Code Intelligence for AI Assistants
+### Aurora - Lightweight Private Memory & Multi-Agent Orchestration
 
-- **Works everywhere** - No API keys needed. Works with Claude Code, Cursor, Aider, and 20+ tools
-- **Smart Memory** - Indexes your code and docs. Remembers what you accessed recently, ranks by relevance
-- **Code Intelligence** - Find unused code, check impact before refactoring, search with LSP context
-- **Planning** - Break goals into tasks, match to agents, detect capability gaps
+- **Private & local** - No API keys, no data leaves your machine. Works with Claude Code, Cursor, Aider, 20+ tools
+- **Smart Memory** - Indexes code and docs locally. Ranks by recency, relevance, and access patterns
+- **Code Intelligence** - LSP-powered: find unused code, check impact before refactoring, semantic search
+- **Multi-Agent Orchestration** - Decompose goals, spawn agents, coordinate with recovery and state
 - **Execution** - Run task lists with guardrails against dangerous commands and scope creep
 - **Friction Analysis** - Extract learned rules from stuck patterns in past sessions
 
@@ -327,15 +327,6 @@ aur goals "Add user authentication"
 | `/aur:tasks [id]` | Regenerate tasks after PRD edits |
 | `/aur:implement [id]` | Execute plan tasks sequentially |
 | `/aur:archive [id]` | Archive completed plan |
-
-### MCP Tools (for AI assistants)
-
-| Tool | Description |
-|------|-------------|
-| `lsp deadcode` | Find unused symbols, generate report |
-| `lsp impact` | Analyze callers and refactoring risk |
-| `lsp check` | Quick usage check before editing |
-| `mem_search` | Semantic search with LSP enrichment |
 
 ---
 

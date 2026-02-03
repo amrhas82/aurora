@@ -375,6 +375,12 @@ def run_step_3_tool_configuration(
             elif display_name in config_updated:
                 parts.append("instruction file [dim](updated)[/]")
 
+            # Check MCP servers
+            if display_name in mcp_created:
+                parts.append("MCP server")
+            elif display_name in mcp_updated:
+                parts.append("MCP server [dim](updated)[/]")
+
             # Discover agents for this tool
             tool_agent_count = 0
             try:

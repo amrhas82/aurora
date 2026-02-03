@@ -121,36 +121,36 @@
 
 - [ ] 2.0 Implement `lsp` MCP tool
   <!-- @agent: @code-developer -->
-  - [ ] 2.1 Create LSP tool wrapper in aurora_mcp
+  - [x] 2.1 Create LSP tool wrapper in aurora_mcp
     - tdd: yes
     - Add `lsp_tool.py` to `src/aurora_mcp/`
     - Import and use `AuroraLSP` from `aurora_lsp.facade`
     - Implement lazy initialization (server starts on first request)
     - Share caching with existing Aurora caching infrastructure (`.aurora/cache/`)
     - verify: `pytest tests/unit/mcp/test_lsp_tool.py::test_lsp_initialization -v`
-  - [ ] 2.1.1 Wire POC patterns from poc_mcp_server.py
+  - [x] 2.1.1 Wire POC patterns from poc_mcp_server.py
     - tdd: no
     - Review `packages/lsp/poc_mcp_server.py` for patterns to reuse
     - Integrate POC tool registration and response formatting
     - Do NOT create new LSP implementations - reuse POC code
     - verify: `grep -q "poc" src/aurora_mcp/lsp_tool.py` or patterns are integrated
-  - [ ] 2.2 Implement `deadcode` action
+  - [x] 2.2 Implement `deadcode` action
     - tdd: yes
     - Wire to `AuroraLSP.find_dead_code(path)`
     - Return format: `{action, path, dead_code: [{name, file, line, kind}], total}`
     - verify: `pytest tests/unit/mcp/test_lsp_tool.py::test_lsp_deadcode -v`
-  - [ ] 2.3 Implement `impact` action
+  - [x] 2.3 Implement `impact` action
     - tdd: yes
     - Wire to `AuroraLSP.get_usage_summary(path, line, col)`
     - Return format: `{action, path, line, symbol, used_by_files, total_usages, top_callers, risk}`
     - Calculate risk from usage count (0-2: low, 3-10: medium, 11+: high)
     - verify: `pytest tests/unit/mcp/test_lsp_tool.py::test_lsp_impact -v`
-  - [ ] 2.4 Implement `check` action
+  - [x] 2.4 Implement `check` action
     - tdd: yes
     - Quick pre-edit check - lighter than impact
     - Return format: `{action, path, line, symbol, used_by, risk}`
     - verify: `pytest tests/unit/mcp/test_lsp_tool.py::test_lsp_check -v`
-  - [ ] 2.5 Add MCP tool description with auto-invocation triggers
+  - [x] 2.5 Add MCP tool description with auto-invocation triggers
     - tdd: no
     - Add docstring triggers: "BEFORE modifying or deleting functions/classes"
     - Add keyword triggers: "deadcode", "dead code", "unused code", "cleanup", "refactor"
@@ -160,13 +160,13 @@
       - Supported markers: `#DEADCODE`, `#REFAC`, `#UNUSED`, `#COMPLEX`, `#TYPE`
       - Marker format: `# #DEADCODE: 0 usages - safe to remove` (end-of-line comment)
     - verify: `grep -q "BEFORE modifying" src/aurora_mcp/lsp_tool.py`
-  - [ ] 2.6 Register `lsp` tool in MCP server with annotations
+  - [x] 2.6 Register `lsp` tool in MCP server with annotations
     - tdd: yes
     - Add tool registration in `server.py` `_register_tools()`
     - Add `readOnlyHint: true` annotation
     - Add `title: "LSP Code Intelligence"` for discoverability
     - verify: `pytest tests/integration/mcp/test_mcp_server.py::test_lsp_tool_registered -v`
-  - [ ] 2.7 Implement CODE_QUALITY_REPORT.md generation
+  - [x] 2.7 Implement CODE_QUALITY_REPORT.md generation
     - tdd: yes
     - Generate report as part of `deadcode` action output
     - Location logic: `/docs/CODE_QUALITY_REPORT.md` if `/docs` exists, else project root
@@ -178,7 +178,7 @@
     - Wire new MCP tools with `configurators/mcp/base.py` and `registry.py`
     - Ensure tools are registered for Claude, Cursor, Cline, Continue
     - verify: `pytest tests/unit/mcp/test_mcp_configurator.py -v`
-  - [ ] 2.9 Verify: `lsp` tool unit tests pass
+  - [x] 2.9 Verify: `lsp` tool unit tests pass
     - tdd: no
     - verify: `pytest tests/unit/mcp/test_lsp_tool.py -v`
 

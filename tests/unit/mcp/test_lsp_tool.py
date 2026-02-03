@@ -11,8 +11,9 @@ from unittest.mock import Mock, patch, MagicMock
 class TestLSPDeadcode:
     """Tests for lsp(action='deadcode')."""
 
-    @patch("aurora_mcp.lsp_tool.AuroraLSP")
-    def test_lsp_deadcode_structure(self, mock_lsp_class):
+    @patch("aurora_mcp.lsp_tool.Path")
+    @patch("aurora_lsp.facade.AuroraLSP")
+    def test_lsp_deadcode_structure(self, mock_lsp_class, mock_path_class):
         """Test deadcode action returns expected structure."""
         # Arrange
         mock_lsp = Mock()
@@ -21,6 +22,18 @@ class TestLSPDeadcode:
             {"name": "ParseError", "file": "exceptions.py", "line": 45, "kind": "class"},
             {"name": "unused_helper", "file": "utils.py", "line": 120, "kind": "function"},
         ]
+
+        # Mock Path for report generation - use MagicMock for / operator
+        mock_workspace = MagicMock()
+        mock_docs_dir = MagicMock()
+        mock_docs_dir.exists.return_value = False
+        mock_docs_dir.is_dir.return_value = False
+        mock_report_path = MagicMock()
+        mock_report_path.write_text = Mock()
+
+        # Configure __truediv__ behavior for Path operations
+        mock_workspace.__truediv__ = MagicMock(side_effect=lambda x: mock_docs_dir if x == "docs" else (mock_report_path if x == "CODE_QUALITY_REPORT.md" else MagicMock()))
+        mock_path_class.cwd.return_value = mock_workspace
 
         # Import after patching
         from aurora_mcp.lsp_tool import lsp
@@ -36,8 +49,9 @@ class TestLSPDeadcode:
         assert result["total"] == 2
         assert len(result["dead_code"]) == 2
 
-    @patch("aurora_mcp.lsp_tool.AuroraLSP")
-    def test_lsp_deadcode_fields(self, mock_lsp_class):
+    @patch("aurora_mcp.lsp_tool.Path")
+    @patch("aurora_lsp.facade.AuroraLSP")
+    def test_lsp_deadcode_fields(self, mock_lsp_class, mock_path_class):
         """Test dead_code items have required fields."""
         # Arrange
         mock_lsp = Mock()
@@ -45,6 +59,14 @@ class TestLSPDeadcode:
         mock_lsp.find_dead_code.return_value = [
             {"name": "TestFunc", "file": "test.py", "line": 10, "kind": "function"},
         ]
+
+        # Mock Path
+        mock_workspace = MagicMock()
+        mock_path_class.cwd.return_value = mock_workspace
+        mock_report = MagicMock()
+        mock_workspace.__truediv__.return_value = mock_report
+        mock_report.exists.return_value = False
+        mock_report.write_text = Mock()
 
         from aurora_mcp.lsp_tool import lsp
 
@@ -66,7 +88,7 @@ class TestLSPDeadcode:
 class TestLSPImpact:
     """Tests for lsp(action='impact')."""
 
-    @patch("aurora_mcp.lsp_tool.AuroraLSP")
+    @patch("aurora_lsp.facade.AuroraLSP")
     def test_lsp_impact_structure(self, mock_lsp_class):
         """Test impact action returns expected structure."""
         # Arrange
@@ -99,9 +121,14 @@ class TestLSPImpact:
         assert "top_callers" in result
         assert "risk" in result
 
-    @patch("aurora_mcp.lsp_tool.AuroraLSP")
+    @patch("aurora_lsp.facade.AuroraLSP")
     def test_lsp_impact_risk_levels(self, mock_lsp_class):
         """Test risk calculation: low (0-2), medium (3-10), high (11+)."""
+        # Reset global LSP instance
+        import aurora_mcp.lsp_tool as lsp_module
+        lsp_module._lsp_instance = None
+        lsp_module._workspace_root = None
+
         mock_lsp = Mock()
         mock_lsp_class.return_value = mock_lsp
 
@@ -145,9 +172,14 @@ class TestLSPImpact:
 class TestLSPCheck:
     """Tests for lsp(action='check')."""
 
-    @patch("aurora_mcp.lsp_tool.AuroraLSP")
+    @patch("aurora_lsp.facade.AuroraLSP")
     def test_lsp_check_structure(self, mock_lsp_class):
         """Test check action returns expected structure."""
+        # Reset global LSP instance
+        import aurora_mcp.lsp_tool as lsp_module
+        lsp_module._lsp_instance = None
+        lsp_module._workspace_root = None
+
         # Arrange
         mock_lsp = Mock()
         mock_lsp_class.return_value = mock_lsp
@@ -174,7 +206,7 @@ class TestLSPCheck:
         assert result["used_by"] == 7
         assert result["risk"] == "medium"  # 7 usages = medium
 
-    @patch("aurora_mcp.lsp_tool.AuroraLSP")
+    @patch("aurora_lsp.facade.AuroraLSP")
     def test_lsp_default_action_is_check(self, mock_lsp_class):
         """Test default action is 'check' when not specified."""
         # Arrange
@@ -200,7 +232,7 @@ class TestLSPCheck:
 class TestCodeQualityReport:
     """Tests for CODE_QUALITY_REPORT.md generation."""
 
-    @patch("aurora_mcp.lsp_tool.AuroraLSP")
+    @patch("aurora_lsp.facade.AuroraLSP")
     @patch("aurora_mcp.lsp_tool.Path")
     def test_code_quality_report_format(self, mock_path, mock_lsp_class):
         """Test report includes severity categories."""
@@ -227,7 +259,7 @@ class TestCodeQualityReport:
         # Assert - result should contain report_path
         assert "report_path" in result or "report" in result
 
-    @patch("aurora_mcp.lsp_tool.AuroraLSP")
+    @patch("aurora_lsp.facade.AuroraLSP")
     @patch("builtins.open", create=True)
     @patch("aurora_mcp.lsp_tool.Path")
     def test_code_quality_report_location_docs(self, mock_path, mock_open, mock_lsp_class):
@@ -253,7 +285,7 @@ class TestCodeQualityReport:
         # Implementation will determine exact field name
         assert result is not None
 
-    @patch("aurora_mcp.lsp_tool.AuroraLSP")
+    @patch("aurora_lsp.facade.AuroraLSP")
     @patch("builtins.open", create=True)
     @patch("aurora_mcp.lsp_tool.Path")
     def test_code_quality_report_location_root(self, mock_path, mock_open, mock_lsp_class):
@@ -282,7 +314,7 @@ class TestCodeQualityReport:
 class TestLSPInitialization:
     """Tests for LSP tool initialization."""
 
-    @patch("aurora_mcp.lsp_tool.AuroraLSP")
+    @patch("aurora_lsp.facade.AuroraLSP")
     def test_lsp_initialization_lazy(self, mock_lsp_class):
         """Test LSP is initialized lazily on first request."""
         from aurora_mcp.lsp_tool import lsp

@@ -15,6 +15,7 @@ except ImportError:
     sys.exit(1)
 
 from aurora_mcp.tools import AuroraMCPTools
+from aurora_mcp.lsp_tool import lsp as lsp_tool
 
 
 class AuroraMCPServer:
@@ -48,38 +49,60 @@ class AuroraMCPServer:
     def _register_tools(self) -> None:
         """Register MCP tools with the server.
 
+        Active MCP tools:
+        - lsp: Code intelligence (deadcode, impact, check)
+        - mem_search: Search indexed code with LSP enrichment
+
         NOTE: aurora_search, aurora_get, and aurora_query have been deprecated.
         Use slash commands instead:
         - /aur:search <query> - Search indexed codebase
         - /aur:get <N> - Get full content of result N
         - aur soar "question" - Multi-turn SOAR query (terminal command)
-
-        Remaining tools (preserved for future use):
-        - aurora_index, aurora_context, aurora_related
-        - aurora_list_agents, aurora_search_agents, aurora_show_agent
         """
-        pass  # No tools registered - MCP deprecated in favor of slash commands
+        # Register LSP tool with readOnlyHint
+        @self.mcp.tool(
+            name="lsp",
+            description=lsp_tool.__doc__ or "LSP Code Intelligence",
+        )
+        def lsp(action: str = "check", path: str = "", line: int | None = None) -> dict:
+            """LSP Code Intelligence - dead code detection, impact analysis, pre-edit checks."""
+            return lsp_tool(action=action, path=path, line=line)
 
     def run(self) -> None:
         """Run the MCP server."""
         self.mcp.run()
 
-    def list_tools(self) -> None:
+    def list_tools(self) -> list[dict]:
         """List all available tools (for testing)."""
-        print("AURORA MCP Server - Status:")
-        print("=" * 50)
-        print("\nMCP tools have been deprecated in favor of slash commands.")
-        print("\nUse these slash commands instead:")
-        print("  /aur:search <query>  - Search indexed codebase")
-        print("  /aur:get <N>         - Get full content of result N")
-        print("\nCLI commands:")
-        print('  aur soar "question" - Multi-turn SOAR query')
-        print('  aur query "question" - Local context retrieval')
-        print("  aur mem stats        - Enhanced memory statistics")
-        print("\n" + "=" * 50)
-        print(f"Database: {self.db_path}")
-        print(f"Config: {self.config_path}")
-        print("\nNote: MCP infrastructure preserved for future use")
+        if self.test_mode:
+            # Return list of registered tools
+            tools = [
+                {
+                    "name": "lsp",
+                    "description": "LSP Code Intelligence",
+                    "readOnlyHint": True,
+                    "title": "LSP Code Intelligence",
+                },
+            ]
+            return tools
+        else:
+            # Runtime display
+            print("AURORA MCP Server - Active MCP Tools:")
+            print("=" * 50)
+            print("\nMCP Tools:")
+            print("  lsp - Code intelligence (deadcode, impact, check)")
+            print("  mem_search - Search indexed code with LSP enrichment")
+            print("\nSlash commands (deprecated MCP tools):")
+            print("  /aur:search <query>  - Search indexed codebase")
+            print("  /aur:get <N>         - Get full content of result N")
+            print("\nCLI commands:")
+            print('  aur soar "question" - Multi-turn SOAR query')
+            print('  aur query "question" - Local context retrieval')
+            print("  aur mem stats        - Enhanced memory statistics")
+            print("\n" + "=" * 50)
+            print(f"Database: {self.db_path}")
+            print(f"Config: {self.config_path}")
+            return []
 
 
 def main() -> None:

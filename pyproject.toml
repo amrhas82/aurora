@@ -52,6 +52,9 @@ dependencies = [
 
     # MCP integration
     "fastmcp>=0.1.0",
+
+    # LSP integration
+    "aurora-lsp",
 ]
 
 [project.urls]

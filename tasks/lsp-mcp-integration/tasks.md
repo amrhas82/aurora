@@ -238,19 +238,19 @@
     - tdd: no
     - verify: `python -c "from aurora_cli.templates.slash_commands import COMMAND_TEMPLATES; assert len(COMMAND_TEMPLATES) == 4, f'Got {len(COMMAND_TEMPLATES)}'"` exits 0
 
-- [ ] 5.0 Add aurora-lsp to dependencies
+- [x] 5.0 Add aurora-lsp to dependencies
   <!-- @agent: @code-developer -->
-  - [ ] 5.1 Add aurora-lsp to pyproject.toml dependencies
+  - [x] 5.1 Add aurora-lsp to pyproject.toml dependencies
     - tdd: no
     - Add `"aurora-lsp"` to dependencies list
     - Ensure LSP package is included in standard Aurora install
     - verify: `grep -q "aurora-lsp" pyproject.toml`
-  - [ ] 5.2 Update packages/lsp/pyproject.toml for proper packaging
+  - [x] 5.2 Update packages/lsp/pyproject.toml for proper packaging
     - tdd: no
     - Ensure package exports `aurora_lsp` module
     - Add `multilspy>=0.0.15` dependency
     - verify: `pip install -e packages/lsp && python -c "from aurora_lsp import AuroraLSP"`
-  - [ ] 5.3 Verify: pip install aurora-actr includes LSP
+  - [x] 5.3 Verify: pip install aurora-actr includes LSP
     - tdd: no
     - verify: `pip install -e . && python -c "from aurora_lsp.facade import AuroraLSP"` exits 0
 

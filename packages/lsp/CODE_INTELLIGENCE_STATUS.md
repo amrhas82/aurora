@@ -127,10 +127,92 @@ packages/lsp/src/aurora_lsp/languages/
   python.py         # Python config (entry points, branch types, patterns)
 ```
 
-**To add a new language:**
-1. Create `languages/{lang}.py` with LanguageConfig
-2. Register in `languages/__init__.py`
-3. Add tree-sitter-{lang} dependency if complexity needed
+#### LanguageConfig Fields
+
+| Field | Type | Purpose | Example (Python) |
+|-------|------|---------|------------------|
+| `name` | str | Language identifier | `"python"` |
+| `extensions` | list[str] | File extensions | `[".py", ".pyi"]` |
+| `tree_sitter_module` | str \| None | Tree-sitter parser module | `"tree_sitter_python"` |
+| `branch_types` | set[str] | AST nodes for complexity | `{"if_statement", "for_statement", ...}` |
+| `entry_points` | set[str] | Skip in deadcode (exact) | `{"main", "cli", "app", "setup"}` |
+| `entry_patterns` | set[str] | Skip in deadcode (glob) | `{"pytest_*", "test_*"}` |
+| `entry_decorators` | set[str] | Decorator entry points | `{"@click.command", "@app.route"}` |
+| `nested_patterns` | set[str] | Nested helper patterns | `{"wrapper", "inner", "on_*"}` |
+| `import_patterns` | list[str] | Import regex patterns | `[r"^\s*import\s+", ...]` |
+
+#### Registry API
+
+```python
+from aurora_lsp.languages import (
+    get_config,                    # Get full LanguageConfig for file
+    get_language,                  # Get language name for file
+    get_complexity_branch_types,   # Get branch types for complexity calc
+    is_entry_point,                # Check if name is entry point
+    is_nested_helper,              # Check if name is nested helper
+    supported_extensions,          # Get all supported extensions
+)
+
+# Usage
+config = get_config("foo.py")           # Returns PYTHON config
+config = get_config("foo.js")           # Returns None (not yet supported)
+
+is_entry_point("foo.py", "main")        # True
+is_entry_point("foo.py", "my_func")     # False
+is_entry_point("foo.py", "pytest_configure")  # True (matches pytest_*)
+
+branch_types = get_complexity_branch_types("foo.py")  # {"if_statement", ...}
+```
+
+#### Adding a New Language
+
+**1. Create config file** (`languages/javascript.py`):
+```python
+from aurora_lsp.languages.base import LanguageConfig
+
+JAVASCRIPT = LanguageConfig(
+    name="javascript",
+    extensions=[".js", ".jsx", ".mjs"],
+    tree_sitter_module="tree_sitter_javascript",
+
+    branch_types={
+        "if_statement", "for_statement", "while_statement",
+        "switch_statement", "ternary_expression", "catch_clause",
+    },
+
+    entry_points={"main", "default"},
+    entry_patterns={"test_*", "spec_*"},
+    entry_decorators=set(),  # JS doesn't use decorators same way
+
+    nested_patterns={"callback", "handler", "wrapper"},
+
+    import_patterns=[
+        r"^\s*import\s+",
+        r"^\s*import\s*\{",
+        r"^\s*(const|let|var)\s+.*=\s*require\(",
+    ],
+)
+```
+
+**2. Register in `__init__.py`**:
+```python
+from aurora_lsp.languages.javascript import JAVASCRIPT
+
+LANGUAGES["javascript"] = JAVASCRIPT
+EXTENSION_MAP.update({
+    ".js": "javascript",
+    ".jsx": "javascript",
+    ".mjs": "javascript",
+})
+```
+
+**3. Add dependency** (if complexity needed):
+```toml
+# pyproject.toml
+dependencies = [
+    "tree-sitter-javascript>=0.20",
+]
+```
 
 ---
 

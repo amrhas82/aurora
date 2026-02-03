@@ -37,6 +37,8 @@ console = Console()
 
 # Lazy-loaded LSP instance for usage enrichment
 _lsp_instance = None
+# Lazy-loaded tree-sitter parser for complexity calculation
+_ts_parser = None
 
 
 def _is_garbage_symbol_name(name: str) -> bool:
@@ -58,26 +60,162 @@ def _clean_symbol_name(name: str) -> str:
     return name
 
 
-def _get_lsp_usage(file_path: str, line_start: int, symbol_name: str = "") -> dict[str, Any]:
+def _get_complexity(file_path: str, line_start: int, line_end: int) -> int:
+    """Calculate complexity for a code region using tree-sitter.
+
+    Args:
+        file_path: Path to source file
+        line_start: Start line (1-indexed)
+        line_end: End line (1-indexed)
+
+    Returns:
+        Complexity percentage (0-100), or -1 if unavailable
+    """
+    global _ts_parser
+
+    try:
+        path = Path(file_path)
+        if not path.exists() or path.suffix != ".py":
+            return -1
+
+        # Lazy init tree-sitter
+        if _ts_parser is None:
+            try:
+                import tree_sitter
+                import tree_sitter_python
+
+                python_lang = tree_sitter.Language(tree_sitter_python.language())
+                _ts_parser = tree_sitter.Parser(python_lang)
+            except ImportError:
+                logger.debug("tree-sitter not available for complexity")
+                return -1
+
+        # Parse file
+        source = path.read_bytes()
+        tree = _ts_parser.parse(source)
+
+        # Find node at line_start
+        target_node = None
+
+        def find_node(node: Any) -> None:
+            nonlocal target_node
+            # tree-sitter uses 0-indexed lines
+            node_start = node.start_point[0] + 1
+            if node_start == line_start and node.type in ("function_definition", "class_definition"):
+                target_node = node
+                return
+            for child in node.children:
+                find_node(child)
+
+        find_node(tree.root_node)
+
+        if target_node is None:
+            return -1
+
+        # Count branch points
+        branch_types = {
+            "if_statement",
+            "for_statement",
+            "while_statement",
+            "try_statement",
+            "with_statement",
+            "match_statement",
+            "elif_clause",
+            "except_clause",
+            "boolean_operator",
+            "conditional_expression",
+        }
+
+        branch_count = 0
+
+        def count_branches(node: Any) -> None:
+            nonlocal branch_count
+            if node.type in branch_types:
+                branch_count += 1
+            for child in node.children:
+                count_branches(child)
+
+        count_branches(target_node)
+
+        # Normalize to percentage: score = branches / (branches + 10) * 100
+        if branch_count == 0:
+            return 0
+        complexity_pct = int(branch_count / (branch_count + 10) * 100)
+        return min(complexity_pct, 99)
+
+    except Exception as e:
+        logger.debug(f"Complexity calculation failed: {e}")
+        return -1
+
+
+def _calculate_risk(files: int, refs: int, complexity: int) -> str:
+    """Calculate risk level from usage and complexity.
+
+    Args:
+        files: Number of files using this symbol
+        refs: Total reference count
+        complexity: Complexity percentage (0-100)
+
+    Returns:
+        Risk level: "HIGH", "MED", "LOW", or "-"
+    """
+    if complexity < 0:
+        complexity = 0
+
+    # HIGH: widespread use OR very complex
+    if files >= 10 or refs >= 50 or complexity >= 60:
+        return "HIGH"
+    # MED: moderate use OR moderate complexity
+    if files >= 3 or refs >= 10 or complexity >= 30:
+        return "MED"
+    # LOW: localized and simple
+    return "LOW"
+
+
+def _get_lsp_usage(
+    file_path: str, line_start: int, symbol_name: str = "", line_end: int = 0
+) -> dict[str, Any]:
     """Get LSP usage data for a code symbol.
 
     Args:
         file_path: Path to the file containing the symbol
         line_start: Starting line number (1-indexed)
         symbol_name: Name of the symbol to find column position
+        line_end: Ending line number (1-indexed) for complexity calculation
 
     Returns:
-        Dict with 'used_by' string and 'top_files' list
+        Dict with usage data:
+        - used_by: Compact format "19f 43r c:95" or "-"
+        - used_by_full: Full format "19 files, 43 refs, complexity 95%, risk HIGH"
+        - top_files: List of file paths that reference this symbol
+        - files: Number of files
+        - refs: Total reference count
+        - complexity: Complexity percentage
+        - risk: "HIGH", "MED", "LOW", or "-"
     """
     global _lsp_instance
 
+    empty_result = {
+        "used_by": "-",
+        "used_by_full": "-",
+        "top_files": [],
+        "files": 0,
+        "refs": 0,
+        "complexity": -1,
+        "risk": "-",
+    }
+
     # Only try to get LSP data for code files with valid symbol names
     if not file_path or line_start <= 0:
-        return {"used_by": "-", "top_files": []}
+        return empty_result
 
     # Skip invalid symbol names (garbage from bad indexing)
     if _is_garbage_symbol_name(symbol_name):
-        return {"used_by": "-", "top_files": []}
+        return empty_result
+
+    files_affected = 0
+    total_usages = 0
+    top_files: list[str] = []
 
     try:
         if _lsp_instance is None:
@@ -128,17 +266,51 @@ def _get_lsp_usage(file_path: str, line_start: int, symbol_name: str = "") -> di
         )
         top_files = sorted_files[:5]  # Top 5 files
 
-        # Format as "N files(M)"
-        used_by = f"{files_affected} files({total_usages})" if files_affected > 0 else "-"
-
-        return {"used_by": used_by, "top_files": top_files}
-
     except ImportError:
         logger.debug("aurora-lsp not available")
-        return {"used_by": "-", "top_files": []}
     except Exception as e:
         logger.debug(f"LSP usage lookup failed: {e}")
-        return {"used_by": "-", "top_files": []}
+
+    # Calculate complexity
+    end_line = line_end if line_end > 0 else line_start + 50
+    complexity = _get_complexity(file_path, line_start, end_line)
+
+    # Calculate risk
+    risk = _calculate_risk(files_affected, total_usages, complexity)
+
+    # Format compact: "19f 43r c:95"
+    if files_affected > 0 or complexity >= 0:
+        parts = []
+        if files_affected > 0:
+            parts.append(f"{files_affected}f {total_usages}r")
+        if complexity >= 0:
+            parts.append(f"c:{complexity}")
+        used_by = " ".join(parts) if parts else "-"
+    else:
+        used_by = "-"
+
+    # Format full: "19 files, 43 refs, complexity 95%, risk HIGH"
+    if files_affected > 0 or complexity >= 0:
+        full_parts = []
+        if files_affected > 0:
+            full_parts.append(f"{files_affected} files")
+            full_parts.append(f"{total_usages} refs")
+        if complexity >= 0:
+            full_parts.append(f"complexity {complexity}%")
+        full_parts.append(f"risk {risk}")
+        used_by_full = ", ".join(full_parts)
+    else:
+        used_by_full = "-"
+
+    return {
+        "used_by": used_by,
+        "used_by_full": used_by_full,
+        "top_files": top_files,
+        "files": files_affected,
+        "refs": total_usages,
+        "complexity": complexity,
+        "risk": risk,
+    }
 
 
 def _start_background_model_loading() -> None:
@@ -977,14 +1149,14 @@ def _display_rich_results(
             "  • [cyan]Using grep for exact matches[/]: grep -r 'term' .\n",
         )
 
-    # Create results table - Type first, Used by instead of Commits/Modified
-    # Per LSP_IMPLEMENTATION_PLAN.md: Type | File | Name | Lines | Used by | Score
+    # Create results table - Quick mode: Type | File | Name | Lines | Risk | Git | Score
     table = Table(show_header=True, header_style="bold magenta")
     table.add_column("Type", style="green", width=6)
     table.add_column("File", style="yellow", width=22)
     table.add_column("Name", style="cyan", width=20)
     table.add_column("Lines", style="dim", width=10)
-    table.add_column("Used by", style="magenta", width=14)
+    table.add_column("Risk", style="red", width=6)
+    table.add_column("Git", style="dim", width=8)
     table.add_column("Score", justify="right", style="bold blue", width=7)
 
     if show_content:
@@ -1004,15 +1176,47 @@ def _display_rich_results(
         line_start, line_end = result.line_range
         line_range_str = f"{line_start}-{line_end}"
 
-        # Get LSP "Used by" data for code chunks
+        # Get LSP "Used by" data for code chunks (includes risk and complexity)
         if element_type_full in ("function", "method", "class", "code"):
-            lsp_data = _get_lsp_usage(result.file_path, line_start, raw_name)
-            used_by_text = lsp_data["used_by"]
-            # Store top_files in result for --show-scores view
-            result.metadata["_lsp_top_files"] = lsp_data["top_files"]
+            lsp_data = _get_lsp_usage(result.file_path, line_start, raw_name, line_end)
+            risk_text = lsp_data["risk"]
+            # Store full data in result for --show-scores view
+            result.metadata["_lsp_data"] = lsp_data
         else:
-            used_by_text = "-"
-            result.metadata["_lsp_top_files"] = []
+            risk_text = "-"
+            result.metadata["_lsp_data"] = {
+                "used_by": "-",
+                "used_by_full": "-",
+                "top_files": [],
+                "files": 0,
+                "refs": 0,
+                "complexity": -1,
+                "risk": "-",
+            }
+
+        # Format git time (relative)
+        last_modified = result.metadata.get("last_modified")
+        if last_modified:
+            from datetime import datetime
+
+            try:
+                mod_time = datetime.fromtimestamp(last_modified)
+                now = datetime.now()
+                delta = now - mod_time
+                if delta.days > 365:
+                    git_text = f"{delta.days // 365}y ago"
+                elif delta.days > 30:
+                    git_text = f"{delta.days // 30}mo ago"
+                elif delta.days > 0:
+                    git_text = f"{delta.days}d ago"
+                elif delta.seconds > 3600:
+                    git_text = f"{delta.seconds // 3600}h ago"
+                else:
+                    git_text = "recent"
+            except (ValueError, OSError):
+                git_text = "-"
+        else:
+            git_text = "-"
 
         # Format score with color and low confidence indicator
         score = result.hybrid_score
@@ -1029,13 +1233,14 @@ def _display_rich_results(
         else:
             score_text = _format_score(score)
 
-        # Row order: Type | File | Name | Lines | Used by | Score
+        # Row order: Type | File | Name | Lines | Risk | Git | Score
         row = [
             element_type,
             _truncate_text(file_path, 24),
             _truncate_text(name, 22),
             line_range_str,
-            used_by_text,
+            risk_text,
+            git_text,
             score_text,
         ]
 
@@ -1363,23 +1568,35 @@ def _format_score_box(
     git_padding = content_width - len(git_text)
     lines.append(f"│{git_text}{' ' * git_padding} │")
 
-    # Used by line (last, uses └) - LSP call relationship data
-    top_files = result.metadata.get("_lsp_top_files", [])
+    # Files line - list of files that reference this symbol
+    lsp_data = result.metadata.get("_lsp_data", {})
+    top_files = lsp_data.get("top_files", [])
     element_type = result.metadata.get("type", "")
 
     if element_type in ("function", "method", "class", "code") and top_files:
-        # Format top files: "12 files (run.py, executor.py, runner.py +9)"
+        # Format: "Files: test_orchestrator.py, soar.py, __init__.py (+14 more)"
         if len(top_files) <= 3:
             files_str = ", ".join(Path(f).name for f in top_files)
         else:
             shown = ", ".join(Path(f).name for f in top_files[:3])
-            files_str = f"{shown} +{len(top_files) - 3}"
-        used_by_text = f"  └─ Used by:    {len(top_files)} files ({files_str})"
+            files_str = f"{shown} (+{len(top_files) - 3} more)"
+        files_line_text = f"  ├─ Files:      {files_str}"
     elif element_type in ("function", "method", "class", "code"):
-        # Code but no LSP data available
-        used_by_text = "  └─ Used by:    -"
+        files_line_text = "  ├─ Files:      -"
     else:
-        # Non-code (kb, doc)
+        files_line_text = "  ├─ Files:      -"
+
+    # Truncate if too long
+    if len(files_line_text) > content_width - 2:
+        files_line_text = _truncate_text(files_line_text, content_width - 2)
+    files_padding = content_width - len(files_line_text)
+    lines.append(f"│{files_line_text}{' ' * files_padding} │")
+
+    # Used by line (last, uses └) - full details: files, refs, complexity, risk
+    if element_type in ("function", "method", "class", "code"):
+        used_by_full = lsp_data.get("used_by_full", "-")
+        used_by_text = f"  └─ Used by:    {used_by_full}"
+    else:
         used_by_text = "  └─ Used by:    -"
 
     # Truncate if too long
@@ -1413,6 +1630,9 @@ def _format_score_box(
         elif "Git:" in line:
             # Git metadata in dim
             text.append(line + "\n", style="dim")
+        elif "Files:" in line:
+            # Files list in yellow
+            text.append(line + "\n", style="yellow")
         elif "Used by:" in line:
             # Used by in magenta (LSP data)
             text.append(line + "\n", style="magenta")

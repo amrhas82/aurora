@@ -1,6 +1,6 @@
 """Memory search MCP tool - Search indexed code with LSP enrichment.
 
-Provides enhanced search with call relationships and git info.
+Provides enhanced search with call relationships, complexity, and risk assessment.
 """
 
 from __future__ import annotations
@@ -13,6 +13,113 @@ from typing import Any
 
 
 logger = logging.getLogger(__name__)
+
+# Lazy-loaded tree-sitter parser
+_ts_parser = None
+
+
+def _get_complexity(file_path: str, line_start: int, line_end: int) -> int:
+    """Calculate complexity for a code region using tree-sitter.
+
+    Args:
+        file_path: Path to source file
+        line_start: Start line (1-indexed)
+        line_end: End line (1-indexed)
+
+    Returns:
+        Complexity percentage (0-100), or -1 if unavailable
+    """
+    global _ts_parser
+
+    try:
+        path = Path(file_path)
+        if not path.exists() or path.suffix != ".py":
+            return -1
+
+        # Lazy init tree-sitter
+        if _ts_parser is None:
+            try:
+                import tree_sitter
+                import tree_sitter_python
+                python_lang = tree_sitter.Language(tree_sitter_python.language())
+                _ts_parser = tree_sitter.Parser(python_lang)
+            except ImportError:
+                logger.debug("tree-sitter not available for complexity")
+                return -1
+
+        # Parse file
+        source = path.read_bytes()
+        tree = _ts_parser.parse(source)
+
+        # Find node at line_start
+        target_node = None
+        def find_node(node):
+            nonlocal target_node
+            # tree-sitter uses 0-indexed lines
+            node_start = node.start_point[0] + 1
+            node_end = node.end_point[0] + 1
+            if node_start == line_start and node.type in ("function_definition", "class_definition"):
+                target_node = node
+                return
+            for child in node.children:
+                find_node(child)
+
+        find_node(tree.root_node)
+
+        if target_node is None:
+            return -1
+
+        # Count branch points
+        branch_types = {
+            "if_statement", "for_statement", "while_statement",
+            "try_statement", "with_statement", "match_statement",
+            "elif_clause", "except_clause", "boolean_operator",
+            "conditional_expression",
+        }
+
+        branch_count = 0
+        def count_branches(node):
+            nonlocal branch_count
+            if node.type in branch_types:
+                branch_count += 1
+            for child in node.children:
+                count_branches(child)
+
+        count_branches(target_node)
+
+        # Normalize to percentage: score = branches / (branches + 10) * 100
+        if branch_count == 0:
+            return 0
+        complexity_pct = int(branch_count / (branch_count + 10) * 100)
+        return min(complexity_pct, 99)
+
+    except Exception as e:
+        logger.debug(f"Complexity calculation failed: {e}")
+        return -1
+
+
+def _calculate_risk(files: int, refs: int, complexity: int) -> str:
+    """Calculate risk level from usage and complexity.
+
+    Args:
+        files: Number of files using this symbol
+        refs: Total reference count
+        complexity: Complexity percentage (0-100)
+
+    Returns:
+        Risk level: "HIGH", "MED", "LOW", or "-"
+    """
+    if complexity < 0:
+        complexity = 0
+
+    # HIGH: widespread use OR very complex
+    if files >= 10 or refs >= 50 or complexity >= 60:
+        return "HIGH"
+    # MED: moderate use OR moderate complexity
+    if files >= 3 or refs >= 10 or complexity >= 30:
+        return "MED"
+    # LOW: localized and simple
+    return "LOW"
 
 # Lazy-loaded instances
 _store = None
@@ -139,15 +246,16 @@ def _get_git_info(file_path: str, workspace: Path) -> str:
         return "-"
 
 
-def _enrich_with_lsp(result: dict[str, Any], workspace: Path) -> dict[str, Any]:
-    """Enrich search result with LSP call relationship data.
+def _get_usage_only(result: dict[str, Any], workspace: Path) -> dict[str, Any]:
+    """Get usage count, complexity, and risk (fast).
 
     Args:
         result: Search result dict with metadata
         workspace: Workspace root directory
 
     Returns:
-        Enriched result with used_by, called_by, calling fields
+        Result with usage, risk fields added.
+        Format: "19f 43r c:74" where f=files, r=refs, c=complexity%
     """
     metadata = result.get("metadata", {})
     chunk_type = metadata.get("type", "")
@@ -155,92 +263,144 @@ def _enrich_with_lsp(result: dict[str, Any], workspace: Path) -> dict[str, Any]:
     # Only enrich code chunks
     if chunk_type != "code":
         result["used_by"] = "-"
-        result["called_by"] = []
-        result["calling"] = []
+        result["risk"] = "-"
         return result
 
+    file_path = metadata.get("file_path", "")
+    line_start = metadata.get("line_start")
+    line_end = metadata.get("line_end")
+
+    if not file_path or not line_start:
+        result["used_by"] = "-"
+        result["risk"] = "-"
+        return result
+
+    try:
+        start_line = int(line_start)
+        end_line = int(line_end) if line_end else start_line + 50
+    except (ValueError, TypeError):
+        result["used_by"] = "-"
+        result["risk"] = "-"
+        return result
+
+    # Get complexity from tree-sitter (fast, ~10ms)
+    complexity = _get_complexity(file_path, start_line, end_line)
+
+    # Get usage from LSP
     lsp = _get_lsp(workspace)
-    if lsp is None:
-        # No LSP available
+    files_affected = 0
+    total_usages = 0
+
+    if lsp is not None:
+        try:
+            line_0indexed = start_line - 1
+            col = 10  # Hit symbol names after 'class ', 'def '
+            summary = lsp.get_usage_summary(file_path, line_0indexed, col=col)
+            total_usages = summary.get("total_usages", 0)
+            files_affected = summary.get("files_affected", 0)
+        except Exception as e:
+            logger.debug(f"LSP usage check failed for {file_path}:{start_line}: {e}")
+
+    # Format: "19f 43r c:74"
+    if files_affected > 0 or complexity >= 0:
+        parts = []
+        if files_affected > 0:
+            parts.append(f"{files_affected}f {total_usages}r")
+        if complexity >= 0:
+            parts.append(f"c:{complexity}")
+        result["used_by"] = " ".join(parts) if parts else "-"
+    else:
         result["used_by"] = "-"
-        result["called_by"] = []
-        result["calling"] = []
-        return result
 
-    # Get file and line from metadata
-    file_path = metadata.get("file", "")
-    line_range = metadata.get("lines", "")
-
-    if not file_path or not line_range:
-        result["used_by"] = "-"
-        result["called_by"] = []
-        result["calling"] = []
-        return result
-
-    # Parse line range (e.g., "68-2447")
-    try:
-        if "-" in line_range:
-            start_line = int(line_range.split("-")[0])
-        else:
-            start_line = int(line_range)
-    except ValueError:
-        result["used_by"] = "-"
-        result["called_by"] = []
-        result["calling"] = []
-        return result
-
-    # LSP uses 0-indexed lines
-    line_0indexed = start_line - 1
-
-    try:
-        # Get usage summary for used_by count
-        summary = lsp.get_usage_summary(file_path, line_0indexed, col=0)
-        total_usages = summary.get("total_usages", 0)
-        files_affected = summary.get("files_affected", 0)
-
-        # Format as "N files(M)"
-        result["used_by"] = f"{files_affected} files({total_usages})"
-
-        # Get callers (functions that call this symbol)
-        callers = lsp.get_callers(file_path, line_0indexed, col=0)
-        result["called_by"] = [caller.get("name", "") for caller in callers[:5]]  # Top 5
-
-        # Get callees (functions this symbol calls)
-        callees = lsp.get_callees(file_path, line_0indexed, col=0)
-        result["calling"] = [callee.get("name", "") for callee in callees[:5]]  # Top 5
-
-    except Exception as e:
-        logger.debug(f"LSP enrichment failed for {file_path}:{start_line}: {e}")
-        result["used_by"] = "-"
-        result["called_by"] = []
-        result["calling"] = []
+    # Calculate risk
+    result["risk"] = _calculate_risk(files_affected, total_usages, complexity)
 
     return result
 
 
-def mem_search(query: str, limit: int = 5) -> list[dict]:
-    """Search indexed code and knowledge base with LSP context.
+def _enrich_full(result: dict[str, Any], workspace: Path) -> dict[str, Any]:
+    """Full enrichment with callers/callees/git (slow).
 
-    Searches Aurora's memory (code chunks, knowledge base entries) and enriches
-    results with LSP usage data for code symbols.
-
-    Natural language triggers: "search code", "find symbols", "where is", "usage of"
+    Assumes _get_usage_only was already called.
 
     Args:
-        query: Search query string
-        limit: Maximum results to return (default 5)
+        result: Search result dict with metadata (already has used_by)
+        workspace: Workspace root directory
 
     Returns:
-        List of search results with:
-        - file: File path
-        - type: "code" or "kb"
-        - symbol: Symbol/section name
-        - lines: Line range (e.g., "68-2447")
-        - score: Relevance score (0-1)
-        - used_by: LSP usage info for code (e.g., "12 files(74)"), "-" for non-code
-        - called_by: List of caller functions/methods
-        - calling: List of called functions/methods (where LSP supports it)
-        - git: Git info (commits, modified time)
+        Enriched result with called_by, calling, git fields added
+    """
+    metadata = result.get("metadata", {})
+    chunk_type = metadata.get("type", "")
+
+    if chunk_type != "code":
+        result["called_by"] = []
+        result["calling"] = []
+        result["git"] = "-"
+        return result
+
+    lsp = _get_lsp(workspace)
+    file_path = metadata.get("file_path", "")
+    line_start = metadata.get("line_start")
+
+    if lsp is None or not file_path or not line_start:
+        result["called_by"] = []
+        result["calling"] = []
+        result["git"] = _get_git_info(file_path, workspace) if file_path else "-"
+        return result
+
+    try:
+        start_line = int(line_start)
+        line_0indexed = start_line - 1
+        col = 10
+
+        # Get callers (functions that call this symbol)
+        callers = lsp.get_callers(file_path, line_0indexed, col=col)
+        result["called_by"] = [caller.get("name", "") for caller in callers[:5]]
+
+        # Get callees (functions this symbol calls)
+        callees = lsp.get_callees(file_path, line_0indexed, col=col)
+        result["calling"] = [callee.get("name", "") for callee in callees[:5]]
+
+    except Exception as e:
+        logger.debug(f"LSP callers/callees failed for {file_path}:{line_start}: {e}")
+        result["called_by"] = []
+        result["calling"] = []
+
+    # Add git info
+    result["git"] = _get_git_info(file_path, workspace)
+    return result
+
+
+def mem_search(query: str, limit: int = 5, enrich: bool = False) -> list[dict]:
+    """Search codebase for symbols, functions, classes with LSP-enriched results.
+
+    WHEN TO USE:
+    - "where is X defined" → search for symbol name
+    - "find functions that handle Y" → search by functionality
+    - "what calls Z" → search then check called_by field
+    - Understanding codebase structure → broad search, check used_by counts
+
+    USE THIS FIRST before lsp tool - mem_search finds the file:line, then use lsp for deeper analysis.
+
+    Args:
+        query: Symbol name, function name, or description (e.g., "SOAROrchestrator", "handle errors")
+        limit: Max results (default 5, increase for broader search)
+        enrich: Add full enrichment - callers, callees, git info (slower). Default False.
+
+    Returns:
+        List of matches with LSP context:
+        - type: "code" or "kb" (knowledge base)
+        - file: Filename (where)
+        - name: Function/class name (what)
+        - lines: Line range
+        - used_by: "19f 43r c:74" (files, refs, complexity%)
+        - risk: "HIGH" | "MED" | "LOW" | "-"
+        - score: Relevance (0-1)
+        When enrich=True, also includes:
+        - called_by: Functions that call this symbol
+        - calling: Functions this symbol calls
+        - git: Recent commit info
     """
     workspace = Path.cwd()
 
@@ -250,12 +410,12 @@ def mem_search(query: str, limit: int = 5) -> list[dict]:
         logger.warning("Memory database not initialized - returning empty results")
         return []
 
-    # Perform search
+    # Perform search (fast path - don't block on embedding model)
     try:
         raw_results = retriever.retrieve(
             query,
             limit=limit,
-            wait_for_model=True,  # Wait for embeddings if loading
+            wait_for_model=False,  # Fast: BM25+Activation if model not loaded (85% quality)
         )
     except Exception as e:
         logger.error(f"Search failed: {e}")
@@ -269,24 +429,38 @@ def mem_search(query: str, limit: int = 5) -> list[dict]:
 
         metadata = result.get("metadata", {})
 
-        # Extract fields
+        # Build lines string from line_start/line_end
+        line_start = metadata.get("line_start")
+        line_end = metadata.get("line_end")
+        if line_start and line_end:
+            lines_str = f"{line_start}-{line_end}"
+        elif line_start:
+            lines_str = str(line_start)
+        else:
+            lines_str = ""
+
+        # Extract fields (metadata uses file_path, line_start, line_end)
+        full_path = metadata.get("file_path", "unknown")
         enriched = {
-            "file": metadata.get("file", "unknown"),
             "type": metadata.get("type", "code"),
-            "symbol": metadata.get("name", ""),
-            "lines": metadata.get("lines", ""),
+            "file": Path(full_path).name if full_path != "unknown" else "unknown",
+            "name": metadata.get("name", ""),  # Function/class name
+            "lines": lines_str,
+            "used_by": "-",  # Will be set by _get_usage_only
+            "risk": "-",     # Will be set by _get_usage_only
             "score": round(result.get("hybrid_score", 0.0), 3),
             "metadata": metadata,  # Include metadata for LSP enrichment
         }
 
-        # Enrich with LSP data (adds used_by, called_by, calling)
-        enriched = _enrich_with_lsp(enriched, workspace)
+        # Always get usage count (fast, matches CLI behavior)
+        enriched = _get_usage_only(enriched, workspace)
+
+        # Optional full enrichment (slow - adds callers, callees, git)
+        if enrich:
+            enriched = _enrich_full(enriched, workspace)
 
         # Remove metadata from final output (internal use only)
         enriched.pop("metadata", None)
-
-        # Add git info
-        enriched["git"] = _get_git_info(enriched["file"], workspace)
 
         enriched_results.append(enriched)
 

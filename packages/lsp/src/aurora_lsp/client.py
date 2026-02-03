@@ -21,6 +21,7 @@ try:
     from multilspy.language_server import LanguageServer
     from multilspy.multilspy_config import Language, MultilspyConfig
     from multilspy.multilspy_logger import MultilspyLogger
+
     MULTILSPY_AVAILABLE = True
 except ImportError:
     MULTILSPY_AVAILABLE = False
@@ -101,14 +102,19 @@ class AuroraLSPClient:
 
         async with self._lock:
             if lang_key not in self._servers:
-                # Create logger if not exists
+                # Create logger if not exists (with suppressed output)
                 if self._logger is None:
+                    import logging as _logging
+
                     self._logger = MultilspyLogger()
+                    # Suppress INFO logs AFTER creating MultilspyLogger
+                    # (MultilspyLogger.__init__ resets level to INFO)
+                    _logging.getLogger("multilspy").setLevel(_logging.WARNING)
 
                 # Create config
                 config = MultilspyConfig(code_language=lang)
 
-                logger.info(f"Starting {lang_key} language server for {self.workspace}")
+                logger.debug(f"Starting {lang_key} language server for {self.workspace}")
 
                 # Create server (sync)
                 server = LanguageServer.create(config, self._logger, str(self.workspace))
@@ -153,7 +159,8 @@ class AuroraLSPClient:
             refs = await server.request_references(rel_path, line, col)
             return self._normalize_locations(refs)
         except Exception as e:
-            logger.warning(f"request_references failed: {e}")
+            # Debug level - this is expected for some symbols (bad positions, non-referenceable)
+            logger.debug(f"request_references failed: {e}")
             return []
 
     async def request_definition(

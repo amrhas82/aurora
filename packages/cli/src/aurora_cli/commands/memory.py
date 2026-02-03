@@ -21,8 +21,6 @@ from typing import Any
 import click
 from rich.console import Console
 from rich.live import Live
-from rich.panel import Panel
-from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
 
@@ -36,6 +34,111 @@ __all__ = ["memory_group", "run_indexing", "display_indexing_summary"]
 
 logger = logging.getLogger(__name__)
 console = Console()
+
+# Lazy-loaded LSP instance for usage enrichment
+_lsp_instance = None
+
+
+def _is_garbage_symbol_name(name: str) -> bool:
+    """Check if symbol name is garbage from bad indexing."""
+    if not name or name == "<unnamed>":
+        return True
+    return (
+        "\n" in name  # Multi-line = not a real symbol
+        or name.startswith(" ")  # Leading space = bad parse
+        or len(name) < 2  # Too short
+        or name in ("str", "int", "bool", "None", "True", "False")  # Built-ins
+    )
+
+
+def _clean_symbol_name(name: str) -> str:
+    """Clean symbol name for display, returning placeholder if garbage."""
+    if _is_garbage_symbol_name(name):
+        return "<chunk>"
+    return name
+
+
+def _get_lsp_usage(file_path: str, line_start: int, symbol_name: str = "") -> dict[str, Any]:
+    """Get LSP usage data for a code symbol.
+
+    Args:
+        file_path: Path to the file containing the symbol
+        line_start: Starting line number (1-indexed)
+        symbol_name: Name of the symbol to find column position
+
+    Returns:
+        Dict with 'used_by' string and 'top_files' list
+    """
+    global _lsp_instance
+
+    # Only try to get LSP data for code files with valid symbol names
+    if not file_path or line_start <= 0:
+        return {"used_by": "-", "top_files": []}
+
+    # Skip invalid symbol names (garbage from bad indexing)
+    if _is_garbage_symbol_name(symbol_name):
+        return {"used_by": "-", "top_files": []}
+
+    try:
+        if _lsp_instance is None:
+            from aurora_lsp.facade import AuroraLSP
+
+            _lsp_instance = AuroraLSP(Path.cwd())
+            logger.debug("Initialized LSP for usage enrichment")
+
+        # Suppress multilspy INFO logs during LSP operations
+        import logging as _logging
+
+        multilspy_logger = _logging.getLogger("multilspy")
+        old_level = multilspy_logger.level
+        multilspy_logger.setLevel(_logging.WARNING)
+
+        # LSP uses 0-indexed lines
+        line_0indexed = line_start - 1
+
+        # Find column position of symbol name in the line
+        col = 0
+        if symbol_name:
+            try:
+                # Read the line to find symbol position
+                file_p = Path(file_path)
+                if file_p.exists():
+                    lines = file_p.read_text().splitlines()
+                    if 0 <= line_0indexed < len(lines):
+                        line_content = lines[line_0indexed]
+                        symbol_pos = line_content.find(symbol_name)
+                        if symbol_pos >= 0:
+                            col = symbol_pos
+            except Exception:
+                pass  # Fall back to col=0
+
+        # Get usage summary (with suppressed multilspy logs)
+        try:
+            summary = _lsp_instance.get_usage_summary(file_path, line_0indexed, col=col)
+        finally:
+            multilspy_logger.setLevel(old_level)
+
+        total_usages = summary.get("total_usages", 0)
+        files_affected = summary.get("files_affected", 0)
+
+        # Extract top files from usages_by_file (sorted by usage count)
+        usages_by_file = summary.get("usages_by_file", {})
+        sorted_files = sorted(
+            usages_by_file.keys(), key=lambda f: len(usages_by_file[f]), reverse=True
+        )
+        top_files = sorted_files[:5]  # Top 5 files
+
+        # Format as "N files(M)"
+        used_by = f"{files_affected} files({total_usages})" if files_affected > 0 else "-"
+
+        return {"used_by": used_by, "top_files": top_files}
+
+    except ImportError:
+        logger.debug("aurora-lsp not available")
+        return {"used_by": "-", "top_files": []}
+    except Exception as e:
+        logger.debug(f"LSP usage lookup failed: {e}")
+        return {"used_by": "-", "top_files": []}
 
 
 def _start_background_model_loading() -> None:
@@ -648,58 +751,6 @@ def search_command(
     else:
         _display_rich_results(results, query, show_content, config, show_scores)
 
-    # Save results to cache for 'aur mem get' command
-    _save_search_cache(results)
-
-
-@memory_group.command(name="get")
-@click.argument("index", type=int)
-@click.option(
-    "--format",
-    "output_format",
-    type=click.Choice(["rich", "json"]),
-    default="rich",
-    help="Output format",
-)
-@click.pass_context
-@handle_errors
-def get_command(_ctx: click.Context, index: int, output_format: str) -> None:
-    r"""Retrieve full content of a search result by index.
-
-    INDEX is the 1-based result number from the last search.
-
-    \b
-    Examples:
-        # Get first result from last search
-        aur mem get 1
-
-        \b
-        # Get third result with JSON output
-        aur mem get 3 --format json
-    """
-    # Load cached results
-    results = _load_search_cache()
-
-    if not results:
-        console.print("\n[yellow]No search results cached.[/]")
-        console.print("[dim]Run 'aur mem search <query>' first.[/]\n")
-        raise click.Abort()
-
-    # Validate index (1-based)
-    if index < 1 or index > len(results):
-        console.print(f"\n[red]Index {index} out of range.[/]")
-        console.print(f"[dim]Last search had {len(results)} results (valid: 1-{len(results)})[/]\n")
-        raise click.Abort()
-
-    # Get result (convert to 0-based)
-    result = results[index - 1]
-
-    # Display
-    if output_format == "json":
-        click.echo(json.dumps(result.__dict__, indent=2, default=str))
-    else:
-        _display_single_result(result, index, len(results))
-
 
 @memory_group.command(name="stats")
 @click.option(
@@ -926,14 +977,14 @@ def _display_rich_results(
             "  • [cyan]Using grep for exact matches[/]: grep -r 'term' .\n",
         )
 
-    # Create results table
+    # Create results table - Type first, Used by instead of Commits/Modified
+    # Per LSP_IMPLEMENTATION_PLAN.md: Type | File | Name | Lines | Used by | Score
     table = Table(show_header=True, header_style="bold magenta")
-    table.add_column("File", style="yellow", width=28)
-    table.add_column("Type", style="green", width=8)
-    table.add_column("Name", style="cyan", width=18)
-    table.add_column("Lines", style="dim", width=9)
-    table.add_column("Commits", style="magenta", width=7, justify="right")
-    table.add_column("Modified", style="dim cyan", width=9)
+    table.add_column("Type", style="green", width=6)
+    table.add_column("File", style="yellow", width=22)
+    table.add_column("Name", style="cyan", width=20)
+    table.add_column("Lines", style="dim", width=10)
+    table.add_column("Used by", style="magenta", width=14)
     table.add_column("Score", justify="right", style="bold blue", width=7)
 
     if show_content:
@@ -948,41 +999,20 @@ def _display_rich_results(
         file_path = Path(result.file_path).name  # Just filename
         element_type_full = result.metadata.get("type", "unknown")
         element_type = _get_type_abbreviation(element_type_full)
-        name = result.metadata.get("name", "<unnamed>")
+        raw_name = result.metadata.get("name", "<unnamed>")
+        name = _clean_symbol_name(raw_name)
         line_start, line_end = result.line_range
         line_range_str = f"{line_start}-{line_end}"
 
-        # Get git metadata (may not be available for all chunks)
-        commit_count = result.metadata.get("commit_count")
-        last_modified = result.metadata.get("last_modified")
-
-        # Format git metadata for display
-        commits_text = str(commit_count) if commit_count is not None else "-"
-
-        # Format last_modified timestamp as relative time
-        if last_modified:
-            from datetime import datetime
-
-            try:
-                # last_modified is a Unix timestamp
-                mod_time = datetime.fromtimestamp(last_modified)
-                now = datetime.now()
-                delta = now - mod_time
-
-                if delta.days > 365:
-                    modified_text = f"{delta.days // 365}y ago"
-                elif delta.days > 30:
-                    modified_text = f"{delta.days // 30}mo ago"
-                elif delta.days > 0:
-                    modified_text = f"{delta.days}d ago"
-                elif delta.seconds > 3600:
-                    modified_text = f"{delta.seconds // 3600}h ago"
-                else:
-                    modified_text = "recent"
-            except (ValueError, OSError):
-                modified_text = "-"
+        # Get LSP "Used by" data for code chunks
+        if element_type_full in ("function", "method", "class", "code"):
+            lsp_data = _get_lsp_usage(result.file_path, line_start, raw_name)
+            used_by_text = lsp_data["used_by"]
+            # Store top_files in result for --show-scores view
+            result.metadata["_lsp_top_files"] = lsp_data["top_files"]
         else:
-            modified_text = "-"
+            used_by_text = "-"
+            result.metadata["_lsp_top_files"] = []
 
         # Format score with color and low confidence indicator
         score = result.hybrid_score
@@ -999,13 +1029,13 @@ def _display_rich_results(
         else:
             score_text = _format_score(score)
 
+        # Row order: Type | File | Name | Lines | Used by | Score
         row = [
-            _truncate_text(file_path, 30),
             element_type,
-            _truncate_text(name, 20),
+            _truncate_text(file_path, 24),
+            _truncate_text(name, 22),
             line_range_str,
-            commits_text,
-            modified_text,
+            used_by_text,
             score_text,
         ]
 
@@ -1197,7 +1227,8 @@ def _format_score_box(
     file_path = result.metadata.get("file_path", "unknown")
     element_type_full = result.metadata.get("type", "unknown")
     element_type = _get_type_abbreviation(element_type_full)
-    name = result.metadata.get("name", "<unnamed>")
+    raw_name = result.metadata.get("name", "<unnamed>")
+    name = _clean_symbol_name(raw_name)
     line_start = result.metadata.get("line_start", 0)
     line_end = result.metadata.get("line_end", 0)
 
@@ -1277,8 +1308,8 @@ def _format_score_box(
     semantic_padding = content_width - len(semantic_text)
     lines.append(f"│{semantic_text}{' ' * semantic_padding} │")
 
-    # Activation score line (last, uses └) with explanation
-    activation_score_str = f"  └─ Activation: {result.activation_score:.3f}"
+    # Activation score line with explanation (uses ├ since Git/Used by follow)
+    activation_score_str = f"  ├─ Activation: {result.activation_score:.3f}"
     if activation_explanation:
         activation_text = f"{activation_score_str} ({activation_explanation})"
     else:
@@ -1290,26 +1321,72 @@ def _format_score_box(
     activation_padding = content_width - len(activation_text)
     lines.append(f"│{activation_text}{' ' * activation_padding} │")
 
-    # Git metadata line (if available)
+    # Git metadata line - format with relative time
     commit_count = result.metadata.get("commit_count")
     last_modified = result.metadata.get("last_modified")
 
-    if commit_count is not None or last_modified:
-        git_parts = []
-        if commit_count is not None:
-            plural = "commit" if commit_count == 1 else "commits"
-            git_parts.append(f"{commit_count} {plural}")
-        if last_modified:
-            git_parts.append(f"last modified {last_modified}")
+    git_parts = []
+    if commit_count is not None:
+        plural = "commit" if commit_count == 1 else "commits"
+        git_parts.append(f"{commit_count} {plural}")
+    if last_modified:
+        # Format as relative time
+        from datetime import datetime
 
-        if git_parts:
-            git_text = f"Git: {', '.join(git_parts)}"
-            # Truncate if too long
-            max_git_length = content_width - 2
-            if len(git_text) > max_git_length:
-                git_text = _truncate_text(git_text, max_git_length)
-            git_padding = content_width - len(git_text)
-            lines.append(f"│ {git_text}{' ' * git_padding}│")
+        try:
+            mod_time = datetime.fromtimestamp(last_modified)
+            now = datetime.now()
+            delta = now - mod_time
+            if delta.days > 365:
+                time_str = f"{delta.days // 365}y ago"
+            elif delta.days > 30:
+                time_str = f"{delta.days // 30}mo ago"
+            elif delta.days > 0:
+                time_str = f"{delta.days}d ago"
+            elif delta.seconds > 3600:
+                time_str = f"{delta.seconds // 3600}h ago"
+            else:
+                time_str = "recent"
+            git_parts.append(f"modified {time_str}")
+            git_parts.append(str(last_modified))  # Unix timestamp
+        except (ValueError, OSError):
+            pass
+
+    if git_parts:
+        git_text = f"  ├─ Git:        {', '.join(git_parts)}"
+    else:
+        git_text = "  ├─ Git:        -"
+
+    # Truncate if too long
+    if len(git_text) > content_width - 2:
+        git_text = _truncate_text(git_text, content_width - 2)
+    git_padding = content_width - len(git_text)
+    lines.append(f"│{git_text}{' ' * git_padding} │")
+
+    # Used by line (last, uses └) - LSP call relationship data
+    top_files = result.metadata.get("_lsp_top_files", [])
+    element_type = result.metadata.get("type", "")
+
+    if element_type in ("function", "method", "class", "code") and top_files:
+        # Format top files: "12 files (run.py, executor.py, runner.py +9)"
+        if len(top_files) <= 3:
+            files_str = ", ".join(Path(f).name for f in top_files)
+        else:
+            shown = ", ".join(Path(f).name for f in top_files[:3])
+            files_str = f"{shown} +{len(top_files) - 3}"
+        used_by_text = f"  └─ Used by:    {len(top_files)} files ({files_str})"
+    elif element_type in ("function", "method", "class", "code"):
+        # Code but no LSP data available
+        used_by_text = "  └─ Used by:    -"
+    else:
+        # Non-code (kb, doc)
+        used_by_text = "  └─ Used by:    -"
+
+    # Truncate if too long
+    if len(used_by_text) > content_width - 2:
+        used_by_text = _truncate_text(used_by_text, content_width - 2)
+    used_by_padding = content_width - len(used_by_text)
+    lines.append(f"│{used_by_text}{' ' * used_by_padding} │")
 
     # Footer line (content_width + 1 to match header/content line widths)
     footer_line = f"└{'─' * (content_width + 1)}┘"
@@ -1336,6 +1413,9 @@ def _format_score_box(
         elif "Git:" in line:
             # Git metadata in dim
             text.append(line + "\n", style="dim")
+        elif "Used by:" in line:
+            # Used by in magenta (LSP data)
+            text.append(line + "\n", style="magenta")
         else:
             # Footer
             text.append(line + "\n", style="cyan")
@@ -1551,96 +1631,6 @@ def _explain_activation_score(metadata: dict[str, Any], _activation_score: float
             pass
 
     return ", ".join(parts)
-
-
-def _save_search_cache(results: list[SearchResult]) -> None:
-    """Save search results to cache file for 'aur mem get' command.
-
-    Args:
-        results: List of search results to cache
-
-    """
-    import pickle
-    import tempfile
-
-    cache_file = Path(tempfile.gettempdir()) / "aurora_search_cache.pkl"
-    try:
-        with open(cache_file, "wb") as f:
-            pickle.dump(results, f)
-    except Exception as e:
-        logger.warning(f"Failed to cache search results: {e}")
-
-
-def _load_search_cache() -> list[SearchResult] | None:
-    """Load cached search results from file.
-
-    Returns:
-        List of cached results, or None if cache doesn't exist or is expired
-
-    """
-    import pickle
-    import tempfile
-    import time
-
-    cache_file = Path(tempfile.gettempdir()) / "aurora_search_cache.pkl"
-
-    if not cache_file.exists():
-        return None
-
-    # Check if cache is expired (10 minutes)
-    cache_age = time.time() - cache_file.stat().st_mtime
-    if cache_age > 600:
-        return None
-
-    try:
-        with open(cache_file, "rb") as f:
-            return pickle.load(f)  # nosec B301 - local trusted cache file
-    except Exception as e:
-        logger.warning(f"Failed to load search cache: {e}")
-        return None
-
-
-def _display_single_result(result: SearchResult, index: int, total: int) -> None:
-    """Display a single search result with full content.
-
-    Args:
-        result: Search result to display
-        index: 1-based index in result list
-        total: Total number of results
-
-    """
-    # Header
-    console.print()
-    console.print(f"[bold cyan]Result #{index} of {total}[/]")
-    console.print()
-
-    # Metadata table
-    meta_table = Table(show_header=False, box=None, padding=(0, 2))
-    meta_table.add_column("Key", style="dim")
-    meta_table.add_column("Value")
-
-    meta_table.add_row("File:", result.file_path)
-    if result.metadata.get("name"):
-        meta_table.add_row("Name:", result.metadata["name"])
-    if result.line_range and result.line_range != (0, 0):
-        meta_table.add_row("Lines:", f"{result.line_range[0]}-{result.line_range[1]}")
-    meta_table.add_row("Score:", f"{result.hybrid_score:.3f}")
-    meta_table.add_row("  BM25:", f"{result.bm25_score:.3f}")
-    meta_table.add_row("  Semantic:", f"{result.semantic_score:.3f}")
-    meta_table.add_row("  Activation:", f"{result.activation_score:.3f}")
-
-    console.print(meta_table)
-    console.print()
-
-    # Content with syntax highlighting
-    # Detect language from file extension
-    file_ext = Path(result.file_path).suffix.lstrip(".")
-    lang_map = {"py": "python", "js": "javascript", "ts": "typescript", "md": "markdown"}
-    language = lang_map.get(file_ext, file_ext or "text")
-
-    syntax = Syntax(result.content, language, theme="monokai", line_numbers=False)
-    console.print(Panel(syntax, border_style="dim"))
-    console.print()
 
 
 if __name__ == "__main__":

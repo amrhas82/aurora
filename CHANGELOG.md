@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-02-03
+
+### Fixed
+
+**Package Structure:**
+- Bundle `aurora_lsp` into `aurora-actr` instead of separate package
+- Remove `aurora-lsp` PyPI dependency (now included directly)
+- Add `multilspy>=0.0.15` as direct dependency
+
+### Deprecated
+
+- `aurora-lsp` package on PyPI (use `aurora-actr>=0.13.1` instead)
+
 ## [0.13.0] - 2026-02-03
 
 ### Added

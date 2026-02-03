@@ -16,6 +16,7 @@ except ImportError:
 
 from aurora_mcp.tools import AuroraMCPTools
 from aurora_mcp.lsp_tool import lsp as lsp_tool
+from aurora_mcp.mem_search_tool import mem_search as mem_search_tool
 
 
 class AuroraMCPServer:
@@ -68,6 +69,15 @@ class AuroraMCPServer:
             """LSP Code Intelligence - dead code detection, impact analysis, pre-edit checks."""
             return lsp_tool(action=action, path=path, line=line)
 
+        # Register mem_search tool
+        @self.mcp.tool(
+            name="mem_search",
+            description=mem_search_tool.__doc__ or "Search indexed code with LSP enrichment",
+        )
+        def mem_search(query: str, limit: int = 5) -> list[dict]:
+            """Search indexed code and knowledge base with LSP context."""
+            return mem_search_tool(query=query, limit=limit)
+
     def run(self) -> None:
         """Run the MCP server."""
         self.mcp.run()
@@ -82,6 +92,12 @@ class AuroraMCPServer:
                     "description": "LSP Code Intelligence",
                     "readOnlyHint": True,
                     "title": "LSP Code Intelligence",
+                },
+                {
+                    "name": "mem_search",
+                    "description": "Search indexed code with LSP enrichment",
+                    "readOnlyHint": True,
+                    "title": "Memory Search",
                 },
             ]
             return tools

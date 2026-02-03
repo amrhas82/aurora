@@ -315,6 +315,10 @@ def _get_usage_only(result: dict[str, Any], workspace: Path) -> dict[str, Any]:
     # Calculate risk
     result["risk"] = _calculate_risk(files_affected, total_usages, complexity)
 
+    # #UNUSED marker: flag symbols with very low usage (candidates for removal)
+    if total_usages <= 2:
+        result["unused"] = True
+
     return result
 
 

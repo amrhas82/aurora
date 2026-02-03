@@ -8,10 +8,10 @@
 | Category | Live | Partial | Missing | Total |
 |----------|------|---------|---------|-------|
 | Reference Analysis | 4 | 1 | 1 | 6 |
-| Code Quality Markers | 3 | 0 | 3 | 6 |
+| Code Quality Markers | 4 | 0 | 2 | 6 |
 | File Relationships | 0 | 1 | 2 | 3 |
 | Auto-Triggers | 0 | 0 | 1 | 1 |
-| **Total** | **7** | **2** | **7** | **16** |
+| **Total** | **8** | **2** | **6** | **16** |
 
 ---
 
@@ -51,7 +51,7 @@
 | **#DEADCODE (accurate)** | ✅ LIVE | LSP references per symbol | Python (tested) | ~20s/dir | 95%+ accuracy |
 | **#REFAC** (high usage) | ✅ LIVE | Usage count > 10 = "high" risk | Python (tested) | ~1s/symbol | Part of `lsp impact` |
 | **#COMPLEX** | ✅ LIVE | Tree-sitter branch counting | **Python only** | <10ms/file | Shown as `c:95` |
-| **#UNUSED** (low usage) | ❌ MISSING | Would use usage count <= 2 | - | - | Easy to add |
+| **#UNUSED** (low usage) | ✅ LIVE | `unused: true` when refs <= 2 | All (uses LSP count) | ~1s/symbol | In mem_search + lsp check |
 | **#TYPE** | ❌ MISSING | Would need type checker | - | - | Language-specific |
 
 ### File Relationships
@@ -235,7 +235,7 @@ Both fast and accurate modes miss:
 1. ✅ ~~Add `--accurate` flag to deadcode~~ DONE
 2. ✅ ~~Add complexity to mem_search output~~ DONE
 3. ✅ ~~Add risk calculation~~ DONE
-4. Add `#UNUSED` marker (usage <= 2)
+4. ✅ ~~Add `#UNUSED` marker (usage <= 2)~~ DONE
 
 ### Medium Term (3-5 days each)
 1. Add JavaScript/TypeScript complexity (tree-sitter-typescript)

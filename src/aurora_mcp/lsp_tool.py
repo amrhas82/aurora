@@ -338,7 +338,7 @@ def lsp(
 
         total_usages = summary.get("total_usages", 0)
 
-        return {
+        result = {
             "action": "check",
             "path": path,
             "line": line,
@@ -346,6 +346,12 @@ def lsp(
             "used_by": total_usages,
             "risk": _calculate_risk(total_usages),
         }
+
+        # #UNUSED marker: flag symbols with very low usage (candidates for removal)
+        if total_usages <= 2:
+            result["unused"] = True
+
+        return result
 
     else:
         raise ValueError(f"Unknown action: {action}. Use: deadcode, impact, check")

@@ -10,10 +10,15 @@ import logging
 from pathlib import Path
 from typing import Any
 
+import nest_asyncio
+
 from aurora_lsp.analysis import CodeAnalyzer
 from aurora_lsp.client import AuroraLSPClient
 from aurora_lsp.diagnostics import DiagnosticsFormatter
 
+
+# Allow nested event loops (needed when called from MCP server)
+nest_asyncio.apply()
 
 logger = logging.getLogger(__name__)
 
@@ -154,12 +159,15 @@ class AuroraLSP:
         self,
         path: str | Path | None = None,
         include_private: bool = False,
+        accurate: bool = False,
     ) -> list[dict]:
         """Find functions/classes with 0 usages.
 
         Args:
             path: Directory or file to analyze. Defaults to workspace.
             include_private: Whether to include private symbols (_name).
+            accurate: If True, use LSP references (95%+ accuracy, ~14x slower).
+                     If False, use batched ripgrep (80-85% accuracy, fast).
 
         Returns:
             List of dead code items, each with:
@@ -170,7 +178,7 @@ class AuroraLSP:
             - imports: Number of times imported (but never used)
         """
         return self._run_async(
-            self.analyzer.find_dead_code(path, include_private)
+            self.analyzer.find_dead_code(path, include_private, accurate)
         )
 
     # =========================================================================

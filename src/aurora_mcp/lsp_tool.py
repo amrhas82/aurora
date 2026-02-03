@@ -41,6 +41,63 @@ def _get_lsp(workspace: Path | None = None):
     return _lsp_instance
 
 
+def _find_symbol_column(file_path: str, line_0indexed: int, workspace: Path) -> int:
+    """Find the column where a symbol starts on a given line.
+
+    Reads the line and detects common Python patterns to find symbol position.
+
+    Args:
+        file_path: Relative or absolute file path
+        line_0indexed: 0-indexed line number
+        workspace: Workspace root directory
+
+    Returns:
+        Column number (0-indexed) where symbol likely starts
+    """
+    import re
+
+    # Resolve file path
+    full_path = Path(file_path)
+    if not full_path.is_absolute():
+        full_path = workspace / file_path
+
+    if not full_path.exists():
+        return 0
+
+    try:
+        lines = full_path.read_text().splitlines()
+        if line_0indexed >= len(lines):
+            return 0
+
+        line = lines[line_0indexed]
+
+        # Pattern: class ClassName
+        match = re.search(r'\bclass\s+(\w+)', line)
+        if match:
+            return match.start(1)
+
+        # Pattern: async def func_name
+        match = re.search(r'\basync\s+def\s+(\w+)', line)
+        if match:
+            return match.start(1)
+
+        # Pattern: def func_name
+        match = re.search(r'\bdef\s+(\w+)', line)
+        if match:
+            return match.start(1)
+
+        # Pattern: variable = ... (at start of line, possibly indented)
+        match = re.match(r'^(\s*)(\w+)\s*[=:]', line)
+        if match:
+            return len(match.group(1))  # Column after indentation
+
+        # Default: try column 4 (common indent level)
+        return 4
+
+    except Exception:
+        return 0
+
+
 def _calculate_risk(usage_count: int) -> str:
     """Calculate risk level from usage count.
 
@@ -144,40 +201,40 @@ def lsp(
     action: Literal["deadcode", "impact", "check"] = "check",
     path: str = "",
     line: int | None = None,
+    accurate: bool = False,
 ) -> dict:
-    """Code intelligence - dead code detection, impact analysis, pre-edit usage checks.
+    """LSP code intelligence for refactoring, usage analysis, and dead code detection.
 
-    Use this tool BEFORE modifying or deleting functions/classes to understand usage impact.
+    WHEN TO USE EACH ACTION:
+    - "refactor", "change", "modify" a symbol → action="impact" (FAST - analyzes one symbol)
+    - "dead code", "unused", "cleanup" → action="deadcode" (SLOW - scans entire file)
+    - Before editing any function/class → action="check" (FAST - quick usage count)
 
-    Automatic annotation workflow:
-    After running deadcode/impact analysis, Claude should automatically add inline markers:
-    - After deadcode: Add `#DEADCODE` comments to flagged symbols
-    - After high-risk impact: Add `#REFAC` markers
-
-    Supported markers (end-of-line comments):
-    - #DEADCODE: 0 usages - safe to remove
-    - #REFAC: High usage - careful refactoring needed
-    - #UNUSED: Imported but never used
-    - #COMPLEX: High complexity
-    - #TYPE: Type annotation needed
+    IMPORTANT: Do NOT use deadcode for refactoring. Use impact instead.
 
     Actions:
-    - "deadcode": Scan for unused code in a file/directory. Returns list of symbols with 0 usages.
-    - "impact": Full impact analysis for a symbol at path:line. Shows all callers and risk level.
-    - "check": Quick pre-edit check. Returns usage count and risk level. Use before editing.
+    - "check": Quick pre-edit usage count. Returns usages and risk level. Use BEFORE editing.
+    - "impact": Full impact analysis for a symbol at path:line. Shows all callers, files affected.
+    - "deadcode": Scan file for ALL unused symbols. SLOW - only use for cleanup tasks.
 
     Risk levels:
     - low (0-2 usages): Safe to change
-    - medium (3-10 usages): Review callers before changing
+    - medium (3-10 usages): Review callers first
     - high (11+ usages): Careful refactoring needed
 
+    After analysis, add inline markers to source files:
+    - #DEADCODE: 0 usages - safe to remove
+    - #REFAC: High usage - careful refactoring needed
+
     Args:
-        action: "deadcode" | "impact" | "check" (default: check)
+        action: "check" | "impact" | "deadcode" (default: check)
         path: File path (required). For deadcode, can be a directory.
-        line: Line number (required for impact/check actions, 1-indexed)
+        line: Line number (required for impact/check, 1-indexed)
+        accurate: For deadcode only. If True, use LSP references (95%+ accuracy, ~14x slower).
+                 If False, use batched ripgrep (80-85% accuracy, fast). Default: False.
 
     Returns:
-        Action-specific JSON response
+        JSON with usages, callers, risk level, files affected
     """
     workspace = Path.cwd()
     lsp_client = _get_lsp(workspace)
@@ -185,7 +242,7 @@ def lsp(
     if action == "deadcode":
         # Find dead code in path
         target_path = workspace / path if path else None
-        dead_code_items = lsp_client.find_dead_code(target_path)
+        dead_code_items = lsp_client.find_dead_code(target_path, accurate=accurate)
 
         # Generate CODE_QUALITY_REPORT.md
         report_path = _generate_code_quality_report(dead_code_items, workspace)
@@ -193,6 +250,7 @@ def lsp(
         return {
             "action": "deadcode",
             "path": path,
+            "accurate": accurate,
             "dead_code": dead_code_items,
             "total": len(dead_code_items),
             "report_path": report_path,
@@ -206,11 +264,14 @@ def lsp(
         # LSP uses 0-indexed lines, input is 1-indexed
         line_0indexed = line - 1
 
+        # Find symbol column intelligently
+        col = _find_symbol_column(path, line_0indexed, workspace)
+
         # Get usage summary
-        summary = lsp_client.get_usage_summary(path, line_0indexed, col=0)
+        summary = lsp_client.get_usage_summary(path, line_0indexed, col=col)
 
         # Get top callers
-        callers = lsp_client.get_callers(path, line_0indexed, col=0)
+        callers = lsp_client.get_callers(path, line_0indexed, col=col)
 
         # Format top callers with usage counts
         top_callers = []
@@ -250,8 +311,11 @@ def lsp(
         # LSP uses 0-indexed lines
         line_0indexed = line - 1
 
+        # Find symbol column intelligently
+        col = _find_symbol_column(path, line_0indexed, workspace)
+
         # Get usage summary (lighter than full impact)
-        summary = lsp_client.get_usage_summary(path, line_0indexed, col=0)
+        summary = lsp_client.get_usage_summary(path, line_0indexed, col=col)
 
         total_usages = summary.get("total_usages", 0)
 

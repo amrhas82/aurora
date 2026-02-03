@@ -7,11 +7,11 @@
 
 | Category | Live | Partial | Missing | Total |
 |----------|------|---------|---------|-------|
-| Reference Analysis | 5 | 1 | 0 | 6 |
-| Code Quality Markers | 4 | 0 | 2 | 6 |
+| Reference Analysis | 6 | 0 | 0 | 6 |
+| Code Quality Markers | 5 | 0 | 1 | 6 |
 | File Relationships | 1 | 1 | 1 | 3 |
 | Auto-Triggers | 0 | 0 | 1 | 1 |
-| **Total** | **10** | **2** | **4** | **16** |
+| **Total** | **12** | **1** | **3** | **16** |
 
 ---
 
@@ -23,6 +23,7 @@
 | **Deadcode (fast)** | ✅ Full | ✅ ripgrep | ✅ ripgrep | ✅ ripgrep | ✅ ripgrep | ✅ ripgrep |
 | **Deadcode (accurate)** | ✅ Full | ⚠️ Untested | ⚠️ Untested | ⚠️ Untested | ⚠️ Untested | ⚠️ Untested |
 | **Complexity** | ✅ tree-sitter | ❌ Not impl | ❌ Not impl | ❌ Not impl | ❌ Not impl | ❌ Not impl |
+| **Calling (outgoing)** | ✅ tree-sitter | ❌ Not impl | ❌ Not impl | ❌ Not impl | ❌ Not impl | ❌ Not impl |
 | **Import filtering** | ✅ Custom | ❌ Not impl | ❌ Not impl | ❌ Not impl | ❌ Not impl | ❌ Not impl |
 | **Risk calculation** | ✅ Full | ⚠️ No complexity | ⚠️ No complexity | ⚠️ No complexity | ⚠️ No complexity | ⚠️ No complexity |
 
@@ -60,7 +61,7 @@
 |---------|--------|----------------|-----------|-------|-------|
 | **imports** (outgoing) | ⚠️ INDEXED | Tree-sitter `_extract_imports()` | Python only | <10ms/file | Not queryable via MCP |
 | **imported_by** (incoming) | ✅ LIVE | `lsp(action="imports")` via ripgrep | All languages | <1s | Query-time search |
-| **calls_files** | ❌ MISSING | Would derive from `calling` | - | - | Needs `calling` first |
+| **calls_files** | ❌ MISSING | Would derive from `calling` | Python (calling ready) | - | `calling` is now ready, need file mapping |
 
 ---
 
@@ -81,6 +82,7 @@
 │  - CodeAnalyzer.find_dead_code(accurate=False)                       │
 │  - CodeAnalyzer.find_usages()                                        │
 │  - CodeAnalyzer.get_callers()                                        │
+│  - CodeAnalyzer.get_callees()         ← Python only (tree-sitter)    │
 │  - _batched_ripgrep_search()          ← Language-agnostic            │
 │  - _get_complexity()                  ← Python only (tree-sitter)    │
 └─────────────────────────────┬───────────────────────────────────────┘
@@ -140,6 +142,8 @@ packages/lsp/src/aurora_lsp/languages/
 | `entry_decorators` | set[str] | Decorator entry points | `{"@click.command", "@app.route"}` |
 | `nested_patterns` | set[str] | Nested helper patterns | `{"wrapper", "inner", "on_*"}` |
 | `import_patterns` | list[str] | Import regex patterns | `[r"^\s*import\s+", ...]` |
+| `call_node_type` | str | AST node for calls | `"call"` |
+| `function_def_types` | set[str] | AST nodes for defs | `{"function_definition", "class_definition"}` |
 
 #### Registry API
 
@@ -148,6 +152,8 @@ from aurora_lsp.languages import (
     get_config,                    # Get full LanguageConfig for file
     get_language,                  # Get language name for file
     get_complexity_branch_types,   # Get branch types for complexity calc
+    get_call_node_type,            # Get AST node type for calls
+    get_function_def_types,        # Get AST node types for function defs
     is_entry_point,                # Check if name is entry point
     is_nested_helper,              # Check if name is nested helper
     supported_extensions,          # Get all supported extensions
@@ -162,6 +168,9 @@ is_entry_point("foo.py", "my_func")     # False
 is_entry_point("foo.py", "pytest_configure")  # True (matches pytest_*)
 
 branch_types = get_complexity_branch_types("foo.py")  # {"if_statement", ...}
+
+call_type = get_call_node_type("foo.py")             # "call"
+def_types = get_function_def_types("foo.py")         # {"function_definition", ...}
 ```
 
 #### Adding a New Language
@@ -246,7 +255,7 @@ dependencies = [
 
 ```python
 lsp(
-    action: "check" | "impact" | "deadcode",
+    action: "check" | "impact" | "deadcode" | "imports",
     path: str,           # File or directory
     line: int | None,    # Required for check/impact (1-indexed)
     accurate: bool,      # For deadcode: True=LSP refs (slow), False=ripgrep (fast)
@@ -258,6 +267,7 @@ lsp(
 | `check` | Quick usage count before editing | Python (tested) | ~1s |
 | `impact` | Full analysis with top callers | Python (tested) | ~2s |
 | `deadcode` | Find all unused symbols | All (fast), Python (accurate) | 2-20s |
+| `imports` | Find files that import this module | All (ripgrep) | <1s |
 
 ### `mem_search` Tool
 
@@ -320,7 +330,7 @@ Both fast and accurate modes miss:
 
 ### LSP Limitations
 - `jedi-language-server` doesn't provide diagnostics (no linting)
-- Outgoing calls (`calling`) not supported without AST parsing
+- Outgoing calls (`calling`) now use tree-sitter AST parsing (Python only)
 - Some language servers (Ruby/solargraph) less reliable
 
 ---
@@ -337,7 +347,8 @@ Both fast and accurate modes miss:
 1. Add JavaScript/TypeScript complexity (tree-sitter-typescript)
 2. Add JS/TS import filtering patterns
 3. ✅ ~~Build `imported_by` reverse lookup~~ DONE - `lsp(action="imports")`
-4. Add pre-edit hook for related files
+4. ✅ ~~Build `calling` (outgoing calls)~~ DONE - tree-sitter AST parsing (Python)
+5. Add pre-edit hook for related files
 
 ### Long Term
 1. Multi-language complexity support

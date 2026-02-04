@@ -199,10 +199,11 @@ class ClaudeMCPConfigurator(MCPConfigurator):
         was_configured = self.is_configured(project_path)
 
         # Remove existing aurora server if present (to update config)
+        # Use --scope local to match the add-json default scope
         if was_configured:
             try:
                 subprocess.run(
-                    ["claude", "mcp", "remove", "aurora"],
+                    ["claude", "mcp", "remove", "aurora", "--scope", "local"],
                     capture_output=True,
                     text=True,
                     check=False,  # Don't fail if not found
@@ -216,7 +217,7 @@ class ClaudeMCPConfigurator(MCPConfigurator):
 
         try:
             result = subprocess.run(
-                ["claude", "mcp", "add-json", "aurora", server_json],
+                ["claude", "mcp", "add-json", "aurora", server_json, "--scope", "local"],
                 capture_output=True,
                 text=True,
                 check=True,
@@ -224,13 +225,19 @@ class ClaudeMCPConfigurator(MCPConfigurator):
             if result.stderr and "error" in result.stderr.lower():
                 warnings.append(result.stderr.strip())
         except subprocess.CalledProcessError as e:
-            return ConfigResult(
-                success=False,
-                created=False,
-                config_path=config_path,
-                message=f"Failed to add MCP server: {e.stderr or e.stdout}",
-                warnings=warnings,
-            )
+            error_msg = (e.stderr or e.stdout or "").strip()
+            # If server already exists, treat as success (already configured)
+            if "already exists" in error_msg.lower():
+                # Server is already configured - this is fine
+                pass
+            else:
+                return ConfigResult(
+                    success=False,
+                    created=False,
+                    config_path=config_path,
+                    message=f"Failed to add MCP server: {error_msg}",
+                    warnings=warnings,
+                )
 
         # Configure permissions
         perm_result = self.configure_permissions(project_path)

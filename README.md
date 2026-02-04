@@ -269,7 +269,7 @@ Verdict: ✓ USEFUL
 Intervention predictability: 93%
 ```
 
-Identifies sessions where you got stuck, measures improvement over time.
+Identifies sessions where you got stuck and extracts learned rules ("antigens") to add to CLAUDE.md or your AI tool's instructions - preventing the same mistakes.
 
 ---
 

@@ -60,6 +60,7 @@ cd aurora && ./install.sh
 - **BM25** - Keyword search
 - **Git signals** - Recent changes rank higher
 - **Tree-sitter/cAST** - Code stored as class/method (Python, TypeScript, Java)
+- **LSP enrichment** - Risk level, usage count, complexity (see Code Intelligence below)
 - **Markdown indexing** - Search docs, save tokens
 
 ```bash
@@ -89,6 +90,11 @@ Refine your search:
   --limit N        More results (e.g., --limit 20)
   --type TYPE      Filter: function, class, method, kb, code
   --min-score 0.5  Higher relevance threshold
+
+LSP enrichment (automatic):
+  Risk column      LOW (0-2 refs) | MED (3-10) | HIGH (11+)
+  Used by          Files, refs, complexity % from LSP analysis
+  See Code Intelligence section below for lsp check/impact/related
 
 Detailed Score Breakdown:
 

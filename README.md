@@ -80,6 +80,7 @@ Found 5 results for 'soar reasoning'
 │ code   │ goals.py               │ <chunk>              │ 437-544    │ -      │ 7d ago   │   0.486 │
 └────────┴────────────────────────┴──────────────────────┴────────────┴────────┴──────────┴─────────┘
 Avg scores: Activation 0.916 | Semantic 0.867 | Hybrid 0.801
+Risk: LOW (0-2 refs) | MED (3-10) | HIGH (11+) · MCP: lsp check/impact/related
 
 Refine your search:
   --show-scores    Detailed score breakdown (BM25, semantic, activation)
@@ -87,12 +88,7 @@ Refine your search:
   --limit N        More results (e.g., --limit 20)
   --type TYPE      Filter: function, class, method, kb, code
   --min-score 0.5  Higher relevance threshold
-
-LSP enrichment (automatic):
-  Risk column      LOW (0-2 refs) | MED (3-10) | HIGH (11+)
-  Used by          Files, refs, complexity % from LSP analysis
-  See Code Intelligence section below for lsp check/impact/related
-
+  
 Detailed Score Breakdown:
 
 ┌─ core.py | code | generate_goals_json (Lines 1091-1175) ───────────────────────────────────────────┐

@@ -43,13 +43,11 @@ Keep this managed block so 'aur init --config' can refresh the instructions.
 
 ## Learned Rules
 
-**Exit Codes:** 0 = success, anything else = failure. Never say "done" after failed command. After 2 consecutive errors, STOP and ask.
+**Errors:** Non-zero exit or tool error = STOP. Never claim "done" with errors. 2 consecutive failures = ask user, don't retry.
 
-**Verification:** Implement ONE step at a time, verify each. After Edit, run tests/linter. After Read/Grep error, stop and report.
+**Verify:** Check path exists before Read/Edit. Run tests after Edit. One step at a time.
 
-**Stuck Detection:** Same tool 3+ times with no progress = STOP, try different approach or ask.
-
-**Resource Limits:** After interrupt/timeout/kill, use simpler alternatives or ask before retrying.
+**User Wins:** When user contradicts with evidence, don't push back. Re-read, acknowledge, try different.
 
 ---
 

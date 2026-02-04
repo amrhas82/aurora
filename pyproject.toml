@@ -55,6 +55,9 @@ dependencies = [
 
     # LSP integration (bundled)
     "multilspy>=0.0.15",
+
+    # ML/Embeddings (required for semantic search)
+    "sentence-transformers>=2.2.0",
 ]
 
 [project.urls]
@@ -70,10 +73,6 @@ aurora = "aurora_cli.main:cli"
 aurora-mcp = "aurora_mcp.server:main"
 
 [project.optional-dependencies]
-# Note: ML features (semantic search) are optional and auto-detected.
-# If you want semantic embeddings, manually install: pip install sentence-transformers torch
-# Aurora works fine without them using BM25 + ACT-R only.
-
 # Dev: Testing and development tools (contributors only)
 dev = [
     "pytest>=7.4.0",

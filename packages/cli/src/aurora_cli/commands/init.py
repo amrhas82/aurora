@@ -103,6 +103,51 @@ def validate_tool_ids(tool_ids: list[str]) -> None:
         raise ValueError(f"Invalid tool ID(s): {invalid_str}. Available tools: {available}")
 
 
+def _ensure_ml_dependencies() -> bool:
+    """Ensure ML dependencies are installed, auto-installing if needed.
+
+    Returns:
+        True if ML dependencies are available, False if installation failed
+
+    """
+    try:
+        import sentence_transformers  # noqa: F401
+
+        return True
+    except ImportError:
+        pass
+
+    # Auto-install sentence-transformers
+    console.print("[yellow]ML dependencies missing - installing sentence-transformers...[/]")
+
+    try:
+        subprocess.run(
+            ["pip", "install", "sentence-transformers"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        console.print("[green]✓[/] Installed sentence-transformers")
+
+        # Verify installation worked
+        try:
+            import importlib
+
+            importlib.invalidate_caches()
+            # Need to restart Python to pick up newly installed package
+            # For now, we'll continue and let the actual import happen later
+            return True
+        except ImportError:
+            console.print("[yellow]⚠[/] Package installed but may require restart")
+            return True
+    except subprocess.CalledProcessError as e:
+        console.print(f"[red]✗[/] Failed to install sentence-transformers: {e.stderr}")
+        return False
+    except FileNotFoundError:
+        console.print("[red]✗[/] pip not found - cannot auto-install")
+        return False
+
+
 def run_step_2_memory_indexing(project_path: Path) -> bool:
     """Run Step 2: Memory Indexing.
 
@@ -129,6 +174,15 @@ def run_step_2_memory_indexing(project_path: Path) -> bool:
 
     console.print("\n[bold]Step 2/3: Memory Indexing[/]")
     console.print("[dim]Indexing codebase for semantic search...[/]\n")
+
+    # Ensure ML dependencies are installed (auto-install if needed)
+    if not _ensure_ml_dependencies():
+        console.print("[red]✗[/] ML dependencies required for indexing")
+        if click.confirm("Skip this step and continue?", default=False):
+            console.print("[yellow]⚠[/] Skipping memory indexing")
+            return False
+        console.print("[red]Aborting initialization[/]")
+        raise SystemExit(1)
 
     # Determine project-specific db_path
     db_path = project_path / ".aurora" / "memory.db"

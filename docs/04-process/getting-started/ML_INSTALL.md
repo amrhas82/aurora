@@ -1,106 +1,71 @@
-# ML Dependencies Installation Guide
+# ML Dependencies
 
-Aurora uses optional ML dependencies for semantic search. You only need to install these if you plan to use:
-- `aur mem index` - Code indexing with embeddings
-- `aur mem search` - Semantic code search
-- `aur init` - Project initialization with indexing
-- `aur soar` - SOAR reasoning (uses memory retrieval)
+Aurora includes `sentence-transformers` as a required dependency for semantic search. It is installed automatically with Aurora.
 
-## Quick Install (CPU-Only, Recommended)
+## What's Included
 
-**For most users without NVIDIA GPU:**
+When you install Aurora, you get:
+- `sentence-transformers` - For generating text embeddings
+- Embedding model auto-downloads on first use (~88MB)
+
+## First Run
+
+On first use of memory indexing, the embedding model will download automatically:
 
 ```bash
-# 1. Install PyTorch (CPU version, ~100MB)
-pip install torch --index-url https://download.pytorch.org/whl/cpu
+$ aur init
+# ...
+Step 2/3: Memory Indexing
+Downloading embedding model: sentence-transformers/all-MiniLM-L6-v2 (~88MB)
+✓ Download complete!
+```
 
-# 2. Install sentence-transformers
+## CPU vs GPU
+
+By default, PyTorch installs with CPU support only. This is fine for Aurora's use case.
+
+**If you want GPU acceleration** (NVIDIA GPU only):
+
+```bash
+# Uninstall CPU version
+pip uninstall torch -y
+
+# Install CUDA version (~3GB)
+pip install torch
+```
+
+GPU only helps for very large codebases. CPU is fast enough for most projects.
+
+## Troubleshooting
+
+### Package not found after install
+
+If you installed Aurora but `sentence-transformers` is missing:
+
+```bash
+# Reinstall Aurora
+pip install -e . --force-reinstall
+
+# Or install directly
 pip install sentence-transformers
-
-# 3. Download embedding model
-aur doctor --fix-ml
 ```
 
-**Total download:** ~200MB (vs 3GB+ for GPU version)
+### Model download failed
 
-## Alternative: GPU Version
-
-**Only if you have an NVIDIA GPU and want GPU acceleration:**
+If the model fails to download:
 
 ```bash
-# Install with CUDA support (~3GB)
-pip install sentence-transformers
-
-# Download embedding model
-aur doctor --fix-ml
-```
-
-⚠️ **Warning:** GPU version downloads ~3GB of CUDA libraries. Only install if you have an NVIDIA GPU.
-
-## What Happens Without ML Dependencies?
-
-Aurora will work fine for all non-ML commands. When you try to use ML features, you'll get a helpful error:
-
-```
-$ aur mem index .
-
-[dim]Checking ML dependencies...[/]
-[bold red]ML Setup Required[/]
-sentence-transformers package not installed.
-
-[bold]Solution:[/]
-  1. Install PyTorch (CPU version):
-     [cyan]pip install torch --index-url https://download.pytorch.org/whl/cpu[/]
-
-  2. Install sentence-transformers:
-     [cyan]pip install sentence-transformers[/]
-
-  3. Download model:
-     [cyan]aur doctor --fix-ml[/]
-```
-
-## Do You Need GPU for Development?
-
-**No!** The CPU version is perfectly fine for:
-- ✅ Development and testing
-- ✅ Running Aurora CLI
-- ✅ Embedding generation (fast enough on CPU for the small model)
-- ✅ All Aurora features
-
-GPU only helps if you're:
-- ❌ Training large ML models (Aurora doesn't do this)
-- ❌ Processing huge batches of embeddings (Aurora uses small batches)
-
-## Uninstalling GPU Version
-
-If you accidentally installed the GPU version:
-
-```bash
-# Remove GPU dependencies
-pip uninstall torch torchvision torchaudio -y
-
-# Install CPU version
-pip install torch --index-url https://download.pytorch.org/whl/cpu
-
-# Verify size (should be ~100MB, not 3GB)
-pip show torch
-```
-
-## Quick Reference
-
-| Version | Download Size | Use Case |
-|---------|---------------|----------|
-| **CPU** (recommended) | ~200MB | Most users, dev work |
-| **GPU** (optional) | ~3GB | Only if you have NVIDIA GPU |
-
-## After Installation
-
-Once ML dependencies are installed:
-
-```bash
-# Verify installation
+# Manual download
 aur doctor --fix-ml
 
+# Or directly via Python
+python -c 'from sentence_transformers import SentenceTransformer; SentenceTransformer("all-MiniLM-L6-v2")'
+```
+
+### Verify installation
+
+```bash
+aur doctor --fix-ml
 # Should output:
 # ✓ sentence-transformers is installed
 # ✓ Embedding model already cached

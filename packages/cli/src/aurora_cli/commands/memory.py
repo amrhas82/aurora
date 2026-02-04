@@ -315,6 +315,42 @@ def _get_lsp_usage(
     }
 
 
+def _ensure_ml_installed() -> bool:
+    """Ensure ML dependencies are installed, auto-installing if needed.
+
+    Returns:
+        True if ML dependencies are available, False if installation failed
+
+    """
+    try:
+        import sentence_transformers  # noqa: F401
+
+        return True
+    except ImportError:
+        pass
+
+    # Auto-install sentence-transformers
+    console.print("[yellow]ML dependencies missing - installing sentence-transformers...[/]")
+
+    import subprocess
+
+    try:
+        subprocess.run(
+            ["pip", "install", "sentence-transformers"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        console.print("[green]✓[/] Installed sentence-transformers")
+        return True
+    except subprocess.CalledProcessError as e:
+        console.print(f"[red]✗[/] Failed to install sentence-transformers: {e.stderr}")
+        return False
+    except FileNotFoundError:
+        console.print("[red]✗[/] pip not found - cannot auto-install")
+        return False
+
+
 def _start_background_model_loading() -> None:
     """Start loading the embedding model in the background.
 
@@ -422,9 +458,36 @@ def run_indexing(
         out.print("[dim]Checking ML dependencies...[/]")
         validate_ml_ready(model_name=config.embedding_model, console=out)
         out.print("[green]✓[/] ML dependencies ready\n")
-    except MLDependencyError as e:
-        out.print(f"[bold red]ML Setup Required[/]\n{e}\n")
-        raise click.Abort()
+    except MLDependencyError:
+        # Auto-install sentence-transformers
+        out.print("[yellow]ML dependencies missing - installing sentence-transformers...[/]")
+        import subprocess
+
+        try:
+            subprocess.run(
+                ["pip", "install", "sentence-transformers"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            out.print("[green]✓[/] Installed sentence-transformers")
+
+            # Retry validation after install
+            try:
+                validate_ml_ready(model_name=config.embedding_model, console=out)
+                out.print("[green]✓[/] ML dependencies ready\n")
+            except MLDependencyError as e2:
+                out.print(f"[bold red]ML Setup Failed[/]\n{e2}\n")
+                out.print("[dim]You may need to restart your terminal after install.[/]")
+                raise click.Abort()
+        except subprocess.CalledProcessError as install_err:
+            out.print(
+                f"[bold red]Failed to install sentence-transformers[/]\n{install_err.stderr}\n"
+            )
+            raise click.Abort()
+        except FileNotFoundError:
+            out.print("[bold red]pip not found - cannot auto-install[/]")
+            raise click.Abort()
 
     # Initialize memory manager with config
     if show_db_path:
@@ -808,6 +871,11 @@ def search_command(
         # Show detailed score explanations
         aur mem search "authentication" --show-scores
     """
+    # Ensure ML dependencies are installed (auto-install if needed)
+    if not _ensure_ml_installed():
+        console.print("[red]ML dependencies required for search[/]")
+        raise click.Abort()
+
     # Start background model loading immediately (before any other work)
     # This gives the model a head start while we do other initialization
     _start_background_model_loading()

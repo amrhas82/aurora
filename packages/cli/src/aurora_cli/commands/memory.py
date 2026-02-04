@@ -1328,7 +1328,7 @@ def _display_rich_results(
     avg_hybrid = sum(r.hybrid_score for r in results) / len(results)
 
     console.print(f"\n[dim]Avg scores: Activation {avg_activation:.3f} | Semantic {avg_semantic:.3f} | Hybrid {avg_hybrid:.3f}[/]")
-    console.print("[dim]Risk: LOW (0-2 refs) | MED (3-10) | HIGH (11+) · Use lsp check/impact/related for details[/]")
+    console.print("[dim]Risk: LOW (0-2 refs) | MED (3-10) | HIGH (11+) · MCP: lsp check/impact/related[/]")
 
     # Show helpful tips for follow-up commands
     console.print("\n[dim]Refine your search:[/]")

@@ -32,15 +32,17 @@ def grep_count(symbol: str) -> tuple[int, int]:
     try:
         result = subprocess.run(
             ["grep", "-r", "--include=*.py", "-l", symbol, str(WORKSPACE / "packages")],
-            capture_output=True, text=True
+            capture_output=True,
+            text=True,
         )
-        files = [f for f in result.stdout.strip().split('\n') if f]
+        files = [f for f in result.stdout.strip().split("\n") if f]
 
         result2 = subprocess.run(
             ["grep", "-r", "--include=*.py", "-oh", symbol, str(WORKSPACE / "packages")],
-            capture_output=True, text=True
+            capture_output=True,
+            text=True,
         )
-        total = len(result2.stdout.strip().split('\n')) if result2.stdout.strip() else 0
+        total = len(result2.stdout.strip().split("\n")) if result2.stdout.strip() else 0
 
         return len(files), total
     except Exception:
@@ -60,9 +62,9 @@ async def main():
 
     try:
         for filepath, symbol, line, col in TEST_CASES:
-            print(f"\n{'='*60}")
+            print(f"\n{'=' * 60}")
             print(f"Symbol: {symbol}")
-            print(f"Location: {filepath}:{line+1} (0-indexed: {line})")
+            print(f"Location: {filepath}:{line + 1} (0-indexed: {line})")
             print("=" * 60)
 
             # Grep count (ground truth)
@@ -71,13 +73,13 @@ async def main():
 
             # LSP references
             refs = await client.request_references(filepath, line, col)
-            lsp_files = len(set(r['file'] for r in refs))
+            lsp_files = len(set(r["file"] for r in refs))
             print(f"LSP:   {len(refs)} references in {lsp_files} files")
 
             # Usage filtering
             usage_result = await analyzer.find_usages(filepath, line, col, include_imports=False)
-            usages = usage_result['total_usages']
-            imports = usage_result['total_imports']
+            usages = usage_result["total_usages"]
+            imports = usage_result["total_imports"]
             print(f"Split: {usages} usages + {imports} imports = {usages + imports} total")
 
             # Calculate capture rate (based on grep as baseline)
@@ -86,26 +88,32 @@ async def main():
             else:
                 capture = 0
 
-            results.append({
-                "symbol": symbol,
-                "grep_total": grep_total,
-                "grep_files": grep_files,
-                "lsp_refs": len(refs),
-                "lsp_files": lsp_files,
-                "usages": usages,
-                "imports": imports,
-                "capture": capture
-            })
+            results.append(
+                {
+                    "symbol": symbol,
+                    "grep_total": grep_total,
+                    "grep_files": grep_files,
+                    "lsp_refs": len(refs),
+                    "lsp_files": lsp_files,
+                    "usages": usages,
+                    "imports": imports,
+                    "capture": capture,
+                }
+            )
 
             if len(refs) > 0:
-                print(f"Sample refs: {[r['file'].split('/')[-1] + ':' + str(r['line']) for r in refs[:3]]}")
+                print(
+                    f"Sample refs: {[r['file'].split('/')[-1] + ':' + str(r['line']) for r in refs[:3]]}"
+                )
 
         # Summary
         print("\n" + "=" * 80)
         print("SUMMARY")
         print("=" * 80)
 
-        print(f"\n{'Symbol':<25} {'Grep':>8} {'LSP':>8} {'Usages':>8} {'Imports':>8} {'Capture':>10}")
+        print(
+            f"\n{'Symbol':<25} {'Grep':>8} {'LSP':>8} {'Usages':>8} {'Imports':>8} {'Capture':>10}"
+        )
         print("-" * 75)
 
         total_grep = 0
@@ -114,20 +122,28 @@ async def main():
         total_imports = 0
 
         for r in results:
-            print(f"{r['symbol']:<25} {r['grep_total']:>8} {r['lsp_refs']:>8} {r['usages']:>8} {r['imports']:>8} {r['capture']:>9.1f}%")
-            total_grep += r['grep_total']
-            total_lsp += r['lsp_refs']
-            total_usages += r['usages']
-            total_imports += r['imports']
+            print(
+                f"{r['symbol']:<25} {r['grep_total']:>8} {r['lsp_refs']:>8} {r['usages']:>8} {r['imports']:>8} {r['capture']:>9.1f}%"
+            )
+            total_grep += r["grep_total"]
+            total_lsp += r["lsp_refs"]
+            total_usages += r["usages"]
+            total_imports += r["imports"]
 
         print("-" * 75)
         overall = total_lsp / total_grep * 100 if total_grep > 0 else 0
-        print(f"{'TOTAL':<25} {total_grep:>8} {total_lsp:>8} {total_usages:>8} {total_imports:>8} {overall:>9.1f}%")
+        print(
+            f"{'TOTAL':<25} {total_grep:>8} {total_lsp:>8} {total_usages:>8} {total_imports:>8} {overall:>9.1f}%"
+        )
 
         print("\nKEY METRICS:")
         print(f"  Total References Found: {total_lsp}")
-        print(f"  Usages (actual code):   {total_usages} ({total_usages/total_lsp*100:.1f}% of refs)")
-        print(f"  Imports (filtered):     {total_imports} ({total_imports/total_lsp*100:.1f}% of refs)")
+        print(
+            f"  Usages (actual code):   {total_usages} ({total_usages / total_lsp * 100:.1f}% of refs)"
+        )
+        print(
+            f"  Imports (filtered):     {total_imports} ({total_imports / total_lsp * 100:.1f}% of refs)"
+        )
 
     finally:
         await client.close()

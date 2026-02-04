@@ -138,7 +138,9 @@ def doctor_command(fix: bool, fix_ml: bool) -> None:
             _display_compact_line("ML:", ml_results)
 
         # Parsers: Tree-sitter
-        parser_results = [r for r in code_results if "Tree-sitter" in r[1] or "parser" in r[1].lower()]
+        parser_results = [
+            r for r in code_results if "Tree-sitter" in r[1] or "parser" in r[1].lower()
+        ]
         if parser_results:
             _display_compact_line("Parsers:", parser_results)
 
@@ -272,7 +274,9 @@ def _format_check(status: str, message: str) -> str:
         return f"[red]✗[/] {message}"
 
 
-def _display_compact_line(label: str, results: list[tuple[str, str, dict]], width: int = 14) -> None:
+def _display_compact_line(
+    label: str, results: list[tuple[str, str, dict]], width: int = 14
+) -> None:
     """Display multiple check results, wrapping long lines with proper indentation.
 
     Args:

@@ -24,6 +24,7 @@ from aurora_lsp.filters import ImportFilter
 @dataclass
 class ComparisonResult:
     """Before/after comparison for a single symbol."""
+
     file: str
     symbol: str
     symbol_kind: str
@@ -59,14 +60,16 @@ def grep_count(workspace: Path, pattern: str, extensions: list[str]) -> tuple[in
             try:
                 content = file_path.read_text()
                 for i, line in enumerate(content.splitlines(), 1):
-                    if re.search(r'\b' + re.escape(pattern) + r'\b', line):
+                    if re.search(r"\b" + re.escape(pattern) + r"\b", line):
                         matches += 1
                         # Check if in comment or string
                         stripped = line.strip()
-                        if (stripped.startswith("//") or
-                            stripped.startswith("*") or
-                            stripped.startswith("#") or
-                            stripped.startswith("/*")):
+                        if (
+                            stripped.startswith("//")
+                            or stripped.startswith("*")
+                            or stripped.startswith("#")
+                            or stripped.startswith("/*")
+                        ):
                             rel_path = file_path.relative_to(workspace)
                             false_positives.append(f"{rel_path}:{i}: {stripped[:60]}")
             except Exception:
@@ -151,14 +154,15 @@ def flatten_symbols(symbols: list) -> list[dict]:
 
 async def test_repo(workspace: Path, extension: str, repo_name: str) -> list[ComparisonResult]:
     """Test a repository."""
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"BEFORE/AFTER COMPARISON: {repo_name}")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
 
     # Find good source files (not tests, not barrel files)
     files = list(workspace.rglob(f"*{extension}"))
     files = [
-        f for f in files
+        f
+        for f in files
         if "node_modules" not in str(f)
         and "test" not in str(f).lower()
         and f.name != f"index{extension}"
@@ -177,7 +181,8 @@ async def test_repo(workspace: Path, extension: str, repo_name: str) -> list[Com
 
             # Find classes/functions to analyze
             interesting = [
-                s for s in flat_symbols
+                s
+                for s in flat_symbols
                 if s.get("kind") in [5, 6, 12, 14]  # Class, Method, Function, Constant
                 and len(s.get("name", "")) > 3
                 and not s.get("name", "").startswith("_")
@@ -185,17 +190,19 @@ async def test_repo(workspace: Path, extension: str, repo_name: str) -> list[Com
 
             # Analyze up to 2 symbols per file
             for sym in interesting[:2]:
-                result = await analyze_symbol(
-                    client, workspace, file_path, sym, extensions
-                )
+                result = await analyze_symbol(client, workspace, file_path, sym, extensions)
                 results.append(result)
-                print(f"\n{result.symbol} ({result.symbol_kind}) in {result.file}:{result.symbol_line}")
+                print(
+                    f"\n{result.symbol} ({result.symbol_kind}) in {result.file}:{result.symbol_line}"
+                )
                 print(f"  BEFORE (grep): {result.grep_matches} matches")
                 if result.grep_false_positives:
                     print("    False positives found:")
                     for fp in result.grep_false_positives:
                         print(f"      - {fp}")
-                print(f"  AFTER (LSP):   {result.lsp_refs} refs ({result.lsp_imports} imports + {result.lsp_usages} usages)")
+                print(
+                    f"  AFTER (LSP):   {result.lsp_refs} refs ({result.lsp_imports} imports + {result.lsp_usages} usages)"
+                )
                 print(f"  → {result.improvement()}")
 
     finally:
@@ -206,9 +213,9 @@ async def test_repo(workspace: Path, extension: str, repo_name: str) -> list[Com
 
 def print_final_summary(js_results: list[ComparisonResult], ts_results: list[ComparisonResult]):
     """Print final comparison summary."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("FINAL SUMMARY")
-    print("="*70)
+    print("=" * 70)
 
     all_results = js_results + ts_results
 
@@ -233,12 +240,12 @@ def print_final_summary(js_results: list[ComparisonResult], ts_results: list[Com
     if total_fp > 0:
         print(f"✓ False positives avoided: {total_fp} grep matches in comments/strings")
 
-    print("\n" + "-"*70)
+    print("\n" + "-" * 70)
     print("LSP ADVANTAGES:")
     print("  1. Semantic accuracy - ignores comments, strings, partial matches")
     print("  2. Import filtering - separates import statements from actual usages")
     print("  3. Language-aware - understands syntax, not just text patterns")
-    print("-"*70)
+    print("-" * 70)
 
 
 async def main():

@@ -121,7 +121,6 @@ def _apply_env_overrides(config: dict) -> None:
             raise ConfigurationError(f"AURORA_SOAR_MODEL must be 'sonnet' or 'opus', got '{val}'")
 
 
-
 def load_config(path: str | Path | None = None) -> dict[str, Any]:
     """Load configuration: defaults + user overrides + env vars.
 

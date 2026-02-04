@@ -98,7 +98,7 @@ class AuroraLSPClient:
         if not lang:
             raise ValueError(f"Unsupported file type: {Path(file_path).suffix}")
 
-        lang_key = lang.name if hasattr(lang, 'name') else str(lang)
+        lang_key = lang.name if hasattr(lang, "name") else str(lang)
 
         async with self._lock:
             if lang_key not in self._servers:
@@ -238,11 +238,11 @@ class AuroraLSPClient:
         try:
             # multilspy may return diagnostics via different methods
             # Try the standard approach first
-            if hasattr(server, 'request_diagnostics'):
+            if hasattr(server, "request_diagnostics"):
                 return await server.request_diagnostics(rel_path) or []
             # Some servers publish diagnostics automatically after open_file
             # Check if server has cached diagnostics
-            if hasattr(server, 'get_diagnostics'):
+            if hasattr(server, "get_diagnostics"):
                 return server.get_diagnostics(rel_path) or []
             # Fallback: diagnostics may be in server state
             logger.debug(f"Diagnostics not directly supported for {file_path}")
@@ -297,11 +297,13 @@ class AuroraLSPClient:
                 range_info = loc.get("range") or loc.get("targetRange", {})
                 start = range_info.get("start", {})
 
-                result.append({
-                    "file": file_path,
-                    "line": start.get("line", 0),
-                    "col": start.get("character", 0),
-                })
+                result.append(
+                    {
+                        "file": file_path,
+                        "line": start.get("line", 0),
+                        "col": start.get("character", 0),
+                    }
+                )
 
         return result
 

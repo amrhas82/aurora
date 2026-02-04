@@ -70,7 +70,9 @@ async def test_references_raw(client: AuroraLSPClient):
     print("TEST: Raw References (SQLiteStore class)")
     print("=" * 60)
 
-    refs = await client.request_references(TEST_FILE, 38, 6)  # SQLiteStore class (line 39, 0-indexed=38)
+    refs = await client.request_references(
+        TEST_FILE, 38, 6
+    )  # SQLiteStore class (line 39, 0-indexed=38)
 
     print(f"Found {len(refs)} total references")
     if refs:
@@ -141,19 +143,19 @@ async def test_usage_filtering(analyzer: CodeAnalyzer):
     print(f"Usages: {result['total_usages']}")
     print(f"Imports: {result['total_imports']}")
 
-    if result['usages']:
+    if result["usages"]:
         print("\nSample usages (not imports):")
-        for u in result['usages'][:5]:
-            context = u.get('context', '')[:60]
+        for u in result["usages"][:5]:
+            context = u.get("context", "")[:60]
             print(f"  {u['file']}:{u['line']}  {context}")
 
-    if result['imports']:
+    if result["imports"]:
         print("\nSample imports (filtered out):")
-        for i in result['imports'][:5]:
-            context = i.get('context', '')[:60]
+        for i in result["imports"][:5]:
+            context = i.get("context", "")[:60]
             print(f"  {i['file']}:{i['line']}  {context}")
 
-    return result['total_usages'] > 0
+    return result["total_usages"] > 0
 
 
 async def test_usage_summary(analyzer: CodeAnalyzer):
@@ -171,12 +173,12 @@ async def test_usage_summary(analyzer: CodeAnalyzer):
     print(f"Impact: {summary['impact']}")
     print(f"Files affected: {summary['files_affected']}")
 
-    if summary['usages_by_file']:
+    if summary["usages_by_file"]:
         print("\nUsages by file:")
-        for file, usages in list(summary['usages_by_file'].items())[:5]:
+        for file, usages in list(summary["usages_by_file"].items())[:5]:
             print(f"  {file}: {len(usages)}")
 
-    return summary['total_usages'] >= 0
+    return summary["total_usages"] >= 0
 
 
 async def test_callers(analyzer: CodeAnalyzer):
@@ -201,14 +203,11 @@ async def test_dead_code(analyzer: CodeAnalyzer):
     print("=" * 60)
 
     # Test on single file first
-    dead = await analyzer.find_dead_code(
-        WORKSPACE / TEST_FILE,
-        include_private=False
-    )
+    dead = await analyzer.find_dead_code(WORKSPACE / TEST_FILE, include_private=False)
 
     print(f"Found {len(dead)} potentially dead items")
     for item in dead[:10]:
-        imports_note = f" (imported {item['imports']}x)" if item['imports'] > 0 else ""
+        imports_note = f" (imported {item['imports']}x)" if item["imports"] > 0 else ""
         print(f"  {item['name']} ({item['kind']}) at line {item['line']}{imports_note}")
 
     return True  # Dead code results vary

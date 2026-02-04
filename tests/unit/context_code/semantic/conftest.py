@@ -18,6 +18,7 @@ def clear_hybrid_retriever_cache():
     # Clear before test
     try:
         from aurora_context_code.semantic.hybrid_retriever import clear_retriever_cache
+
         clear_retriever_cache()
     except ImportError:
         pass
@@ -27,6 +28,7 @@ def clear_hybrid_retriever_cache():
     # Clear after test
     try:
         from aurora_context_code.semantic.hybrid_retriever import clear_retriever_cache
+
         clear_retriever_cache()
     except ImportError:
         pass

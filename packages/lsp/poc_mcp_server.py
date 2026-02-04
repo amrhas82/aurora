@@ -28,6 +28,7 @@ mcp = FastMCP("aurora-lsp-poc")
 # Tool 1: lsp - Code intelligence
 # =============================================================================
 
+
 @mcp.tool()
 def lsp(
     action: Literal["deadcode", "impact", "check"] = "check",
@@ -109,6 +110,7 @@ def lsp(
 # Tool 2: mem_search - Search indexed code and knowledge base
 # =============================================================================
 
+
 @mcp.tool()
 def mem_search(query: str, limit: int = 5) -> list[dict]:
     """Search indexed code and knowledge base with LSP context.
@@ -161,10 +163,7 @@ def mem_search(query: str, limit: int = 5) -> list[dict]:
         },
     ]
 
-    return [
-        {**r, "_poc": True, "_query": query}
-        for r in results[:limit]
-    ]
+    return [{**r, "_poc": True, "_query": query} for r in results[:limit]]
 
 
 # =============================================================================

@@ -80,7 +80,11 @@ class CoreSystemChecks:
                         f"DB large ({size_mb:.0f} MB)",
                         {"path": str(db_path), "size_mb": size_mb},
                     )
-                return ("pass", f"DB ({size_mb:.1f} MB)", {"path": str(db_path), "size_mb": size_mb})
+                return (
+                    "pass",
+                    f"DB ({size_mb:.1f} MB)",
+                    {"path": str(db_path), "size_mb": size_mb},
+                )
             return ("warning", "DB not found", {"path": str(db_path)})
         except Exception as e:
             return ("fail", f"DB check failed: {e}", {})
@@ -437,9 +441,7 @@ class SearchRetrievalChecks:
             aurora_cache = Path.cwd() / ".aurora" / "cache"
             aurora_size = 0
             if aurora_cache.exists():
-                aurora_size = sum(
-                    f.stat().st_size for f in aurora_cache.rglob("*") if f.is_file()
-                )
+                aurora_size = sum(f.stat().st_size for f in aurora_cache.rglob("*") if f.is_file())
 
             # HuggingFace ML model cache
             hf_cache = Path.home() / ".cache" / "huggingface" / "hub"
@@ -607,7 +609,11 @@ class ConfigurationChecks:
                 self.config.validate()
                 return ("pass", "Config file valid (global)", {"path": str(global_config_path)})
 
-            return ("warning", "No config file (using defaults)", {"path": str(project_config_path)})
+            return (
+                "warning",
+                "No config file (using defaults)",
+                {"path": str(project_config_path)},
+            )
         except Exception as e:
             return ("fail", f"Config validation failed: {e}", {})
 
@@ -749,7 +755,11 @@ class ToolIntegrationChecks:
             return (
                 "pass",
                 f"Slash commands available ({actual_count}) and configured ({configured_count} tools)",
-                {"configured": True, "available": actual_count, "configured_count": configured_count},
+                {
+                    "configured": True,
+                    "available": actual_count,
+                    "configured_count": configured_count,
+                },
             )
         except Exception as e:
             return ("fail", f"Slash command check failed: {e}", {})
@@ -895,13 +905,21 @@ class InstallationChecks:
                         # Try package-specific version
                         pkg_name = pkg.replace("_", "-")
                         version = importlib.metadata.version(pkg_name)
-                    results.append(("pass", f"{desc} ({pkg}) v{version}", {"package": pkg, "version": version}))
+                    results.append(
+                        ("pass", f"{desc} ({pkg}) v{version}", {"package": pkg, "version": version})
+                    )
                 except Exception:
                     # If version not found, just show package without version
                     results.append(("pass", f"{desc} ({pkg})", {"package": pkg}))
             except ImportError:
                 if is_optional:
-                    results.append(("warning", f"{desc} not available ({pkg})", {"package": pkg, "optional": True}))
+                    results.append(
+                        (
+                            "warning",
+                            f"{desc} not available ({pkg})",
+                            {"package": pkg, "optional": True},
+                        )
+                    )
                 else:
                     results.append(("fail", f"{desc} MISSING ({pkg})", {"package": pkg}))
         return results

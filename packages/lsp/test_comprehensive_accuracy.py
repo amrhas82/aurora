@@ -38,7 +38,7 @@ async def test_import_usage_accuracy(client: AuroraLSPClient, analyzer: CodeAnal
     results = []
 
     for filepath, symbol, line, exp_imports, exp_usages in IMPORT_USAGE_TESTS:
-        print(f"\n{symbol} in {filepath.split('/')[-1]}:{line+1}")
+        print(f"\n{symbol} in {filepath.split('/')[-1]}:{line + 1}")
 
         # Get LSP results
         refs = await client.request_references(filepath, line, 6)
@@ -78,15 +78,17 @@ async def test_import_usage_accuracy(client: AuroraLSPClient, analyzer: CodeAnal
         print(f"  LSP:       {lsp_imports} imports,  {lsp_usages} usages")
         print(f"  Accuracy: {import_accuracy:.0f}% imports, {usage_accuracy:.0f}% usages")
 
-        results.append({
-            "symbol": symbol,
-            "lsp_imports": lsp_imports,
-            "lsp_usages": lsp_usages,
-            "exp_imports": exp_imports,
-            "exp_usages": exp_usages,
-            "import_accuracy": import_accuracy,
-            "usage_accuracy": usage_accuracy,
-        })
+        results.append(
+            {
+                "symbol": symbol,
+                "lsp_imports": lsp_imports,
+                "lsp_usages": lsp_usages,
+                "exp_imports": exp_imports,
+                "exp_usages": exp_usages,
+                "import_accuracy": import_accuracy,
+                "usage_accuracy": usage_accuracy,
+            }
+        )
 
     # Summary
     if results:
@@ -158,7 +160,9 @@ async def test_dead_code_accuracy(analyzer: CodeAnalyzer):
     total_known_live = len(KNOWN_LIVE_CODE)
 
     recall = true_positives / total_known_dead * 100 if total_known_dead > 0 else 0
-    specificity = (total_known_live - false_positives) / total_known_live * 100 if total_known_live > 0 else 0
+    specificity = (
+        (total_known_live - false_positives) / total_known_live * 100 if total_known_live > 0 else 0
+    )
 
     print(f"\n  TRUE POSITIVES:  {true_positives}/{total_known_dead}")
     print(f"  FALSE NEGATIVES: {false_negatives}/{total_known_dead}")
@@ -191,15 +195,20 @@ async def test_reference_accuracy(client: AuroraLSPClient):
     results = []
 
     for filepath, symbol, line, min_expected in REFERENCE_TESTS:
-        print(f"\n{symbol} in {filepath.split('/')[-1]}:{line+1}")
+        print(f"\n{symbol} in {filepath.split('/')[-1]}:{line + 1}")
 
         # Get grep count
         try:
             result = subprocess.run(
                 ["grep", "-rw", "--include=*.py", "-c", symbol, str(WORKSPACE / "packages")],
-                capture_output=True, text=True
+                capture_output=True,
+                text=True,
             )
-            grep_total = sum(int(l.split(":")[-1]) for l in result.stdout.strip().split("\n") if l and ":" in l)
+            grep_total = sum(
+                int(line.split(":")[-1])
+                for line in result.stdout.strip().split("\n")
+                if line and ":" in line
+            )
         except Exception:
             grep_total = 0
 
@@ -214,13 +223,15 @@ async def test_reference_accuracy(client: AuroraLSPClient):
         print(f"  LSP:  {lsp_total} references")
         print(f"  Min expected: {min_expected}, Accuracy: {accuracy:.0f}%")
 
-        results.append({
-            "symbol": symbol,
-            "grep": grep_total,
-            "lsp": lsp_total,
-            "min_expected": min_expected,
-            "accuracy": accuracy,
-        })
+        results.append(
+            {
+                "symbol": symbol,
+                "grep": grep_total,
+                "lsp": lsp_total,
+                "min_expected": min_expected,
+                "accuracy": accuracy,
+            }
+        )
 
     if results:
         avg_acc = sum(r["accuracy"] for r in results) / len(results)
@@ -233,6 +244,7 @@ async def test_reference_accuracy(client: AuroraLSPClient):
 # ==============================================================================
 # MAIN
 # ==============================================================================
+
 
 async def main():
     print("=" * 70)
@@ -261,9 +273,13 @@ async def main():
 ┌─────────────────────────────────────────────────────────────────────┐
 │ METRIC                              │ ACCURACY                      │
 ├─────────────────────────────────────┼───────────────────────────────┤""")
-        print(f"│ Import Detection                    │ {import_acc:>6.1f}%                       │")
+        print(
+            f"│ Import Detection                    │ {import_acc:>6.1f}%                       │"
+        )
         print(f"│ Usage Detection                     │ {usage_acc:>6.1f}%                       │")
-        print(f"│ Dead Code Recall                    │ {dead_recall:>6.1f}%                       │")
+        print(
+            f"│ Dead Code Recall                    │ {dead_recall:>6.1f}%                       │"
+        )
         print(f"│ Dead Code Specificity               │ {dead_spec:>6.1f}%                       │")
         print(f"│ Reference Finding                   │ {ref_acc:>6.1f}%                       │")
         print("└─────────────────────────────────────┴───────────────────────────────┘")

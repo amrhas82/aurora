@@ -36,6 +36,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class TestResult:
     """Result of testing a single file."""
+
     file: str
     language: str
     symbols_found: int
@@ -50,13 +51,32 @@ class TestResult:
 def format_symbol(sym: dict, indent: int = 0) -> str:
     """Format a symbol for display."""
     kind_map = {
-        1: "File", 2: "Module", 3: "Namespace", 4: "Package",
-        5: "Class", 6: "Method", 7: "Property", 8: "Field",
-        9: "Constructor", 10: "Enum", 11: "Interface",
-        12: "Function", 13: "Variable", 14: "Constant",
-        15: "String", 16: "Number", 17: "Boolean", 18: "Array",
-        19: "Object", 20: "Key", 21: "Null", 22: "EnumMember",
-        23: "Struct", 24: "Event", 25: "Operator", 26: "TypeParameter"
+        1: "File",
+        2: "Module",
+        3: "Namespace",
+        4: "Package",
+        5: "Class",
+        6: "Method",
+        7: "Property",
+        8: "Field",
+        9: "Constructor",
+        10: "Enum",
+        11: "Interface",
+        12: "Function",
+        13: "Variable",
+        14: "Constant",
+        15: "String",
+        16: "Number",
+        17: "Boolean",
+        18: "Array",
+        19: "Object",
+        20: "Key",
+        21: "Null",
+        22: "EnumMember",
+        23: "Struct",
+        24: "Event",
+        25: "Operator",
+        26: "TypeParameter",
     }
     name = sym.get("name", "?")
     kind_num = sym.get("kind", 0)
@@ -171,17 +191,18 @@ async def test_repo(
     max_files: int = 10,
 ) -> list[TestResult]:
     """Test LSP on a repository."""
-    logger.info(f"\n{'='*60}")
+    logger.info(f"\n{'=' * 60}")
     logger.info(f"Testing {repo_name} ({extension.upper()})")
     logger.info(f"Workspace: {workspace}")
-    logger.info(f"{'='*60}")
+    logger.info(f"{'=' * 60}")
 
     # Find source files
     files = list(workspace.rglob(f"*{extension}"))
 
     # Filter out test files, node_modules, and barrel files
     files = [
-        f for f in files
+        f
+        for f in files
         if "node_modules" not in str(f)
         and "dist" not in str(f)
         and ".d.ts" not in str(f)
@@ -212,7 +233,9 @@ async def test_repo(
                 logger.info(f"  Symbols: {result.symbols_found}")
                 if result.test_symbol:
                     logger.info(f"  Test symbol: {result.test_symbol}")
-                    logger.info(f"  References: {result.total_refs} (imports: {result.imports}, usages: {result.usages})")
+                    logger.info(
+                        f"  References: {result.total_refs} (imports: {result.imports}, usages: {result.usages})"
+                    )
 
     finally:
         await client.close()
@@ -243,13 +266,13 @@ def print_summary(js_results: list[TestResult], ts_results: list[TestResult]) ->
     js_stats = calc_stats(js_results)
     ts_stats = calc_stats(ts_results)
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("SUMMARY: JavaScript vs TypeScript LSP Testing")
-    print("="*70)
+    print("=" * 70)
 
-    print("\n" + "-"*70)
+    print("\n" + "-" * 70)
     print(f"{'Metric':<30} {'JavaScript':>18} {'TypeScript':>18}")
-    print("-"*70)
+    print("-" * 70)
 
     metrics = [
         ("Files Tested", "files_tested"),
@@ -270,12 +293,12 @@ def print_summary(js_results: list[TestResult], ts_results: list[TestResult]) ->
         else:
             print(f"{label:<30} {js_val:>18} {ts_val:>18}")
 
-    print("-"*70)
+    print("-" * 70)
 
     # Show sample symbols from each
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("SAMPLE SYMBOLS FOUND")
-    print("="*70)
+    print("=" * 70)
 
     print("\n--- JavaScript (liteagents) ---")
     for r in js_results[:3]:
@@ -292,19 +315,23 @@ def print_summary(js_results: list[TestResult], ts_results: list[TestResult]) ->
                 print(f"  {format_symbol(sym)}")
 
     # Show import filtering results
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("IMPORT vs USAGE FILTERING")
-    print("="*70)
+    print("=" * 70)
 
     print("\n--- JavaScript ---")
     for r in js_results:
         if r.total_refs > 0:
-            print(f"  {r.test_symbol}: {r.total_refs} refs → {r.imports} imports + {r.usages} usages")
+            print(
+                f"  {r.test_symbol}: {r.total_refs} refs → {r.imports} imports + {r.usages} usages"
+            )
 
     print("\n--- TypeScript ---")
     for r in ts_results:
         if r.total_refs > 0:
-            print(f"  {r.test_symbol}: {r.total_refs} refs → {r.imports} imports + {r.usages} usages")
+            print(
+                f"  {r.test_symbol}: {r.total_refs} refs → {r.imports} imports + {r.usages} usages"
+            )
 
 
 async def main():

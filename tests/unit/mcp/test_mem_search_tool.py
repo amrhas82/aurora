@@ -17,10 +17,13 @@ class TestMemSearch:
     @patch("aurora_mcp.mem_search_tool.Path")
     @patch("aurora_cli.memory.retrieval.MemoryRetriever")
     @patch("aurora_lsp.facade.AuroraLSP")
-    def test_mem_search_basic(self, mock_lsp_class, mock_retriever_class, mock_path_class, mock_get_lsp, mock_git_info):
+    def test_mem_search_basic(
+        self, mock_lsp_class, mock_retriever_class, mock_path_class, mock_get_lsp, mock_git_info
+    ):
         """Test mem_search returns search results."""
         # Reset globals
         import aurora_mcp.mem_search_tool as mem_search_module
+
         mem_search_module._store = None
         mem_search_module._retriever = None
         mem_search_module._lsp_instance = None
@@ -74,10 +77,13 @@ class TestMemSearch:
     @patch("aurora_mcp.mem_search_tool.Path")
     @patch("aurora_cli.memory.retrieval.MemoryRetriever")
     @patch("aurora_lsp.facade.AuroraLSP")
-    def test_mem_search_result_fields(self, mock_lsp_class, mock_retriever_class, mock_path_class, mock_get_lsp, mock_git_info):
+    def test_mem_search_result_fields(
+        self, mock_lsp_class, mock_retriever_class, mock_path_class, mock_get_lsp, mock_git_info
+    ):
         """Test results contain required fields."""
         # Reset globals
         import aurora_mcp.mem_search_tool as mem_search_module
+
         mem_search_module._store = None
         mem_search_module._retriever = None
         mem_search_module._lsp_instance = None
@@ -136,10 +142,13 @@ class TestMemSearch:
     @patch("aurora_mcp.mem_search_tool._get_lsp")
     @patch("aurora_mcp.mem_search_tool.Path")
     @patch("aurora_cli.memory.retrieval.MemoryRetriever")
-    def test_mem_search_used_by_format_code(self, mock_retriever_class, mock_path_class, mock_get_lsp, mock_git_info):
+    def test_mem_search_used_by_format_code(
+        self, mock_retriever_class, mock_path_class, mock_get_lsp, mock_git_info
+    ):
         """Test used_by format is 'N files(M)' for code results."""
         # Reset globals
         import aurora_mcp.mem_search_tool as mem_search_module
+
         mem_search_module._store = None
         mem_search_module._retriever = None
         mem_search_module._lsp_instance = None
@@ -190,10 +199,13 @@ class TestMemSearch:
     @patch("aurora_mcp.mem_search_tool.Path")
     @patch("aurora_cli.memory.retrieval.MemoryRetriever")
     @patch("aurora_lsp.facade.AuroraLSP")
-    def test_mem_search_used_by_format_kb(self, mock_lsp_class, mock_retriever_class, mock_path_class, mock_get_lsp, mock_git_info):
+    def test_mem_search_used_by_format_kb(
+        self, mock_lsp_class, mock_retriever_class, mock_path_class, mock_get_lsp, mock_git_info
+    ):
         """Test used_by is '-' for non-code (kb) results."""
         # Reset globals
         import aurora_mcp.mem_search_tool as mem_search_module
+
         mem_search_module._store = None
         mem_search_module._retriever = None
         mem_search_module._lsp_instance = None
@@ -238,10 +250,13 @@ class TestMemSearch:
     @patch("aurora_mcp.mem_search_tool.Path")
     @patch("aurora_cli.memory.retrieval.MemoryRetriever")
     @patch("aurora_lsp.facade.AuroraLSP")
-    def test_mem_search_called_by_list(self, mock_lsp_class, mock_retriever_class, mock_path_class, mock_get_lsp, mock_git_info):
+    def test_mem_search_called_by_list(
+        self, mock_lsp_class, mock_retriever_class, mock_path_class, mock_get_lsp, mock_git_info
+    ):
         """Test called_by returns list of caller functions."""
         # Reset globals
         import aurora_mcp.mem_search_tool as mem_search_module
+
         mem_search_module._store = None
         mem_search_module._retriever = None
         mem_search_module._lsp_instance = None
@@ -300,10 +315,13 @@ class TestMemSearch:
     @patch("aurora_mcp.mem_search_tool.Path")
     @patch("aurora_cli.memory.retrieval.MemoryRetriever")
     @patch("aurora_lsp.facade.AuroraLSP")
-    def test_mem_search_calling_list(self, mock_lsp_class, mock_retriever_class, mock_path_class, mock_get_lsp, mock_git_info):
+    def test_mem_search_calling_list(
+        self, mock_lsp_class, mock_retriever_class, mock_path_class, mock_get_lsp, mock_git_info
+    ):
         """Test calling returns list of called functions (where supported)."""
         # Reset globals
         import aurora_mcp.mem_search_tool as mem_search_module
+
         mem_search_module._store = None
         mem_search_module._retriever = None
         mem_search_module._lsp_instance = None
@@ -362,10 +380,13 @@ class TestMemSearch:
     @patch("aurora_mcp.mem_search_tool.Path")
     @patch("aurora_cli.memory.retrieval.MemoryRetriever")
     @patch("aurora_lsp.facade.AuroraLSP")
-    def test_mem_search_limit_default(self, mock_lsp_class, mock_retriever_class, mock_path_class, mock_get_lsp, mock_git_info):
+    def test_mem_search_limit_default(
+        self, mock_lsp_class, mock_retriever_class, mock_path_class, mock_get_lsp, mock_git_info
+    ):
         """Test limit parameter defaults to 5."""
         # Reset globals
         import aurora_mcp.mem_search_tool as mem_search_module
+
         mem_search_module._store = None
         mem_search_module._retriever = None
         mem_search_module._lsp_instance = None
@@ -375,7 +396,12 @@ class TestMemSearch:
         mock_retriever_class.return_value = mock_retriever
         mock_retriever.retrieve.return_value = [
             {
-                "metadata": {"file": f"file{i}.py", "type": "code", "name": f"sym{i}", "lines": "1-10"},
+                "metadata": {
+                    "file": f"file{i}.py",
+                    "type": "code",
+                    "name": f"sym{i}",
+                    "lines": "1-10",
+                },
                 "hybrid_score": 0.5,
             }
             for i in range(10)
@@ -409,10 +435,13 @@ class TestMemSearch:
     @patch("aurora_mcp.mem_search_tool.Path")
     @patch("aurora_cli.memory.retrieval.MemoryRetriever")
     @patch("aurora_lsp.facade.AuroraLSP")
-    def test_mem_search_git_info(self, mock_lsp_class, mock_retriever_class, mock_path_class, mock_get_lsp, mock_git_info):
+    def test_mem_search_git_info(
+        self, mock_lsp_class, mock_retriever_class, mock_path_class, mock_get_lsp, mock_git_info
+    ):
         """Test git info included in results."""
         # Reset globals
         import aurora_mcp.mem_search_tool as mem_search_module
+
         mem_search_module._store = None
         mem_search_module._retriever = None
         mem_search_module._lsp_instance = None
@@ -466,10 +495,13 @@ class TestMemSearchInitialization:
     @patch("aurora_mcp.mem_search_tool.Path")
     @patch("aurora_cli.memory.retrieval.MemoryRetriever")
     @patch("aurora_lsp.facade.AuroraLSP")
-    def test_mem_search_initialization(self, mock_lsp_class, mock_retriever_class, mock_path_class, mock_get_lsp, mock_git_info):
+    def test_mem_search_initialization(
+        self, mock_lsp_class, mock_retriever_class, mock_path_class, mock_get_lsp, mock_git_info
+    ):
         """Test mem_search initializes correctly."""
         # Reset globals
         import aurora_mcp.mem_search_tool as mem_search_module
+
         mem_search_module._store = None
         mem_search_module._retriever = None
         mem_search_module._lsp_instance = None

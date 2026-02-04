@@ -676,7 +676,9 @@ class TestStep3ToolConfiguration:
                     new_callable=AsyncMock,
                     return_value=([], []),
                 ):
-                    created, updated, agent_count, tool_names = run_step_3_tool_configuration(tmp_path)
+                    created, updated, agent_count, tool_names = run_step_3_tool_configuration(
+                        tmp_path
+                    )
 
                     # Should return empty lists
                     assert created == []

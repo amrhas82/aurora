@@ -83,7 +83,7 @@ def _batched_ripgrep_search(
     unique_symbols = list(set(symbols))
 
     # Create temp file with patterns (one per line)
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
         for sym in unique_symbols:
             f.write(f"{sym}\n")
         patterns_file = f.name
@@ -247,16 +247,11 @@ class CodeAnalyzer:
 
         # Filter imports
         import_filter = get_filter_for_file(file_path)
-        usages, imports = await import_filter.filter_references(
-            refs, self._read_line
-        )
+        usages, imports = await import_filter.filter_references(refs, self._read_line)
 
         # Filter out the definition itself (LSP includes it in references)
         def_file = str(Path(file_path).resolve())
-        usages = [
-            u for u in usages
-            if not (u.get("file") == def_file and u.get("line") == line)
-        ]
+        usages = [u for u in usages if not (u.get("file") == def_file and u.get("line") == line)]
 
         if not include_imports:
             return {
@@ -405,11 +400,31 @@ class CodeAnalyzer:
 
                     if kind == SymbolKind.CLASS and sym_line < 50:
                         type_import_names = {
-                            "Any", "Optional", "Union", "List", "Dict", "Set", "Tuple",
-                            "Callable", "Iterator", "Iterable", "Generator", "Sequence",
-                            "Mapping", "MutableMapping", "Type", "TypeVar", "Generic",
-                            "Protocol", "Path", "datetime", "timezone", "timedelta",
-                            "cast", "overload", "TYPE_CHECKING",
+                            "Any",
+                            "Optional",
+                            "Union",
+                            "List",
+                            "Dict",
+                            "Set",
+                            "Tuple",
+                            "Callable",
+                            "Iterator",
+                            "Iterable",
+                            "Generator",
+                            "Sequence",
+                            "Mapping",
+                            "MutableMapping",
+                            "Type",
+                            "TypeVar",
+                            "Generic",
+                            "Protocol",
+                            "Path",
+                            "datetime",
+                            "timezone",
+                            "timedelta",
+                            "cast",
+                            "overload",
+                            "TYPE_CHECKING",
                         }
                         if name in type_import_names:
                             continue
@@ -422,13 +437,15 @@ class CodeAnalyzer:
                     if self._is_entry_point_or_nested(name, file_path, prev_line):
                         continue
 
-                    all_symbols.append({
-                        "name": name,
-                        "kind": kind,
-                        "line": sym_line,
-                        "col": start.get("character", 0),
-                        "file": str(file_path),
-                    })
+                    all_symbols.append(
+                        {
+                            "name": name,
+                            "kind": kind,
+                            "line": sym_line,
+                            "col": start.get("character", 0),
+                            "file": str(file_path),
+                        }
+                    )
 
             except Exception as e:
                 logger.warning(f"Error getting symbols from {file_path}: {e}")
@@ -452,13 +469,15 @@ class CodeAnalyzer:
 
                     # Dead if 0 usages (definition itself is not counted as usage)
                     if usage_count == 0:
-                        dead.append({
-                            "file": sym["file"],
-                            "line": sym["line"],
-                            "name": sym["name"],
-                            "kind": SymbolKind(sym["kind"]).name.lower(),
-                            "imports": result.get("total_imports", 0),
-                        })
+                        dead.append(
+                            {
+                                "file": sym["file"],
+                                "line": sym["line"],
+                                "name": sym["name"],
+                                "kind": SymbolKind(sym["kind"]).name.lower(),
+                                "imports": result.get("total_imports", 0),
+                            }
+                        )
                 except Exception as e:
                     logger.debug(f"LSP reference check failed for {sym['name']}: {e}")
                     continue
@@ -493,7 +512,10 @@ class CodeAnalyzer:
                         file_content = await self._read_file(sym["file"])
                         # Count word-boundary matches (simple approximation)
                         import re
-                        within_file_usages = len(re.findall(rf'\b{re.escape(sym["name"])}\b', file_content))
+
+                        within_file_usages = len(
+                            re.findall(rf"\b{re.escape(sym['name'])}\b", file_content)
+                        )
                         # Subtract 1 for the definition itself
                         within_file_usages = max(0, within_file_usages - 1)
                     except Exception:
@@ -501,13 +523,15 @@ class CodeAnalyzer:
 
                 # Dead if no other files AND no usages within own file
                 if len(other_files) == 0 and within_file_usages == 0:
-                    dead.append({
-                        "file": sym["file"],
-                        "line": sym["line"],
-                        "name": sym["name"],
-                        "kind": SymbolKind(sym["kind"]).name.lower(),
-                        "imports": 0,
-                    })
+                    dead.append(
+                        {
+                            "file": sym["file"],
+                            "line": sym["line"],
+                            "name": sym["name"],
+                            "kind": SymbolKind(sym["kind"]).name.lower(),
+                            "imports": 0,
+                        }
+                    )
 
         return dead
 
@@ -634,17 +658,61 @@ class CodeAnalyzer:
             # Built-ins and common methods to skip
             skip_names = {
                 # Built-in functions
-                "int", "str", "float", "bool", "list", "dict", "set", "tuple",
-                "len", "range", "enumerate", "zip", "map", "filter", "sorted",
-                "print", "isinstance", "hasattr", "getattr", "setattr",
-                "min", "max", "sum", "abs", "round", "type", "id", "hash",
-                "open", "super", "next", "iter",
+                "int",
+                "str",
+                "float",
+                "bool",
+                "list",
+                "dict",
+                "set",
+                "tuple",
+                "len",
+                "range",
+                "enumerate",
+                "zip",
+                "map",
+                "filter",
+                "sorted",
+                "print",
+                "isinstance",
+                "hasattr",
+                "getattr",
+                "setattr",
+                "min",
+                "max",
+                "sum",
+                "abs",
+                "round",
+                "type",
+                "id",
+                "hash",
+                "open",
+                "super",
+                "next",
+                "iter",
                 # Common dict/list methods (too noisy)
-                "get", "items", "keys", "values", "update", "pop", "append",
-                "extend", "insert", "remove", "clear", "copy",
+                "get",
+                "items",
+                "keys",
+                "values",
+                "update",
+                "pop",
+                "append",
+                "extend",
+                "insert",
+                "remove",
+                "clear",
+                "copy",
                 # String methods
-                "format", "join", "split", "strip", "replace", "lower", "upper",
-                "startswith", "endswith",
+                "format",
+                "join",
+                "split",
+                "strip",
+                "replace",
+                "lower",
+                "upper",
+                "startswith",
+                "endswith",
             }
 
             def find_calls(node):
@@ -652,7 +720,7 @@ class CodeAnalyzer:
                     # Extract the function name being called
                     func_node = node.child_by_field_name("function")
                     if func_node:
-                        call_name = source_text[func_node.start_byte:func_node.end_byte]
+                        call_name = source_text[func_node.start_byte : func_node.end_byte]
 
                         # Clean up the name
                         # For "self.method()", extract "method"
@@ -666,14 +734,18 @@ class CodeAnalyzer:
                                 base_name = parts[-1]  # Last part for filtering
 
                         # Skip duplicates, built-ins, and dunder methods
-                        if (call_name not in seen_names
+                        if (
+                            call_name not in seen_names
                             and base_name not in skip_names
-                            and not base_name.startswith("__")):
+                            and not base_name.startswith("__")
+                        ):
                             seen_names.add(call_name)
-                            callees.append({
-                                "name": call_name,
-                                "line": node.start_point[0] + 1,  # 1-indexed for output
-                            })
+                            callees.append(
+                                {
+                                    "name": call_name,
+                                    "line": node.start_point[0] + 1,  # 1-indexed for output
+                                }
+                            )
 
                 for child in node.children:
                     find_calls(child)
@@ -776,10 +848,7 @@ class CodeAnalyzer:
 
         # Filter out common non-source directories
         exclude_dirs = {"node_modules", ".git", "__pycache__", ".venv", "venv", "dist", "build"}
-        files = [
-            f for f in files
-            if not any(d in f.parts for d in exclude_dirs)
-        ]
+        files = [f for f in files if not any(d in f.parts for d in exclude_dirs)]
 
         return sorted(files)
 

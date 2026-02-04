@@ -109,7 +109,10 @@ def _get_complexity(file_path: str, line_start: int, line_end: int) -> int:
             nonlocal target_node
             # tree-sitter uses 0-indexed lines
             node_start = node.start_point[0] + 1
-            if node_start == line_start and node.type in ("function_definition", "class_definition"):
+            if node_start == line_start and node.type in (
+                "function_definition",
+                "class_definition",
+            ):
                 target_node = node
                 return
             for child in node.children:

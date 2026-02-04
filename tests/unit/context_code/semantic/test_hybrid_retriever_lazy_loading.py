@@ -29,7 +29,9 @@ class MockStore:
         """Return empty list for testing."""
         return []
 
-    def retrieve_by_activation(self, min_activation=0.0, limit=100, include_embeddings=True, chunk_type=None):
+    def retrieve_by_activation(
+        self, min_activation=0.0, limit=100, include_embeddings=True, chunk_type=None
+    ):
         """Return mock chunks for testing."""
         return [MockChunk(f"chunk-{i}") for i in range(min(limit, 10))]
 

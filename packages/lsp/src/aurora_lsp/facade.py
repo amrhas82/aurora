@@ -117,9 +117,7 @@ class AuroraLSP:
             - total_usages: Count of actual usages
             - total_imports: Count of import statements
         """
-        return self._run_async(
-            self.analyzer.find_usages(file_path, line, col, include_imports)
-        )
+        return self._run_async(self.analyzer.find_usages(file_path, line, col, include_imports))
 
     def get_usage_summary(
         self,
@@ -147,9 +145,7 @@ class AuroraLSP:
             - usages: Top 20 usage locations
             - imports: All import locations
         """
-        return self._run_async(
-            self.analyzer.get_usage_summary(file_path, line, col, symbol_name)
-        )
+        return self._run_async(self.analyzer.get_usage_summary(file_path, line, col, symbol_name))
 
     # =========================================================================
     # IMPORTANT: Dead Code Detection
@@ -189,9 +185,7 @@ class AuroraLSP:
             - kind: 'function', 'class', or 'method'
             - imports: Number of times imported (but never used)
         """
-        return self._run_async(
-            self.analyzer.find_dead_code(path, include_private, accurate)
-        )
+        return self._run_async(self.analyzer.find_dead_code(path, include_private, accurate))
 
     # =========================================================================
     # IMPORTANT: Linting
@@ -217,9 +211,7 @@ class AuroraLSP:
             - total_warnings: Warning count
             - total_hints: Hint count
         """
-        return self._run_async(
-            self.diagnostics.get_all_diagnostics(path, severity_filter)
-        )
+        return self._run_async(self.diagnostics.get_all_diagnostics(path, severity_filter))
 
     def lint_file(self, file_path: str | Path) -> dict:
         """Get linting diagnostics for a single file.
@@ -230,9 +222,7 @@ class AuroraLSP:
         Returns:
             Dict with errors, warnings, hints lists.
         """
-        return self._run_async(
-            self.diagnostics.get_file_diagnostics(file_path)
-        )
+        return self._run_async(self.diagnostics.get_file_diagnostics(file_path))
 
     # =========================================================================
     # OPTIONAL: Call Hierarchy (callers/callees)
@@ -258,9 +248,7 @@ class AuroraLSP:
             - name: Function name
             - kind: 'function' or 'method'
         """
-        return self._run_async(
-            self.analyzer.get_callers(file_path, line, col)
-        )
+        return self._run_async(self.analyzer.get_callers(file_path, line, col))
 
     def get_callees(
         self,
@@ -280,9 +268,7 @@ class AuroraLSP:
         Returns:
             List of called functions (may be empty).
         """
-        return self._run_async(
-            self.analyzer.get_callees(file_path, line, col)
-        )
+        return self._run_async(self.analyzer.get_callees(file_path, line, col))
 
     # =========================================================================
     # Import Analysis
@@ -420,9 +406,7 @@ class AuroraLSP:
         # Search for symbol
         for file_path in files:
             try:
-                symbols = self._run_async(
-                    self.client.request_document_symbols(file_path)
-                )
+                symbols = self._run_async(self.client.request_document_symbols(file_path))
                 for symbol in self._flatten_symbols(symbols or []):
                     if symbol.get("name") == name:
                         range_info = symbol.get("range", {})
@@ -466,6 +450,7 @@ class AuroraLSP:
 # =========================================================================
 # Convenience Functions
 # =========================================================================
+
 
 def find_usages(
     file_path: str | Path,

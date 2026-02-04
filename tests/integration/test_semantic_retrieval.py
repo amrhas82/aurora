@@ -94,7 +94,7 @@ class MockStore:
 
         # Filter by type if specified
         if chunk_type:
-            candidates = [c for c in candidates if getattr(c, 'type', None) == chunk_type]
+            candidates = [c for c in candidates if getattr(c, "type", None) == chunk_type]
 
         # Sort by activation (descending)
         candidates.sort(key=lambda c: c.activation, reverse=True)

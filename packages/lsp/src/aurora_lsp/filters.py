@@ -38,7 +38,7 @@ class ImportFilter:
         ],
         "go": [
             r"^\s*import\s+",
-            r'^\s*import\s*\(',
+            r"^\s*import\s*\(",
             r'^\s*"[\w/.-]+"',  # Inside import block
         ],
         "rust": [

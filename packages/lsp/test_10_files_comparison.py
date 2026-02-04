@@ -22,6 +22,7 @@ from aurora_lsp.filters import ImportFilter
 @dataclass
 class FileResult:
     """Results for a single file."""
+
     file: str
     language: str
     symbols_found: int
@@ -51,14 +52,16 @@ def grep_count_with_fp(workspace: Path, pattern: str, extension: str) -> tuple[i
         try:
             content = file_path.read_text()
             for line in content.splitlines():
-                if re.search(r'\b' + re.escape(pattern) + r'\b', line):
+                if re.search(r"\b" + re.escape(pattern) + r"\b", line):
                     matches += 1
                     stripped = line.strip()
-                    if (stripped.startswith("//") or
-                        stripped.startswith("*") or
-                        stripped.startswith("/*") or
-                        stripped.startswith("#") or
-                        "* @" in stripped):  # JSDoc
+                    if (
+                        stripped.startswith("//")
+                        or stripped.startswith("*")
+                        or stripped.startswith("/*")
+                        or stripped.startswith("#")
+                        or "* @" in stripped
+                    ):  # JSDoc
                         false_positives += 1
         except Exception:
             continue
@@ -164,19 +167,20 @@ async def analyze_file(
     return result
 
 
-async def test_repo(workspace: Path, extension: str, name: str, max_files: int = 10) -> list[FileResult]:
+async def test_repo(
+    workspace: Path, extension: str, name: str, max_files: int = 10
+) -> list[FileResult]:
     """Test a repository."""
-    print(f"\n{'='*80}")
+    print(f"\n{'=' * 80}")
     print(f" {name} - 10 Files Before/After")
-    print(f"{'='*80}")
+    print(f"{'=' * 80}")
 
     # Find source files
     files = list(workspace.rglob(f"*{extension}"))
     files = [
-        f for f in files
-        if "node_modules" not in str(f)
-        and "dist" not in str(f)
-        and f.name != f"index{extension}"
+        f
+        for f in files
+        if "node_modules" not in str(f) and "dist" not in str(f) and f.name != f"index{extension}"
     ]
     files.sort(key=lambda f: f.stat().st_size, reverse=True)
     files = files[:max_files]
@@ -198,8 +202,12 @@ async def test_repo(workspace: Path, extension: str, name: str, max_files: int =
             if result.best_symbol:
                 print(f"\n    Analysis of '{result.best_symbol}' ({result.best_symbol_kind}):")
                 print("    ┌─────────────────────────────────────────────────────────")
-                print(f"    │ BEFORE (grep):  {result.grep_matches:>4} matches ({result.false_positives} in comments)")
-                print(f"    │ AFTER  (LSP):   {result.lsp_refs:>4} refs = {result.lsp_imports} imports + {result.lsp_usages} usages")
+                print(
+                    f"    │ BEFORE (grep):  {result.grep_matches:>4} matches ({result.false_positives} in comments)"
+                )
+                print(
+                    f"    │ AFTER  (LSP):   {result.lsp_refs:>4} refs = {result.lsp_imports} imports + {result.lsp_usages} usages"
+                )
 
                 improvement = ""
                 if result.false_positives > 0:
@@ -222,13 +230,15 @@ async def test_repo(workspace: Path, extension: str, name: str, max_files: int =
 
 def print_summary(js_results: list[FileResult], ts_results: list[FileResult]):
     """Print final summary table."""
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print(" SUMMARY TABLE")
-    print("="*80)
+    print("=" * 80)
 
-    print("\n┌" + "─"*78 + "┐")
-    print(f"│ {'Language':<12} │ {'Files':>6} │ {'Symbols':>8} │ {'Grep':>8} │ {'LSP Refs':>10} │ {'Imports':>8} │ {'Usages':>8} │")
-    print("├" + "─"*78 + "┤")
+    print("\n┌" + "─" * 78 + "┐")
+    print(
+        f"│ {'Language':<12} │ {'Files':>6} │ {'Symbols':>8} │ {'Grep':>8} │ {'LSP Refs':>10} │ {'Imports':>8} │ {'Usages':>8} │"
+    )
+    print("├" + "─" * 78 + "┤")
 
     for name, results in [("JavaScript", js_results), ("TypeScript", ts_results)]:
         files = len(results)
@@ -238,9 +248,11 @@ def print_summary(js_results: list[FileResult], ts_results: list[FileResult]):
         imports = sum(r.lsp_imports for r in results)
         usages = sum(r.lsp_usages for r in results)
 
-        print(f"│ {name:<12} │ {files:>6} │ {symbols:>8} │ {grep:>8} │ {lsp:>10} │ {imports:>8} │ {usages:>8} │")
+        print(
+            f"│ {name:<12} │ {files:>6} │ {symbols:>8} │ {grep:>8} │ {lsp:>10} │ {imports:>8} │ {usages:>8} │"
+        )
 
-    print("└" + "─"*78 + "┘")
+    print("└" + "─" * 78 + "┘")
 
     # Totals
     all_results = js_results + ts_results

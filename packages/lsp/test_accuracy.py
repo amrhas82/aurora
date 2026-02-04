@@ -75,7 +75,7 @@ def manual_analyze(filepath: Path) -> dict:
         "classes": classes,
         "functions": functions,
         "methods": methods,
-        "total": len(classes) + len(functions) + len(methods)
+        "total": len(classes) + len(functions) + len(methods),
     }
 
 
@@ -113,7 +113,7 @@ async def lsp_analyze(client: AuroraLSPClient, filepath: str) -> dict:
         "classes": classes,
         "functions": functions,
         "methods": methods,
-        "total": len(classes) + len(functions) + len(methods)
+        "total": len(classes) + len(functions) + len(methods),
     }
 
 
@@ -174,27 +174,33 @@ async def main():
                 print(f"\nSKIP: {filepath} (not found)")
                 continue
 
-            print(f"\n{'='*60}")
+            print(f"\n{'=' * 60}")
             print(f"FILE: {filepath}")
             print("=" * 60)
 
             # Manual analysis
             manual = manual_analyze(full_path)
-            print(f"Manual: {len(manual['classes'])} classes, {len(manual['functions'])} functions, {len(manual['methods'])} methods = {manual['total']} total")
+            print(
+                f"Manual: {len(manual['classes'])} classes, {len(manual['functions'])} functions, {len(manual['methods'])} methods = {manual['total']} total"
+            )
 
             # LSP analysis
             lsp = await lsp_analyze(client, filepath)
-            print(f"LSP:    {len(lsp['classes'])} classes, {len(lsp['functions'])} functions, {len(lsp['methods'])} methods = {lsp['total']} total")
+            print(
+                f"LSP:    {len(lsp['classes'])} classes, {len(lsp['functions'])} functions, {len(lsp['methods'])} methods = {lsp['total']} total"
+            )
 
             # Compare
             comparison = compare_results(manual, lsp, filepath)
             results.append(comparison)
 
-            print(f"Matched: {comparison['matched']}/{comparison['manual_count']} ({comparison['recall']:.1f}% recall)")
+            print(
+                f"Matched: {comparison['matched']}/{comparison['manual_count']} ({comparison['recall']:.1f}% recall)"
+            )
 
-            if comparison['manual_only_items']:
+            if comparison["manual_only_items"]:
                 print(f"  Manual only (missed by LSP): {comparison['manual_only_items'][:5]}")
-            if comparison['lsp_only_items']:
+            if comparison["lsp_only_items"]:
                 print(f"  LSP only (extra): {comparison['lsp_only_items'][:5]}")
 
         # Summary
@@ -202,9 +208,9 @@ async def main():
         print("SUMMARY")
         print("=" * 80)
 
-        total_manual = sum(r['manual_count'] for r in results)
-        total_lsp = sum(r['lsp_count'] for r in results)
-        total_matched = sum(r['matched'] for r in results)
+        total_manual = sum(r["manual_count"] for r in results)
+        total_lsp = sum(r["lsp_count"] for r in results)
+        total_matched = sum(r["matched"] for r in results)
 
         overall_recall = total_matched / total_manual * 100 if total_manual > 0 else 0
         overall_precision = total_matched / total_lsp * 100 if total_lsp > 0 else 0
@@ -213,14 +219,18 @@ async def main():
         print(f"Total symbols (manual):  {total_manual}")
         print(f"Total symbols (LSP):     {total_lsp}")
         print(f"Total matched:           {total_matched}")
-        print(f"\nOVERALL RECALL:    {overall_recall:.1f}% (LSP found {total_matched}/{total_manual} manual symbols)")
-        print(f"OVERALL PRECISION: {overall_precision:.1f}% ({total_matched}/{total_lsp} LSP symbols were correct)")
+        print(
+            f"\nOVERALL RECALL:    {overall_recall:.1f}% (LSP found {total_matched}/{total_manual} manual symbols)"
+        )
+        print(
+            f"OVERALL PRECISION: {overall_precision:.1f}% ({total_matched}/{total_lsp} LSP symbols were correct)"
+        )
 
         print("\nPer-file breakdown:")
         print(f"{'File':<50} {'Recall':>8} {'Precision':>10}")
         print("-" * 70)
         for r in results:
-            fname = r['file'].split('/')[-1]
+            fname = r["file"].split("/")[-1]
             print(f"{fname:<50} {r['recall']:>7.1f}% {r['precision']:>9.1f}%")
 
     finally:

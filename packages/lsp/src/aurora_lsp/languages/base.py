@@ -58,6 +58,7 @@ class LanguageConfig:
     def matches_extension(self, file_path: str) -> bool:
         """Check if file path matches this language's extensions."""
         from pathlib import Path
+
         return Path(file_path).suffix in self.extensions
 
     def is_entry_point(self, name: str) -> bool:

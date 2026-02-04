@@ -33,7 +33,11 @@ class TestLSPDeadcode:
         mock_report_path.write_text = Mock()
 
         # Configure __truediv__ behavior for Path operations
-        mock_workspace.__truediv__ = MagicMock(side_effect=lambda x: mock_docs_dir if x == "docs" else (mock_report_path if x == "CODE_QUALITY_REPORT.md" else MagicMock()))
+        mock_workspace.__truediv__ = MagicMock(
+            side_effect=lambda x: mock_docs_dir
+            if x == "docs"
+            else (mock_report_path if x == "CODE_QUALITY_REPORT.md" else MagicMock())
+        )
         mock_path_class.cwd.return_value = mock_workspace
 
         # Import after patching
@@ -127,6 +131,7 @@ class TestLSPImpact:
         """Test risk calculation: low (0-2), medium (3-10), high (11+)."""
         # Reset global LSP instance
         import aurora_mcp.lsp_tool as lsp_module
+
         lsp_module._lsp_instance = None
         lsp_module._workspace_root = None
 
@@ -178,6 +183,7 @@ class TestLSPCheck:
         """Test check action returns expected structure."""
         # Reset global LSP instance
         import aurora_mcp.lsp_tool as lsp_module
+
         lsp_module._lsp_instance = None
         lsp_module._workspace_root = None
 

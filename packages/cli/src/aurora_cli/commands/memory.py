@@ -1274,15 +1274,15 @@ def _display_rich_results(
                 now = datetime.now()
                 delta = now - mod_time
                 if delta.days > 365:
-                    git_text = f"{delta.days // 365}y ago"
+                    git_text = f"{delta.days // 365}y"
                 elif delta.days > 30:
-                    git_text = f"{delta.days // 30}mo ago"
+                    git_text = f"{delta.days // 30}mo"
                 elif delta.days > 0:
-                    git_text = f"{delta.days}d ago"
+                    git_text = f"{delta.days}d"
                 elif delta.seconds > 3600:
-                    git_text = f"{delta.seconds // 3600}h ago"
+                    git_text = f"{delta.seconds // 3600}h"
                 else:
-                    git_text = "recent"
+                    git_text = "now"
             except (ValueError, OSError):
                 git_text = "-"
         else:
@@ -1328,6 +1328,7 @@ def _display_rich_results(
     avg_hybrid = sum(r.hybrid_score for r in results) / len(results)
 
     console.print(f"\n[dim]Avg scores: Activation {avg_activation:.3f} | Semantic {avg_semantic:.3f} | Hybrid {avg_hybrid:.3f}[/]")
+    console.print("[dim]Risk: LOW (0-2 refs) | MED (3-10) | HIGH (11+) · Use lsp check/impact/related for details[/]")
 
     # Show helpful tips for follow-up commands
     console.print("\n[dim]Refine your search:[/]")

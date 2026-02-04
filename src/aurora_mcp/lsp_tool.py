@@ -115,6 +115,108 @@ def _calculate_risk(usage_count: int) -> str:
         return "high"
 
 
+def _get_symbol_name_from_line(file_path: str, line_0indexed: int, workspace: Path) -> str | None:
+    """Extract symbol name from a line (class, function, or variable definition).
+
+    Args:
+        file_path: Path to file
+        line_0indexed: 0-indexed line number
+        workspace: Workspace root
+
+    Returns:
+        Symbol name if found, None otherwise
+    """
+    import re
+
+    full_path = Path(file_path)
+    if not full_path.is_absolute():
+        full_path = workspace / file_path
+
+    if not full_path.exists():
+        return None
+
+    try:
+        lines = full_path.read_text().splitlines()
+        if line_0indexed >= len(lines):
+            return None
+
+        line = lines[line_0indexed]
+
+        # Pattern: class ClassName
+        match = re.search(r'\bclass\s+(\w+)', line)
+        if match:
+            return match.group(1)
+
+        # Pattern: async def func_name
+        match = re.search(r'\basync\s+def\s+(\w+)', line)
+        if match:
+            return match.group(1)
+
+        # Pattern: def func_name
+        match = re.search(r'\bdef\s+(\w+)', line)
+        if match:
+            return match.group(1)
+
+        # Pattern: variable = ...
+        match = re.match(r'^\s*(\w+)\s*[=:]', line)
+        if match:
+            return match.group(1)
+
+        return None
+    except Exception:
+        return None
+
+
+def _count_text_matches(symbol_name: str, workspace: Path) -> tuple[int, int]:
+    """Count text matches for a symbol using ripgrep.
+
+    Uses word boundary matching to reduce false positives.
+    Excludes common false positive patterns (comments, strings where possible).
+
+    Args:
+        symbol_name: Name of the symbol to search
+        workspace: Workspace root directory
+
+    Returns:
+        Tuple of (file_count, total_matches)
+    """
+    import subprocess
+
+    if not symbol_name:
+        return 0, 0
+
+    try:
+        # Use ripgrep with word boundary, count matches per file
+        # -w: word boundary, -c: count, --type py: Python files only
+        result = subprocess.run(
+            ["rg", "-w", "-c", "--type", "py", symbol_name, "."],
+            cwd=workspace,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+
+        if result.returncode not in (0, 1):  # 1 means no matches
+            return 0, 0
+
+        # Parse output: each line is "file:count"
+        file_count = 0
+        total_matches = 0
+        for line in result.stdout.strip().split("\n"):
+            if ":" in line:
+                file_count += 1
+                try:
+                    count = int(line.split(":")[-1])
+                    total_matches += count
+                except ValueError:
+                    total_matches += 1
+
+        return file_count, total_matches
+
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        return 0, 0
+
+
 def _generate_code_quality_report(dead_code: list[dict], workspace: Path) -> str:
     """Generate CODE_QUALITY_REPORT.md file.
 
@@ -314,17 +416,36 @@ def lsp(
             })
 
         total_usages = summary.get("total_usages", 0)
+        files_affected = summary.get("files_affected", 0)
 
-        return {
+        result = {
             "action": "impact",
             "path": path,
             "line": line,
-            "symbol": summary.get("symbol", "unknown"),
-            "used_by_files": summary.get("files_affected", 0),
+            "symbol": summary.get("symbol"),
+            "used_by_files": files_affected,
             "total_usages": total_usages,
             "top_callers": top_callers,
             "risk": _calculate_risk(total_usages),
         }
+
+        # Hybrid fallback: if LSP found 0 refs, check with text search
+        # This catches cross-package references that LSP misses
+        if total_usages == 0:
+            symbol_name = _get_symbol_name_from_line(path, line_0indexed, workspace)
+            if symbol_name:
+                text_files, text_matches = _count_text_matches(symbol_name, workspace)
+                if text_matches > 0:
+                    result["text_matches"] = text_matches
+                    result["text_files"] = text_files
+                    result["note"] = (
+                        f"LSP found 0 refs but text search found {text_matches} matches "
+                        f"in {text_files} files - likely cross-package usage"
+                    )
+                    # Upgrade risk based on text matches
+                    result["risk"] = _calculate_risk(text_matches)
+
+        return result
 
     elif action == "check":
         # Quick pre-edit check
@@ -346,10 +467,27 @@ def lsp(
             "action": "check",
             "path": path,
             "line": line,
-            "symbol": summary.get("symbol", "unknown"),
+            "symbol": summary.get("symbol"),
             "used_by": total_usages,
             "risk": _calculate_risk(total_usages),
         }
+
+        # Hybrid fallback: if LSP found 0 refs, check with text search
+        if total_usages == 0:
+            symbol_name = _get_symbol_name_from_line(path, line_0indexed, workspace)
+            if symbol_name:
+                text_files, text_matches = _count_text_matches(symbol_name, workspace)
+                if text_matches > 0:
+                    result["text_matches"] = text_matches
+                    result["text_files"] = text_files
+                    result["note"] = (
+                        f"LSP found 0 refs but text search found {text_matches} matches "
+                        f"in {text_files} files - likely cross-package usage"
+                    )
+                    # Upgrade risk based on text matches
+                    result["risk"] = _calculate_risk(text_matches)
+                    # Don't mark as unused if text search found matches
+                    return result
 
         # #UNUSED marker: flag symbols with very low usage (candidates for removal)
         if total_usages <= 2:

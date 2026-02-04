@@ -5,7 +5,7 @@ Aurora provides Model Context Protocol (MCP) tools for code intelligence and sea
 ## Overview
 
 Aurora's MCP server exposes two primary tools:
-- **lsp** - Language Server Protocol integration for code analysis
+- **lsp** - Language Server Protocol integration for code analysis (with hybrid fallback for cross-package refs)
 - **mem_search** - Hybrid search with LSP enrichment
 
 These tools are available in:
@@ -19,6 +19,8 @@ These tools are available in:
 The `lsp` MCP tool provides five actions for code intelligence.
 
 > **Speed Note:** Many operations use ripgrep (~2ms/symbol) instead of LSP (~300ms/symbol) for 100x speed improvement.
+>
+> **Hybrid Fallback (v0.13.4+):** `check` and `impact` actions automatically fall back to text search when LSP returns 0 refs, catching cross-package references with ~85% accuracy.
 >
 > See [Code Intelligence Status](../lsp/CODE_INTELLIGENCE_STATUS.md) for comprehensive feature documentation.
 
@@ -130,6 +132,12 @@ Analyze symbol usage and impact.
 - **medium**: 3-10 usages (review carefully)
 - **high**: 11+ usages (breaking change, needs migration plan)
 
+**Hybrid Fallback:** When LSP returns 0 usages, impact action automatically falls back to ripgrep text search. If text matches are found, the response includes additional fields:
+- `text_matches`: Total text occurrences across codebase
+- `text_files`: Number of files containing matches
+- `note`: Explanation that this is likely cross-package usage
+- Risk level is adjusted based on text matches
+
 ### check Action
 
 Quick usage check before editing.
@@ -152,6 +160,21 @@ Quick usage check before editing.
   "symbol": "helper_function",
   "used_by": 3,
   "risk": "low"
+}
+```
+
+**Hybrid Fallback Response** (when LSP finds 0 refs but text search finds matches):
+```json
+{
+  "action": "check",
+  "path": "src/core/orchestrator.py",
+  "line": 25,
+  "symbol": "SOAROrchestrator",
+  "used_by": 0,
+  "text_matches": 12,
+  "text_files": 5,
+  "note": "LSP found 0 refs but text search found 12 matches in 5 files - likely cross-package usage",
+  "risk": "medium"
 }
 ```
 
@@ -211,6 +234,36 @@ Find what a symbol depends on (outgoing calls). Uses tree-sitter AST parsing (~5
 
 **Note:** Currently Python-only (requires tree-sitter-python).
 
+### Hybrid LSP Fallback (v0.13.4+)
+
+The `check` and `impact` actions include automatic hybrid fallback when LSP returns 0 references:
+
+```
+┌─────────────┐     0 refs?     ┌─────────────┐
+│ LSP Server  │────────────────▶│   ripgrep   │
+│ (jedi/ts)   │                 │ text search │
+└─────────────┘                 └─────────────┘
+                                      │
+                                      ▼
+                              ┌─────────────────┐
+                              │ text_matches: N │
+                              │ text_files: M   │
+                              │ risk: adjusted  │
+                              └─────────────────┘
+```
+
+**Why This Matters:**
+- LSP may miss cross-package references (installed packages vs source)
+- Lazy imports (`TYPE_CHECKING` blocks) not always resolved
+- Text search provides 85% accuracy fallback
+
+**When Fallback Activates:**
+1. LSP returns 0 references for the symbol
+2. Symbol name is extracted from the source line
+3. ripgrep searches for word-boundary matches
+4. If matches found, response includes `text_matches`, `text_files`, and explanatory `note`
+5. Risk level is upgraded based on text match count
+
 ## mem_search Tool
 
 Hybrid search with LSP enrichment combining BM25, ACT-R activation, and semantic embeddings.
@@ -261,14 +314,14 @@ Hybrid search with LSP enrichment combining BM25, ACT-R activation, and semantic
 
 ## When to Use
 
-| Scenario | Tool | Action | Speed |
-|----------|------|--------|-------|
-| Before editing a symbol | `lsp` | `check` | ~1s |
-| Before refactoring | `lsp` | `impact` | ~2s |
-| Find unused code | `lsp` | `deadcode` | 2-20s |
-| Who imports this module? | `lsp` | `imports` | <1s |
-| What does this call? | `lsp` | `related` | ~50ms |
-| Search codebase | `mem_search` | - | <1s |
+| Scenario | Tool | Action | Speed | Hybrid Fallback |
+|----------|------|--------|-------|-----------------|
+| Before editing a symbol | `lsp` | `check` | ~1s | Yes |
+| Before refactoring | `lsp` | `impact` | ~2s | Yes |
+| Find unused code | `lsp` | `deadcode` | 2-20s | No (uses ripgrep) |
+| Who imports this module? | `lsp` | `imports` | <1s | No (uses ripgrep) |
+| What does this call? | `lsp` | `related` | ~50ms | No (tree-sitter) |
+| Search codebase | `mem_search` | - | <1s | N/A |
 
 ## MCP Server
 

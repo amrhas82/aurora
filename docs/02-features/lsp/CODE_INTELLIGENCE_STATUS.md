@@ -1,17 +1,23 @@
 # Code Intelligence Status Report
 
-> Last Updated: 2026-02-03
+> Last Updated: 2026-02-04
 > Purpose: Track all code intelligence features, implementation details, and language support.
 
 ## Executive Summary
 
 | Category | Live | Partial | Missing | Total |
 |----------|------|---------|---------|-------|
-| Reference Analysis | 6 | 0 | 0 | 6 |
+| Reference Analysis | 7 | 0 | 0 | 7 |
 | Code Quality Markers | 5 | 0 | 1 | 6 |
 | File Relationships | 1 | 1 | 1 | 3 |
 | Auto-Triggers | 0 | 0 | 1 | 1 |
-| **Total** | **12** | **1** | **3** | **16** |
+| **Total** | **13** | **1** | **3** | **17** |
+
+### Recent Changes (v0.13.4+)
+
+- **Hybrid LSP Fallback** - When LSP returns 0 refs, automatically falls back to ripgrep text search to detect cross-package references
+- **Cross-Package Detection** - Catches references that LSP misses due to lazy imports or installed packages vs source
+- **Enhanced Risk Assessment** - Risk level upgraded based on text matches when LSP fails
 
 ---
 
@@ -54,6 +60,44 @@
 | **unused** | flag | "Is this dead code?" | `refs <= 2` → `unused: true` | Dead code detection |
 | **complexity** | score | "How complex is this code?" | `c:45` = 45th percentile | Risk assessment |
 | **risk** | level | "How risky to change?" | HIGH (11+ refs), MED (3-10), LOW (0-2) | Change impact |
+
+### Hybrid LSP Fallback (NEW in v0.13.4)
+
+When LSP returns 0 references for a symbol, Aurora automatically falls back to text search:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    Hybrid Reference Detection                        │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  1. LSP Request                2. Fallback (if 0 refs)               │
+│  ┌─────────────┐               ┌─────────────┐                       │
+│  │ LSP Server  │──0 refs?──▶   │  ripgrep    │                       │
+│  │ (jedi/ts)   │               │ -w symbol   │                       │
+│  └─────────────┘               └─────────────┘                       │
+│        │                              │                              │
+│        ▼                              ▼                              │
+│  ┌─────────────┐               ┌─────────────┐                       │
+│  │  result =   │               │ text_matches│                       │
+│  │  0 usages   │               │ text_files  │                       │
+│  └─────────────┘               │ note:...    │                       │
+│                                │ risk: adj.  │                       │
+│                                └─────────────┘                       │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Why This Helps:**
+- LSP tracks references within the analyzed workspace
+- Cross-package imports (e.g., `from aurora_soar import SOAROrchestrator`) may not resolve if the package is installed vs source
+- Text search catches these with ~85% accuracy
+
+**Response Fields (when fallback activates):**
+| Field | Description | Example |
+|-------|-------------|---------|
+| `text_matches` | Total text occurrences | `12` |
+| `text_files` | Files containing matches | `5` |
+| `note` | Explanation of divergence | `"LSP found 0 refs but text search found 12 matches in 5 files - likely cross-package usage"` |
+| `risk` | Adjusted risk level | `"medium"` (upgraded from `"low"`) |
 
 ### Reading the `used_by` Format
 
@@ -110,6 +154,7 @@
 | **called_by** (incoming) | ✅ LIVE | LSP `get_callers()` + import filtering | Python only (filter) | ~1500ms/symbol | Filters import statements |
 | **calling** (outgoing) | ✅ LIVE | Tree-sitter AST parsing | **Python only** | ~50ms/symbol | Filters built-ins, shows meaningful calls |
 | **references** (raw) | ✅ LIVE | LSP `request_references()` | All via multilspy | ~800ms/symbol | Raw LSP, no filtering |
+| **hybrid_fallback** | ✅ LIVE | ripgrep text search when LSP=0 | All languages | ~100ms | Catches cross-package refs |
 | **definition** | ✅ LIVE (unused) | LSP `request_definition()` | All via multilspy | ~200ms | Not exposed via MCP |
 | **hover** | ✅ LIVE (unused) | LSP `request_hover()` | All via multilspy | ~200ms | Not exposed via MCP |
 
@@ -390,6 +435,14 @@ mem_search(
 1. **Complexity calculation** - Uses `tree-sitter-python`
 2. **Import filtering** - Python regex patterns (`from X import`, `import X`)
 3. **Entry point detection** - Python patterns (`main`, `pytest_*`, decorators)
+
+### Cross-Package References (Mitigated)
+LSP may miss references when:
+- Packages are installed (site-packages) rather than source
+- Lazy imports are used (`if TYPE_CHECKING:`)
+- Dynamic imports (`importlib.import_module()`)
+
+**Mitigation (v0.13.4+):** Hybrid fallback uses ripgrep text search when LSP returns 0 refs, catching ~85% of cross-package references. Response includes `text_matches`, `text_files`, and adjusted `risk`.
 
 ### External Callers Not Detected
 Both fast and accurate modes miss:

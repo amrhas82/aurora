@@ -228,6 +228,39 @@ callers = await analyzer.get_callers(file, line, col)
 # Returns: [{"name": "save_doc_chunk", "file": "sqlite.py", "line": 1015}]
 ```
 
+### 5. Hybrid LSP Fallback (v0.13.4+)
+
+Automatic text search fallback when LSP returns 0 references:
+
+```python
+# MCP tool call
+result = lsp(action="check", path="src/soar/orchestrator.py", line=25)
+
+# If LSP finds references:
+# {"used_by": 12, "risk": "high"}
+
+# If LSP finds 0 but text search finds matches:
+# {
+#   "used_by": 0,
+#   "text_matches": 15,
+#   "text_files": 6,
+#   "note": "LSP found 0 refs but text search found 15 matches in 6 files - likely cross-package usage",
+#   "risk": "high"  # Adjusted based on text_matches
+# }
+```
+
+**Implementation Details:**
+1. When LSP returns 0 references, extract symbol name from source line
+2. Use ripgrep with word boundaries (`rg -w`) to find text matches
+3. Count files and total matches
+4. If matches found, add `text_matches`, `text_files`, and `note` to response
+5. Recalculate risk based on text match count
+
+This catches cross-package references that LSP misses due to:
+- Installed packages (site-packages) vs source files
+- Lazy imports (`if TYPE_CHECKING:` blocks)
+- Dynamic imports (`importlib.import_module()`)
+
 ## Limitations
 
 1. **Polymorphism**: Methods called through base class interfaces show as "unused" at the implementation level. The LSP tracks references to the base class method, not overrides.
@@ -237,6 +270,8 @@ callers = await analyzer.get_callers(file, line, col)
 3. **Type-Only Imports**: `TYPE_CHECKING` imports are correctly identified but may appear in both usage and import counts depending on context.
 
 4. **Linting**: Not in scope. Each language has mature linters (ruff for Python, ESLint for JS/TS, Clippy for Rust). Use those directly - no need to wrap them.
+
+5. **Cross-Package References**: LSP may return 0 refs for symbols used across packages (installed vs source). **Mitigated in v0.13.4** with hybrid fallback using ripgrep text search.
 
 ## Future CLI Workflow
 
@@ -340,6 +375,7 @@ Aurora-LSP is integrated into Aurora's MCP server as the `lsp` tool, providing c
 - Risk assessment (low/medium/high based on usage count)
 - Import dependency tracking
 - Outgoing call analysis (what does this function call?)
+- **Hybrid fallback** for cross-package reference detection (v0.13.4+)
 - Integrated with Aurora's hybrid search (mem_search tool)
 
 See [MCP Tools Documentation](../mcp/MCP.md) for complete MCP integration details.

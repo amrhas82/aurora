@@ -2,6 +2,8 @@
 
 LSP integration for Aurora providing semantic code analysis, dead code detection, and impact assessment.
 
+> **📊 For comprehensive feature status, language support matrix, and implementation details, see [Code Intelligence Status](CODE_INTELLIGENCE_STATUS.md).**
+
 ## Overview
 
 The `aurora-lsp` package wraps [multilspy](https://github.com/microsoft/multilspy) (Microsoft) with custom layers for:
@@ -321,20 +323,31 @@ Aurora-LSP is integrated into Aurora's MCP server as the `lsp` tool, providing c
 - Continue (VS Code)
 
 **MCP Actions:**
-1. `lsp(action="deadcode")` - Find unused symbols, generate CODE_QUALITY_REPORT.md
-2. `lsp(action="impact", path="file.py", line=42)` - Analyze symbol usage and risk
-3. `lsp(action="check", path="file.py", line=42)` - Quick usage check
+
+| Action | Parameters | Speed | Purpose |
+|--------|------------|-------|---------|
+| `check` | `path`, `line` | ~1s | Quick usage count before editing |
+| `impact` | `path`, `line` | ~2s | Full impact analysis with top callers |
+| `deadcode` | `path` (optional) | 2-20s | Find all unused symbols, generate report |
+| `imports` | `path` | <1s | Find all files that import a module |
+| `related` | `path`, `line` | ~50ms | Find outgoing calls (Python only) |
+
+**Speed Note:** Many operations use ripgrep (~2ms/symbol) instead of traditional LSP (~300ms/symbol).
 
 **Benefits:**
-- Dead code detection with automatic annotation
+- Dead code detection with CODE_QUALITY_REPORT.md generation
 - Impact analysis before refactoring
 - Risk assessment (low/medium/high based on usage count)
+- Import dependency tracking
+- Outgoing call analysis (what does this function call?)
 - Integrated with Aurora's hybrid search (mem_search tool)
 
 See [MCP Tools Documentation](../mcp/MCP.md) for complete MCP integration details.
+See [Code Intelligence Status](CODE_INTELLIGENCE_STATUS.md) for all 16 features and implementation status.
 
 ## See Also
 
+- [Code Intelligence Status](CODE_INTELLIGENCE_STATUS.md) - All 16 features, language matrix, benchmarks
 - [MCP Tools](../mcp/MCP.md) - Aurora MCP integration
 - [multilspy](https://github.com/microsoft/multilspy) - Underlying LSP library
 - [LSP Specification](https://microsoft.github.io/language-server-protocol/) - Protocol reference

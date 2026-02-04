@@ -77,6 +77,14 @@ Understanding Aurora's purpose and architecture.
 | [Tools Guide](02-features/agents/TOOLS_GUIDE.md) | Supported CLI tools |
 | [Agent Integration](02-features/agents/AGENT_INTEGRATION.md) | Multi-agent patterns |
 
+### Code Intelligence
+
+| Document | Description |
+|----------|-------------|
+| [Code Intelligence Status](02-features/lsp/CODE_INTELLIGENCE_STATUS.md) | All 16 features, language support matrix, benchmarks |
+| [LSP Package](02-features/lsp/LSP.md) | Architecture and accuracy metrics |
+| [MCP Tools](02-features/mcp/MCP.md) | MCP integration for AI assistants |
+
 ### Other Features
 
 | Document | Description |

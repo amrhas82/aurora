@@ -16,7 +16,11 @@ These tools are available in:
 
 ## lsp Tool
 
-The `lsp` MCP tool provides three actions for code intelligence:
+The `lsp` MCP tool provides five actions for code intelligence.
+
+> **Speed Note:** Many operations use ripgrep (~2ms/symbol) instead of LSP (~300ms/symbol) for 100x speed improvement.
+>
+> See [Code Intelligence Status](../lsp/CODE_INTELLIGENCE_STATUS.md) for comprehensive feature documentation.
 
 ### deadcode Action
 
@@ -151,6 +155,62 @@ Quick usage check before editing.
 }
 ```
 
+### imports Action
+
+Find all files that import a given module. Uses ripgrep for speed (<1s).
+
+**Usage:**
+```json
+{
+  "action": "imports",
+  "path": "src/utils/helper.py"
+}
+```
+
+**Returns:**
+```json
+{
+  "action": "imports",
+  "path": "src/utils/helper.py",
+  "imported_by": [
+    "src/api/endpoints.py",
+    "src/services/auth.py",
+    "tests/test_helper.py"
+  ],
+  "total": 3
+}
+```
+
+### related Action
+
+Find what a symbol depends on (outgoing calls). Uses tree-sitter AST parsing (~50ms).
+
+**Usage:**
+```json
+{
+  "action": "related",
+  "path": "src/auth/login.py",
+  "line": 42
+}
+```
+
+**Returns:**
+```json
+{
+  "action": "related",
+  "path": "src/auth/login.py",
+  "line": 42,
+  "calls": [
+    {"name": "validate_credentials", "line": 45},
+    {"name": "create_session", "line": 48},
+    {"name": "log_login_attempt", "line": 50}
+  ],
+  "total_calls": 3
+}
+```
+
+**Note:** Currently Python-only (requires tree-sitter-python).
+
 ## mem_search Tool
 
 Hybrid search with LSP enrichment combining BM25, ACT-R activation, and semantic embeddings.
@@ -201,13 +261,14 @@ Hybrid search with LSP enrichment combining BM25, ACT-R activation, and semantic
 
 ## When to Use
 
-| Scenario | Tool | Action |
-|----------|------|--------|
-| Before deleting code | `lsp` | `check` |
-| Before refactoring | `lsp` | `impact` |
-| Find unused code | `lsp` | `deadcode` |
-| Search codebase | `mem_search` | - |
-| Understand dependencies | `lsp` | `impact` |
+| Scenario | Tool | Action | Speed |
+|----------|------|--------|-------|
+| Before editing a symbol | `lsp` | `check` | ~1s |
+| Before refactoring | `lsp` | `impact` | ~2s |
+| Find unused code | `lsp` | `deadcode` | 2-20s |
+| Who imports this module? | `lsp` | `imports` | <1s |
+| What does this call? | `lsp` | `related` | ~50ms |
+| Search codebase | `mem_search` | - | <1s |
 
 ## MCP Server
 
@@ -237,6 +298,7 @@ LSP integration supports 10+ languages via [multilspy](https://github.com/micros
 
 ## References
 
-- [LSP Integration](../lsp/LSP.md) - Detailed LSP documentation
+- [Code Intelligence Status](../lsp/CODE_INTELLIGENCE_STATUS.md) - All 16 features, language matrix, benchmarks
+- [LSP Package](../lsp/LSP.md) - Architecture, accuracy metrics, API usage
 - [Memory System](../memory/MEMORY.md) - Hybrid retrieval details
 - [MCP Protocol](https://modelcontextprotocol.io/) - MCP specification

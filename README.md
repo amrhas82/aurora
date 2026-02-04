@@ -105,26 +105,34 @@ Detailed Score Breakdown:
 
 ---
 
-### MCP Tools
+### Code Intelligence (MCP)
 
-Aurora exposes these tools to AI assistants via Model Context Protocol:
+Aurora provides fast code intelligence via MCP tools - many operations use ripgrep instead of LSP for 100x speed.
 
-| Tool | Purpose |
-|------|---------|
-| `lsp deadcode` | Find unused functions, classes, variables. Generates CODE_QUALITY_REPORT.md |
-| `lsp impact` | See all callers before changing a symbol. Shows risk level (low/medium/high) |
-| `lsp check` | Quick "is this used?" lookup before editing |
-| `mem_search` | Semantic search across indexed code. Returns snippets with LSP context (used_by, called_by) and git info |
+| Tool | Action | Speed | Purpose |
+|------|--------|-------|---------|
+| `lsp` | `check` | ~1s | Quick usage count before editing |
+| `lsp` | `impact` | ~2s | Full impact analysis with top callers |
+| `lsp` | `deadcode` | 2-20s | Find all unused symbols in directory |
+| `lsp` | `imports` | <1s | Find all files that import a module |
+| `lsp` | `related` | ~50ms | Find outgoing calls (dependencies) |
+| `mem_search` | - | <1s | Semantic search with LSP enrichment |
 
-**Supported:** Python, TypeScript, Java, Go, Rust, C/C++, and more (10+ languages via multilspy)
+**Risk levels:** LOW (0-2 refs) → MED (3-10) → HIGH (11+)
 
 **When to use:**
 - Before editing: `lsp check` to see what depends on it
 - Before refactoring: `lsp impact` to assess risk
+- Understanding dependencies: `lsp related` to see what a function calls
+- Finding importers: `lsp imports` to see who imports a module
 - Finding code: `mem_search` instead of grep for semantic results
 - After changes: `lsp deadcode` to clean up orphaned code
 
-See [MCP Tools Documentation](docs/02-features/mcp/MCP.md) for details.
+**Language support:**
+- **Python:** Full (LSP + tree-sitter complexity + import filtering)
+- **JS/TS/Go/Rust/Java:** Partial (LSP refs, ripgrep deadcode)
+
+See [Code Intelligence Guide](docs/02-features/lsp/CODE_INTELLIGENCE_STATUS.md) for all 16 features and implementation details.
 
 ---
 

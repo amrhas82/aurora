@@ -423,3 +423,12 @@ Both fast and accurate modes miss:
 1. Multi-language complexity support
 2. Type checking integration per language
 3. LSP warm-up / persistent daemon for faster cold start
+
+---
+
+## See Also
+
+- [LSP Package Documentation](LSP.md) - Architecture, accuracy metrics, API usage
+- [MCP Tools](../mcp/MCP.md) - MCP integration for AI assistants
+- [multilspy](https://github.com/microsoft/multilspy) - Underlying LSP library
+- [LSP Specification](https://microsoft.github.io/language-server-protocol/) - Protocol reference

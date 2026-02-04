@@ -198,7 +198,7 @@ def _generate_code_quality_report(dead_code: list[dict], workspace: Path) -> str
 
 
 def lsp(
-    action: Literal["deadcode", "impact", "check", "imports"] = "check",
+    action: Literal["deadcode", "impact", "check", "imports", "related"] = "check",
     path: str = "",
     line: int | None = None,
     accurate: bool = False,
@@ -210,6 +210,7 @@ def lsp(
     - "dead code", "unused", "cleanup" → action="deadcode" (scans entire directory)
     - Before editing any function/class → action="check" (FAST - quick usage count)
     - "who imports this?" → action="imports" (FAST - find all importers of a module)
+    - "what does this call?" → action="related" (FAST - find outgoing calls/dependencies)
 
     IMPORTANT: Do NOT use deadcode for refactoring. Use impact instead.
 
@@ -218,6 +219,7 @@ def lsp(
     - "impact": Full impact analysis for a symbol at path:line. Shows all callers, files affected.
     - "deadcode": Scan directory for ALL unused symbols. Has two modes (see below).
     - "imports": Find all files that import a given module. Use for refactoring impact.
+    - "related": Find what a symbol depends on (outgoing calls). Use for understanding dependencies.
 
     DEADCODE MODES:
     - Fast (default): Batched ripgrep text search, ~2s, 85% accuracy, ALL languages
@@ -248,14 +250,14 @@ def lsp(
     - Import filters: packages/lsp/src/aurora_lsp/filters.py (Python only)
 
     Args:
-        action: "check" | "impact" | "deadcode" | "imports" (default: check)
+        action: "check" | "impact" | "deadcode" | "imports" | "related" (default: check)
         path: File path (required). For deadcode, can be a directory. For imports, the module file.
-        line: Line number (required for impact/check, 1-indexed). Not used for deadcode/imports.
+        line: Line number (required for impact/check/related, 1-indexed). Not used for deadcode/imports.
         accurate: For deadcode only. If True, use LSP references (95%+ accuracy, ~20s).
                  If False (default), use batched ripgrep (85% accuracy, ~2s).
 
     Returns:
-        JSON with usages, callers, risk level, files affected, or import information
+        JSON with usages, callers, risk level, files affected, dependencies, or import information
     """
     workspace = Path.cwd()
     lsp_client = _get_lsp(workspace)
@@ -364,5 +366,35 @@ def lsp(
         result["action"] = "imports"
         return result
 
+    elif action == "related":
+        # Find what this symbol depends on (outgoing calls)
+        if line is None:
+            raise ValueError("line parameter required for related action")
+
+        # LSP uses 0-indexed lines
+        line_0indexed = line - 1
+
+        # Find symbol column intelligently
+        col = _find_symbol_column(path, line_0indexed, workspace)
+
+        # Get outgoing calls (what this symbol calls)
+        callees = lsp_client.get_callees(path, line_0indexed, col=col)
+
+        # Format callees
+        formatted_callees = []
+        for callee in callees:
+            formatted_callees.append({
+                "name": callee.get("name", "unknown"),
+                "line": callee.get("line", 0),
+            })
+
+        return {
+            "action": "related",
+            "path": path,
+            "line": line,
+            "calls": formatted_callees,
+            "total_calls": len(formatted_callees),
+        }
+
     else:
-        raise ValueError(f"Unknown action: {action}. Use: deadcode, impact, check, imports")
+        raise ValueError(f"Unknown action: {action}. Use: deadcode, impact, check, imports, related")

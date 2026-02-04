@@ -87,9 +87,13 @@ class MockStore:
         self,
         min_activation: float = 0.0,
         limit: int = 100,
+        include_embeddings: bool = True,
+        chunk_type: str | None = None,
     ) -> list[MockChunk]:
         """Retrieve chunks sorted by activation."""
         candidates = [chunk for chunk in self.chunks.values() if chunk.activation >= min_activation]
+        if chunk_type:
+            candidates = [c for c in candidates if getattr(c, 'type', None) == chunk_type]
         candidates.sort(key=lambda c: c.activation, reverse=True)
         return candidates[:limit]
 

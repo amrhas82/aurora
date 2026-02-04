@@ -60,9 +60,12 @@ class MockStore:
         self.chunks = chunks or []
         self.db_path = ":memory:"
 
-    def retrieve_by_activation(self, min_activation=0.0, limit=100, include_embeddings=True):
+    def retrieve_by_activation(self, min_activation=0.0, limit=100, include_embeddings=True, chunk_type=None):
         """Retrieve chunks by activation."""
-        return self.chunks[:limit]
+        chunks = self.chunks
+        if chunk_type:
+            chunks = [c for c in chunks if getattr(c, 'type', None) == chunk_type]
+        return chunks[:limit]
 
     def fetch_embeddings_for_chunks(self, chunk_ids):
         """Fetch embeddings for specific chunks (two-phase optimization)."""

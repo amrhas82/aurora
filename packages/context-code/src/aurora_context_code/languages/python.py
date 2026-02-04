@@ -139,7 +139,9 @@ class PythonParser(CodeParser):
             # flow analysis and tracking variable assignments.
             imports = self._extract_imports(tree.root_node, source_code)
             for chunk in chunks:
-                chunk.dependencies = self._identify_dependencies(chunk, imports, chunks)
+                chunk.dependencies = self._identify_dependencies(
+                    chunk, imports, chunks, source_code
+                )
 
             logger.debug(f"Extracted {len(chunks)} chunks from {file_path}")
             return chunks
@@ -591,38 +593,113 @@ class PythonParser(CodeParser):
 
     def _identify_dependencies(
         self,
-        _chunk: CodeChunk,
-        _imports: set[str],
-        _all_chunks: list[CodeChunk],
+        chunk: CodeChunk,
+        imports: set[str],
+        all_chunks: list[CodeChunk],
+        source_code: str,
     ) -> list[str]:
         """Identify dependencies for a code chunk.
 
-        This is a simplified implementation that:
-        1. Identifies calls to other functions/methods in the same file
-        2. Returns chunk IDs of those dependencies
-
-        A full implementation would require control flow analysis and
-        tracking variable assignments.
+        Analyzes the chunk's source code to find:
+        1. Calls to other functions/methods in the same file (returns chunk IDs)
+        2. References to imported names (returns "import:name" format)
 
         Args:
-            _chunk: The chunk to analyze (reserved for future implementation)
-            _imports: Set of imported names (reserved for future implementation)
-            _all_chunks: All chunks extracted from the file (reserved for future implementation)
+            chunk: The chunk to analyze
+            imports: Set of imported names from the file
+            all_chunks: All chunks extracted from the file
+            source_code: Full source code of the file
 
         Returns:
-            List of chunk IDs this chunk depends on
+            List of dependencies: chunk IDs for local calls, "import:name" for imports
 
         """
-        # For now, return empty list
-        # Full implementation would:
-        # 1. Parse the function/method body
-        # 2. Find all function calls
-        # 3. Match calls to chunks in the same file
-        # 4. Return chunk IDs of matched dependencies
-        #
-        # This is complex and would require additional tree-sitter queries
-        # and control flow analysis. Deferring to future enhancement.
-        return []
+        dependencies: list[str] = []
+
+        # Extract the chunk's source code by line range
+        lines = source_code.split("\n")
+        chunk_start = chunk.line_start - 1  # Convert to 0-indexed
+        chunk_end = chunk.line_end  # line_end is inclusive
+        chunk_code = "\n".join(lines[chunk_start:chunk_end])
+
+        if not chunk_code.strip():
+            return []
+
+        # Build a set of names defined in other chunks (for local dependency matching)
+        # Map from name -> chunk_id
+        local_names: dict[str, str] = {}
+        for other_chunk in all_chunks:
+            if other_chunk.id != chunk.id:
+                local_names[other_chunk.name] = other_chunk.id
+
+        # Find all identifiers/names referenced in this chunk's code
+        # We'll parse the chunk code to find function calls
+        if self.parser is None:
+            return []
+
+        try:
+            tree = self.parser.parse(bytes(chunk_code, "utf-8"))
+
+            # Find all call expressions
+            call_nodes = self._find_nodes_by_type(tree.root_node, "call")
+
+            seen_deps: set[str] = set()  # Avoid duplicates
+
+            for call_node in call_nodes:
+                # Extract the function being called
+                func_node = call_node.child_by_field_name("function")
+                if not func_node:
+                    continue
+
+                # Handle different call patterns:
+                # - simple call: foo()
+                # - attribute call: obj.method() or module.func()
+                func_name = None
+
+                if func_node.type == "identifier":
+                    # Simple function call: foo()
+                    func_name = chunk_code[func_node.start_byte : func_node.end_byte]
+                elif func_node.type == "attribute":
+                    # Attribute access: obj.method() or module.func()
+                    # Get the base object (first part before .)
+                    obj_node = func_node.child_by_field_name("object")
+                    if obj_node and obj_node.type == "identifier":
+                        base_name = chunk_code[obj_node.start_byte : obj_node.end_byte]
+                        # Check if base is an import (e.g., os.path.join)
+                        if base_name in imports:
+                            dep_key = f"import:{base_name}"
+                            if dep_key not in seen_deps:
+                                dependencies.append(dep_key)
+                                seen_deps.add(dep_key)
+                    # Also check the method name for local calls (e.g., self.helper())
+                    attr_node = func_node.child_by_field_name("attribute")
+                    if attr_node:
+                        method_name = chunk_code[attr_node.start_byte : attr_node.end_byte]
+                        if method_name in local_names:
+                            chunk_id = local_names[method_name]
+                            if chunk_id not in seen_deps:
+                                dependencies.append(chunk_id)
+                                seen_deps.add(chunk_id)
+
+                if func_name:
+                    # Check if it's a local function call
+                    if func_name in local_names:
+                        chunk_id = local_names[func_name]
+                        if chunk_id not in seen_deps:
+                            dependencies.append(chunk_id)
+                            seen_deps.add(chunk_id)
+                    # Check if it's an imported name
+                    elif func_name in imports:
+                        dep_key = f"import:{func_name}"
+                        if dep_key not in seen_deps:
+                            dependencies.append(dep_key)
+                            seen_deps.add(dep_key)
+
+        except Exception as e:
+            logger.warning(f"Failed to parse chunk for dependencies: {e}")
+            return []
+
+        return dependencies
 
     def _generate_chunk_id(self, file_path: Path, element_name: str, line_start: int) -> str:
         """Generate a unique chunk ID based on file path, element name, and location.

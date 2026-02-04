@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING
 from aurora_lsp.languages.base import LanguageConfig
 from aurora_lsp.languages.python import PYTHON
 
+
 if TYPE_CHECKING:
     pass
 

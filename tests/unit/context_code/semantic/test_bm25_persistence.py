@@ -34,7 +34,7 @@ class MockStore:
             chunks.append(chunk)
         return chunks
 
-    def retrieve_by_activation(self, min_activation=0.0, limit=100, include_embeddings=True):
+    def retrieve_by_activation(self, min_activation=0.0, limit=100, include_embeddings=True, chunk_type=None):
         """Retrieve chunks by activation (for lazy loading trigger)."""
         chunks = []
         for i in range(min(limit, 10)):  # Return up to 10 mock chunks

@@ -47,7 +47,6 @@ repos:
     hooks:
       - id: black
         name: Format Python code with Black
-        language_version: python3.10
         args: ['--line-length=100']
         exclude: 'tests/fixtures/.*broken\.py$'
 
@@ -116,7 +115,7 @@ repos:
     hooks:
       - id: bandit
         name: Security check with Bandit
-        args: ['-ll', '--skip=B101,B601,B103,B108,B301,B306']  # Skip test-specific patterns
+        args: ['-ll', '--skip=B101,B601,B103,B301,B306']  # Skip test-specific patterns
         exclude: '^(tests/|packages/.*/tests/|.*_test\.py$|test_.*\.py$|compare_batch_sizes\.py|profile_.*\.py|benchmark_.*\.py)'
 
   # Documentation
@@ -130,7 +129,7 @@ repos:
 
 # Configuration
 default_language_version:
-  python: python3.10
+  python: python3
 
 # Global settings
 fail_fast: false  # Run all hooks even if one fails

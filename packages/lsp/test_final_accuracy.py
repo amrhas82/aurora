@@ -172,7 +172,8 @@ async def main():
         print("KEY INSIGHTS")
         print("=" * 90)
 
-        print(f"""
+        print(
+            f"""
 📊 CAPTURE RATES:
    • Overall:         {overall:.1f}% of grep matches found by LSP
    • Usage accuracy:  {totals["lsp_use"]}/{totals["grep_use"]} usages ({totals["lsp_use"] / max(totals["grep_use"], 1) * 100:.1f}%)
@@ -186,7 +187,8 @@ async def main():
    • LSP > grep: type resolution, re-exports, aliases
    • LSP < grep: partial matches, comments, strings
    • Polymorphic calls through base class tracked at base, not implementation
-""")
+"""
+        )
 
     finally:
         await client.close()

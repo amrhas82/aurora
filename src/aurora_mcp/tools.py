@@ -19,7 +19,6 @@ from aurora_core.activation.engine import ActivationEngine
 from aurora_core.store.sqlite import SQLiteStore
 from aurora_mcp.config import setup_mcp_logging
 
-
 logger = logging.getLogger(__name__)
 
 # Setup MCP logging

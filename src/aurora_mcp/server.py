@@ -8,7 +8,6 @@ import argparse
 import sys
 from pathlib import Path
 
-
 try:
     from fastmcp import FastMCP
 except ImportError:
@@ -59,6 +58,7 @@ class AuroraMCPServer:
         - aur mem search "query" - Search indexed codebase
         - aur soar "question" - Multi-turn SOAR query
         """
+
         # Register LSP tool with readOnlyHint
         @self.mcp.tool(
             name="lsp",
@@ -73,7 +73,9 @@ class AuroraMCPServer:
             name="mem_search",
             description=mem_search_tool.__doc__ or "Search indexed code",
         )
-        def mem_search(query: str, limit: int = 5, enrich: bool = False, code_only: bool = True) -> list[dict]:
+        def mem_search(
+            query: str, limit: int = 5, enrich: bool = False, code_only: bool = True
+        ) -> list[dict]:
             """Search indexed code (default) or include KB docs."""
             return mem_search_tool(query=query, limit=limit, enrich=enrich, code_only=code_only)
 

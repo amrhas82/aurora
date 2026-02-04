@@ -34,7 +34,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
-
 # Ensure we're using the local packages
 sys.path.insert(0, str(Path(__file__).parent.parent / "packages" / "cli" / "src"))
 sys.path.insert(0, str(Path(__file__).parent.parent / "packages" / "core" / "src"))
@@ -44,6 +43,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "packages" / "context-code
 @dataclass
 class TimingResult:
     """Results from a timing measurement."""
+
     name: str
     duration_ms: float
     details: str = ""
@@ -73,11 +73,14 @@ class Profiler:
 
     def time_function(self, name: str) -> Callable:
         """Decorator to time a function."""
+
         def decorator(func: Callable) -> Callable:
             def wrapper(*args: Any, **kwargs: Any) -> Any:
                 with self.time_section(name):
                     return func(*args, **kwargs)
+
             return wrapper
+
         return decorator
 
     def print_summary(self) -> None:
@@ -122,18 +125,22 @@ def profile_imports(profiler: Profiler) -> dict[str, Any]:
 
     with profiler.time_section("Import: aurora_cli.config"):
         from aurora_cli.config import Config
+
         modules["Config"] = Config
 
     with profiler.time_section("Import: aurora_core.store.sqlite"):
         from aurora_core.store.sqlite import SQLiteStore
+
         modules["SQLiteStore"] = SQLiteStore
 
     with profiler.time_section("Import: aurora_cli.memory.retrieval"):
         from aurora_cli.memory.retrieval import MemoryRetriever
+
         modules["MemoryRetriever"] = MemoryRetriever
 
     with profiler.time_section("Import: aurora_context_code.model_cache"):
         from aurora_context_code.model_cache import is_model_cached_fast
+
         modules["is_model_cached_fast"] = is_model_cached_fast
 
     return modules
@@ -178,13 +185,16 @@ def profile_bm25_index_load(profiler: Profiler, db_path: str) -> Any:
 
     with profiler.time_section("BM25 index load", f"from {bm25_index_path}"):
         from aurora_context_code.semantic.bm25_scorer import BM25Scorer
+
         scorer = BM25Scorer()
         scorer.load_index(bm25_index_path)
 
     return scorer
 
 
-def profile_retriever_init(profiler: Profiler, MemoryRetriever: type, store: Any, config: Any) -> Any:
+def profile_retriever_init(
+    profiler: Profiler, MemoryRetriever: type, store: Any, config: Any
+) -> Any:
     """Profile retriever initialization (no model loading)."""
     with profiler.time_section("MemoryRetriever initialization"):
         retriever = MemoryRetriever(store=store, config=config)
@@ -201,6 +211,7 @@ def profile_embedding_model_load(profiler: Profiler, model_cached: bool) -> Any:
         os.environ["HF_HUB_OFFLINE"] = "1"
         try:
             from aurora_context_code.semantic.embedding_provider import EmbeddingProvider
+
             provider = EmbeddingProvider()
             provider.preload_model()
         except Exception as e:
@@ -225,16 +236,12 @@ def profile_database_retrieval(profiler: Profiler, store: Any, limit: int = 500)
     """Profile database retrieval by activation."""
     with profiler.time_section("DB: retrieve_by_activation (with embeddings)", f"limit={limit}"):
         chunks_with_emb = store.retrieve_by_activation(
-            min_activation=0.0,
-            limit=limit,
-            include_embeddings=True
+            min_activation=0.0, limit=limit, include_embeddings=True
         )
 
     with profiler.time_section("DB: retrieve_by_activation (no embeddings)", f"limit={limit}"):
         chunks_no_emb = store.retrieve_by_activation(
-            min_activation=0.0,
-            limit=limit,
-            include_embeddings=False
+            min_activation=0.0, limit=limit, include_embeddings=False
         )
 
     return chunks_with_emb
@@ -272,12 +279,15 @@ def profile_bm25_scoring(profiler: Profiler, query: str, chunks: list) -> list:
     return scores
 
 
-def profile_semantic_scoring(profiler: Profiler, provider: Any, query_embedding: Any, chunks: list) -> list:
+def profile_semantic_scoring(
+    profiler: Profiler, provider: Any, query_embedding: Any, chunks: list
+) -> list:
     """Profile semantic similarity scoring."""
     if provider is None or query_embedding is None:
         return []
 
     import numpy as np
+
     from aurora_context_code.semantic.embedding_provider import cosine_similarity
 
     with profiler.time_section("Semantic: score all chunks", f"{min(100, len(chunks))} chunks"):
@@ -293,7 +303,9 @@ def profile_semantic_scoring(profiler: Profiler, provider: Any, query_embedding:
 
 def profile_full_search(profiler: Profiler, retriever: Any, query: str, limit: int = 10) -> list:
     """Profile the complete search path."""
-    with profiler.time_section("Full search (retrieve_fast)", f"query='{query[:30]}...', limit={limit}"):
+    with profiler.time_section(
+        "Full search (retrieve_fast)", f"query='{query[:30]}...', limit={limit}"
+    ):
         results, is_hybrid = retriever.retrieve_fast(query, limit=limit)
 
     return results, is_hybrid
@@ -333,16 +345,16 @@ def main() -> None:
     )
     parser.add_argument("query", help="Search query to test")
     parser.add_argument(
-        "--detailed", "-d", action="store_true",
-        help="Show detailed timing for each step"
+        "--detailed", "-d", action="store_true", help="Show detailed timing for each step"
     )
     parser.add_argument(
-        "--cprofile", "-c", action="store_true",
-        help="Run cProfile for detailed function-level analysis"
+        "--cprofile",
+        "-c",
+        action="store_true",
+        help="Run cProfile for detailed function-level analysis",
     )
     parser.add_argument(
-        "--db-path", type=str, default=None,
-        help="Database path (default: .aurora/memory.db)"
+        "--db-path", type=str, default=None, help="Database path (default: .aurora/memory.db)"
     )
     args = parser.parse_args()
 

@@ -21,8 +21,15 @@ from pathlib import Path
 script_dir = Path(__file__).parent
 sys.path.insert(0, str(script_dir))
 
-from friction_analyze import main as analyze_main, load_config, extract_signals, derive_session_name, analyze_session, aggregate_sessions
 from antigen_extract import main as extract_main
+from friction_analyze import (
+    aggregate_sessions,
+    analyze_session,
+    derive_session_name,
+    extract_signals,
+    load_config,
+)
+from friction_analyze import main as analyze_main
 
 
 def main():
@@ -33,42 +40,42 @@ def main():
     sessions_dir = Path(sys.argv[1])
 
     if not sessions_dir.exists():
-        print(f'Error: {sessions_dir} does not exist')
+        print(f"Error: {sessions_dir} does not exist")
         return 1
 
-    print('=' * 60)
-    print(' FRICTION ANALYSIS PIPELINE')
-    print('=' * 60)
+    print("=" * 60)
+    print(" FRICTION ANALYSIS PIPELINE")
+    print("=" * 60)
 
     # Step 1: Analyze sessions
-    print('\n[1/2] Analyzing sessions...\n')
+    print("\n[1/2] Analyzing sessions...\n")
     analyze_main()  # Continue even if INCONCLUSIVE - may still have BAD sessions
 
     # Check if analysis produced output
-    analysis_file = Path('.aurora/friction/friction_analysis.json')
+    analysis_file = Path(".aurora/friction/friction_analysis.json")
     if not analysis_file.exists():
-        print('\nNo analysis output. Check session directory.')
+        print("\nNo analysis output. Check session directory.")
         return 1
 
     # Step 2: Extract antigens
-    print('\n' + '=' * 60)
-    print('\n[2/2] Extracting antigens from BAD sessions...\n')
+    print("\n" + "=" * 60)
+    print("\n[2/2] Extracting antigens from BAD sessions...\n")
     extract_main()
 
     # Final summary
-    print('\n' + '=' * 60)
-    print(' DONE')
-    print('=' * 60)
+    print("\n" + "=" * 60)
+    print(" DONE")
+    print("=" * 60)
 
-    review_file = Path('.aurora/friction/antigen_review.md')
+    review_file = Path(".aurora/friction/antigen_review.md")
     if review_file.exists():
-        print(f'\nReview your antigens:')
-        print(f'  cat {review_file}')
-        print(f'\nOr feed to LLM:')
+        print(f"\nReview your antigens:")
+        print(f"  cat {review_file}")
+        print(f"\nOr feed to LLM:")
         print(f'  cat {review_file} | claude "write CLAUDE.md rules to prevent these patterns"')
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

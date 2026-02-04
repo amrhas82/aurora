@@ -8,11 +8,8 @@ from __future__ import annotations
 import asyncio
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-
-if TYPE_CHECKING:
-    from multilspy.language_server import LanguageServer
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +23,7 @@ try:
 except ImportError:
     MULTILSPY_AVAILABLE = False
     Language = None  # type: ignore
+    LanguageServer = None  # type: ignore
 
 
 class AuroraLSPClient:

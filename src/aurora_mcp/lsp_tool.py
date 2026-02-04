@@ -9,7 +9,6 @@ import logging
 from pathlib import Path
 from typing import Literal
 
-
 logger = logging.getLogger(__name__)
 
 # Lazy-loaded LSP instance (initialized on first use)
@@ -28,14 +27,14 @@ def _get_lsp(workspace: Path | None = None):
     if _lsp_instance is None or _workspace_root != ws:
         try:
             from aurora_lsp.facade import AuroraLSP
+
             _lsp_instance = AuroraLSP(ws)
             _workspace_root = ws
             logger.info(f"Initialized LSP for workspace: {ws}")
         except ImportError:
             logger.error("aurora-lsp package not installed")
             raise ImportError(
-                "LSP tools require aurora-lsp package. "
-                "Install with: pip install aurora-lsp"
+                "LSP tools require aurora-lsp package. " "Install with: pip install aurora-lsp"
             )
 
     return _lsp_instance
@@ -72,22 +71,22 @@ def _find_symbol_column(file_path: str, line_0indexed: int, workspace: Path) -> 
         line = lines[line_0indexed]
 
         # Pattern: class ClassName
-        match = re.search(r'\bclass\s+(\w+)', line)
+        match = re.search(r"\bclass\s+(\w+)", line)
         if match:
             return match.start(1)
 
         # Pattern: async def func_name
-        match = re.search(r'\basync\s+def\s+(\w+)', line)
+        match = re.search(r"\basync\s+def\s+(\w+)", line)
         if match:
             return match.start(1)
 
         # Pattern: def func_name
-        match = re.search(r'\bdef\s+(\w+)', line)
+        match = re.search(r"\bdef\s+(\w+)", line)
         if match:
             return match.start(1)
 
         # Pattern: variable = ... (at start of line, possibly indented)
-        match = re.match(r'^(\s*)(\w+)\s*[=:]', line)
+        match = re.match(r"^(\s*)(\w+)\s*[=:]", line)
         if match:
             return len(match.group(1))  # Column after indentation
 
@@ -143,22 +142,22 @@ def _get_symbol_name_from_line(file_path: str, line_0indexed: int, workspace: Pa
         line = lines[line_0indexed]
 
         # Pattern: class ClassName
-        match = re.search(r'\bclass\s+(\w+)', line)
+        match = re.search(r"\bclass\s+(\w+)", line)
         if match:
             return match.group(1)
 
         # Pattern: async def func_name
-        match = re.search(r'\basync\s+def\s+(\w+)', line)
+        match = re.search(r"\basync\s+def\s+(\w+)", line)
         if match:
             return match.group(1)
 
         # Pattern: def func_name
-        match = re.search(r'\bdef\s+(\w+)', line)
+        match = re.search(r"\bdef\s+(\w+)", line)
         if match:
             return match.group(1)
 
         # Pattern: variable = ...
-        match = re.match(r'^\s*(\w+)\s*[=:]', line)
+        match = re.match(r"^\s*(\w+)\s*[=:]", line)
         if match:
             return match.group(1)
 
@@ -237,9 +236,9 @@ def _generate_code_quality_report(dead_code: list[dict], workspace: Path) -> str
     # Group by severity
     # For dead code, we'll categorize by kind and usage
     critical = []  # Classes/functions in core files
-    high = []      # Public functions/classes
-    medium = []    # Protected members
-    low = []       # Private members
+    high = []  # Public functions/classes
+    medium = []  # Protected members
+    low = []  # Private members
 
     for item in dead_code:
         name = item.get("name", "")
@@ -408,12 +407,14 @@ def lsp(
             # Count usages from this caller (approximation)
             file_usages = usages_by_file.get(caller_file, [])
             usages_count = len([u for u in file_usages if u.get("name") == caller_name])
-            top_callers.append({
-                "file": caller_file,
-                "line": caller_line + 1,  # Convert back to 1-indexed
-                "name": caller_name,
-                "usages": usages_count or 1,
-            })
+            top_callers.append(
+                {
+                    "file": caller_file,
+                    "line": caller_line + 1,  # Convert back to 1-indexed
+                    "name": caller_name,
+                    "usages": usages_count or 1,
+                }
+            )
 
         total_usages = summary.get("total_usages", 0)
         files_affected = summary.get("files_affected", 0)
@@ -521,10 +522,12 @@ def lsp(
         # Format callees
         formatted_callees = []
         for callee in callees:
-            formatted_callees.append({
-                "name": callee.get("name", "unknown"),
-                "line": callee.get("line", 0),
-            })
+            formatted_callees.append(
+                {
+                    "name": callee.get("name", "unknown"),
+                    "line": callee.get("line", 0),
+                }
+            )
 
         return {
             "action": "related",
@@ -535,4 +538,6 @@ def lsp(
         }
 
     else:
-        raise ValueError(f"Unknown action: {action}. Use: deadcode, impact, check, imports, related")
+        raise ValueError(
+            f"Unknown action: {action}. Use: deadcode, impact, check, imports, related"
+        )

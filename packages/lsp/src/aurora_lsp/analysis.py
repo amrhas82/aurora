@@ -13,10 +13,9 @@ from enum import IntEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from aurora_lsp.filters import ImportFilter, get_filter_for_file
+from aurora_lsp.filters import get_filter_for_file
 from aurora_lsp.languages import (
     get_call_node_type,
-    get_config,
     get_function_def_types,
     is_entry_point,
     is_nested_helper,

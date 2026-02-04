@@ -13,7 +13,6 @@ from typing import Any
 
 from aurora_lsp.languages import get_complexity_branch_types, get_config
 
-
 logger = logging.getLogger(__name__)
 
 # Lazy-loaded tree-sitter parser
@@ -50,6 +49,7 @@ def _get_complexity(file_path: str, line_start: int, line_end: int) -> int:
             try:
                 import tree_sitter
                 import tree_sitter_python
+
                 python_lang = tree_sitter.Language(tree_sitter_python.language())
                 _ts_parser = tree_sitter.Parser(python_lang)
             except ImportError:
@@ -62,12 +62,16 @@ def _get_complexity(file_path: str, line_start: int, line_end: int) -> int:
 
         # Find node at line_start
         target_node = None
+
         def find_node(node):
             nonlocal target_node
             # tree-sitter uses 0-indexed lines
             node_start = node.start_point[0] + 1
             node_end = node.end_point[0] + 1
-            if node_start == line_start and node.type in ("function_definition", "class_definition"):
+            if node_start == line_start and node.type in (
+                "function_definition",
+                "class_definition",
+            ):
                 target_node = node
                 return
             for child in node.children:
@@ -84,6 +88,7 @@ def _get_complexity(file_path: str, line_start: int, line_end: int) -> int:
             return -1
 
         branch_count = 0
+
         def count_branches(node):
             nonlocal branch_count
             if node.type in branch_types:
@@ -126,6 +131,7 @@ def _calculate_risk(files: int, refs: int, complexity: int) -> str:
         return "MED"
     # LOW: localized and simple
     return "LOW"
+
 
 # Lazy-loaded instances
 _store = None
@@ -180,6 +186,7 @@ def _get_lsp(workspace: Path | None = None):
     if _lsp_instance is None:
         try:
             from aurora_lsp.facade import AuroraLSP
+
             ws = workspace or Path.cwd()
             _lsp_instance = AuroraLSP(ws)
             logger.info(f"Initialized LSP for workspace: {ws}")
@@ -367,8 +374,11 @@ def _enrich_full(result: dict[str, Any], workspace: Path) -> dict[str, Any]:
         # Get callers (functions that call this symbol) - include file:line
         callers = lsp.get_callers(file_path, line_0indexed, col=col)
         result["called_by"] = [
-            f"{caller.get('name', '')}:{Path(caller.get('file', '')).name}:{caller.get('line', 0) + 1}"
-            if caller.get('file') else caller.get('name', '')
+            (
+                f"{caller.get('name', '')}:{Path(caller.get('file', '')).name}:{caller.get('line', 0) + 1}"
+                if caller.get("file")
+                else caller.get("name", "")
+            )
             for caller in callers[:5]
         ]
 
@@ -376,13 +386,13 @@ def _enrich_full(result: dict[str, Any], workspace: Path) -> dict[str, Any]:
         callees = lsp.get_callees(file_path, line_0indexed, col=col)
         result["calling"] = []
         for callee in callees[:5]:
-            name = callee.get('name', '')
+            name = callee.get("name", "")
             # Clean up: remove newlines, args, quotes, trailing parens
-            name = name.split('\n')[0].split('(')[0].strip().rstrip(')')
+            name = name.split("\n")[0].split("(")[0].strip().rstrip(")")
             # Skip truncated/garbage names (e.g., partial code)
             if not name or len(name) < 2:
                 continue
-            line_num = callee.get('line', 0)
+            line_num = callee.get("line", 0)
             if line_num:
                 result["calling"].append(f"{name}:{line_num}")
             else:
@@ -398,7 +408,9 @@ def _enrich_full(result: dict[str, Any], workspace: Path) -> dict[str, Any]:
     return result
 
 
-def mem_search(query: str, limit: int = 5, enrich: bool = False, code_only: bool = True) -> list[dict]:
+def mem_search(
+    query: str, limit: int = 5, enrich: bool = False, code_only: bool = True
+) -> list[dict]:
     """Search codebase for symbols, functions, classes with LSP-enriched results.
 
     WHEN TO USE:
@@ -496,7 +508,7 @@ def mem_search(query: str, limit: int = 5, enrich: bool = False, code_only: bool
             "name": metadata.get("name", ""),  # Function/class name
             "lines": lines_str,
             "used_by": "-",  # Will be set by _get_usage_only
-            "risk": "-",     # Will be set by _get_usage_only
+            "risk": "-",  # Will be set by _get_usage_only
             "score": round(result.get("hybrid_score", 0.0), 3),
             "metadata": metadata,  # Include metadata for LSP enrichment
         }

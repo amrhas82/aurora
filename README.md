@@ -88,7 +88,7 @@ Refine your search:
   --limit N        More results (e.g., --limit 20)
   --type TYPE      Filter: function, class, method, kb, code
   --min-score 0.5  Higher relevance threshold
-  
+
 Detailed Score Breakdown:
 
 ┌─ core.py | code | generate_goals_json (Lines 1091-1175) ─────────────────────────────────────┐

@@ -269,10 +269,12 @@ async def main():
         print("FINAL ACCURACY SUMMARY")
         print("=" * 70)
 
-        print("""
+        print(
+            """
 ┌─────────────────────────────────────────────────────────────────────┐
 │ METRIC                              │ ACCURACY                      │
-├─────────────────────────────────────┼───────────────────────────────┤""")
+├─────────────────────────────────────┼───────────────────────────────┤"""
+        )
         print(
             f"│ Import Detection                    │ {import_acc:>6.1f}%                       │"
         )
@@ -287,14 +289,16 @@ async def main():
         overall = (import_acc + usage_acc + dead_recall + dead_spec + ref_acc) / 5
         print(f"\n  OVERALL ACCURACY: {overall:.1f}%")
 
-        print("""
+        print(
+            """
 NOTES:
   • Import detection: Regex pattern matching on LSP reference lines
   • Usage detection: All non-import references from LSP
   • Dead code: Symbols with 0 usages (excluding imports)
   • Reference finding: LSP textDocument/references
   • Numbers may vary due to codebase changes
-""")
+"""
+        )
 
     finally:
         await client.close()

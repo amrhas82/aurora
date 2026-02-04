@@ -45,7 +45,8 @@ def main():
     print("=" * 60)
     print("\nTo get full content: Claude uses Read tool with file + lines from mem_search")
     print("\nTo test with Claude Code, add to .mcp.json:")
-    print("""
+    print(
+        """
 {
   "mcpServers": {
     "aurora-lsp-poc": {
@@ -54,7 +55,8 @@ def main():
     }
   }
 }
-""")
+"""
+    )
 
 
 if __name__ == "__main__":

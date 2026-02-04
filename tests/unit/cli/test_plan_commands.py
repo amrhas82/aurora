@@ -15,12 +15,7 @@ import pytest
 from click.testing import CliRunner
 
 from aurora_cli.commands.plan import plan_group
-from aurora_cli.planning.core import (
-    archive_plan,
-    init_planning_directory,
-    list_plans,
-    show_plan,
-)
+from aurora_cli.planning.core import archive_plan, init_planning_directory, list_plans, show_plan
 from aurora_cli.planning.models import Complexity, Plan, PlanManifest, PlanStatus, Subgoal
 
 

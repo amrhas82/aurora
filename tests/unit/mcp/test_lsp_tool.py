@@ -34,9 +34,11 @@ class TestLSPDeadcode:
 
         # Configure __truediv__ behavior for Path operations
         mock_workspace.__truediv__ = MagicMock(
-            side_effect=lambda x: mock_docs_dir
-            if x == "docs"
-            else (mock_report_path if x == "CODE_QUALITY_REPORT.md" else MagicMock())
+            side_effect=lambda x: (
+                mock_docs_dir
+                if x == "docs"
+                else (mock_report_path if x == "CODE_QUALITY_REPORT.md" else MagicMock())
+            )
         )
         mock_path_class.cwd.return_value = mock_workspace
 

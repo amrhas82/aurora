@@ -273,9 +273,7 @@ class EmbeddingProvider:
 
             try:
                 # Import suppression helper
-                from aurora_context_code.semantic.model_utils import (
-                    _suppress_model_loading_output,
-                )
+                from aurora_context_code.semantic.model_utils import _suppress_model_loading_output
 
                 # Use the lazily-imported SentenceTransformer class
                 # Suppress verbose "Loading weights" progress bars

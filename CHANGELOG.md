@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.4] - 2026-02-04
+
+### Added
+
+**LSP Hybrid Fallback:**
+- Text search fallback when LSP returns 0 references
+- Detects cross-package usage that LSP misses (lazy imports, installed packages)
+- Shows both LSP refs and text matches when they diverge
+- Risk level upgraded based on text matches
+
+### Fixed
+
+**MCP Server Configuration:**
+- Handle 'already exists' gracefully when configuring aurora MCP server
+- Use explicit `--scope local` for both remove and add-json commands
+
+**ML Model Loading:**
+- Suppress verbose 'Loading weights' progress bar during model loading
+- Disable transformers progress bar via logging API
+- Disable huggingface_hub progress bars
+
+### Changed
+
+- Moved stale test `test_conflict_detection_resolution.py` to archive
+
 ## [0.13.2] - 2026-02-03
 
 ### Added

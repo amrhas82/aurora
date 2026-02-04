@@ -526,7 +526,12 @@ class BackgroundModelLoader:
                 self._loading = False
                 self._load_end_time = time.time()
 
-            logger.error("Background model loading failed: %s", e)
+            logger.warning(
+                "ML embeddings unavailable - semantic search disabled. "
+                "Using keyword + recency fallback. "
+                "To enable: pip install sentence-transformers torch"
+            )
+            logger.debug("Model load error: %s", e)
 
     def is_loading(self) -> bool:
         """Check if model is currently loading.

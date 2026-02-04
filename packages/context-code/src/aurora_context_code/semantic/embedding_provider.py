@@ -199,7 +199,7 @@ class EmbeddingProvider:
         """
         if not _can_import_ml_deps():
             raise ImportError(
-                "sentence-transformers is required for semantic embeddings. "
+                "ML embeddings unavailable - sentence-transformers not found. "
                 "Install with: pip install sentence-transformers torch",
             )
 

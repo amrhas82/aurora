@@ -18,7 +18,6 @@ from rich.console import Console
 
 from aurora_reasoning.llm_client import LLMClient, LLMResponse, extract_json_from_text
 
-
 # Console for spinner output
 _console = Console()
 

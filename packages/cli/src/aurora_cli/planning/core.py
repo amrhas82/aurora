@@ -39,7 +39,6 @@ from aurora_cli.planning.results import (
     ShowResult,
 )
 
-
 logger = logging.getLogger(__name__)
 
 # Import renderer for template-based file generation

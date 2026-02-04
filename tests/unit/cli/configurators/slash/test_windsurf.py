@@ -109,9 +109,9 @@ class TestWindsurfSlashCommandConfiguratorFrontmatter:
         for cmd_id in ALL_COMMANDS:
             frontmatter = config.get_frontmatter(cmd_id)
             assert frontmatter is not None
-            assert "auto_execution_mode: 3" in frontmatter, (
-                f"Frontmatter for {cmd_id} should have auto_execution_mode: 3"
-            )
+            assert (
+                "auto_execution_mode: 3" in frontmatter
+            ), f"Frontmatter for {cmd_id} should have auto_execution_mode: 3"
 
     def test_get_frontmatter_all_commands(self):
         """Test get_frontmatter works for all standard commands."""
@@ -121,9 +121,9 @@ class TestWindsurfSlashCommandConfiguratorFrontmatter:
             frontmatter = config.get_frontmatter(cmd_id)
             assert frontmatter is not None, f"Frontmatter for {cmd_id} should not be None"
             assert "---" in frontmatter, f"Frontmatter for {cmd_id} should have YAML delimiters"
-            assert "description:" in frontmatter, (
-                f"Frontmatter for {cmd_id} should have description"
-            )
+            assert (
+                "description:" in frontmatter
+            ), f"Frontmatter for {cmd_id} should have description"
 
 
 class TestWindsurfSlashCommandConfiguratorBody:

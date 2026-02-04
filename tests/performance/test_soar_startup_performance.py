@@ -27,7 +27,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-
 pytestmark = [pytest.mark.performance]
 
 
@@ -74,9 +73,9 @@ class TestSOARCommandStartup:
         elapsed = time.time() - start
 
         assert result.exit_code == 0
-        assert elapsed < 1.0, (
-            f"'aur soar --help' took {elapsed:.3f}s (target: <1.0s). Help should be instant."
-        )
+        assert (
+            elapsed < 1.0
+        ), f"'aur soar --help' took {elapsed:.3f}s (target: <1.0s). Help should be instant."
 
     def test_critical_imports_fast(self):
         """Verify critical SOAR imports complete quickly (<2s)."""
@@ -144,9 +143,9 @@ class TestConfigurationLoading:
         config = Config()
         elapsed = time.time() - start
 
-        assert elapsed < 0.5, (
-            f"Config loading took {elapsed:.3f}s (target: <0.5s). Config should load quickly."
-        )
+        assert (
+            elapsed < 0.5
+        ), f"Config loading took {elapsed:.3f}s (target: <0.5s). Config should load quickly."
         assert config is not None
 
 
@@ -303,9 +302,9 @@ class TestBackgroundModelLoading:
         heavy_deps = ["torch", "sentence_transformers"]
         for dep in heavy_deps:
             imported = [m for m in new_modules if dep in m.lower()]
-            assert not imported, (
-                f"Cache check imported {dep}: {imported}. Cache checking should be lightweight."
-            )
+            assert (
+                not imported
+            ), f"Cache check imported {dep}: {imported}. Cache checking should be lightweight."
 
 
 class TestEndToEndStartup:
@@ -458,12 +457,12 @@ class TestStartupOptimizations:
         from aurora_cli.commands.soar import soar_command  # noqa: F401
 
         # These should NOT be imported yet
-        assert "sentence_transformers" not in sys.modules, (
-            "sentence_transformers imported too early"
-        )
-        assert "torch" not in sys.modules or "aurora_context_code" not in sys.modules, (
-            "torch imported too early (unless already loaded)"
-        )
+        assert (
+            "sentence_transformers" not in sys.modules
+        ), "sentence_transformers imported too early"
+        assert (
+            "torch" not in sys.modules or "aurora_context_code" not in sys.modules
+        ), "torch imported too early (unless already loaded)"
 
     def test_background_loading_exists(self):
         """Verify background model loading function exists and is callable."""

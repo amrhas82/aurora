@@ -19,7 +19,6 @@ from typing import TYPE_CHECKING, Any
 
 from aurora_core.chunks import CodeChunk
 
-
 if TYPE_CHECKING:
     from aurora_cli.config import Config
     from aurora_core.store.sqlite import SQLiteStore
@@ -366,6 +365,19 @@ class MemoryRetriever:
                 min_semantic_score=threshold,
                 chunk_type=chunk_type,
             )
+
+            # Record access for retrieved chunks
+            if results and self._store:
+                try:
+                    from datetime import datetime, timezone
+
+                    now = datetime.now(timezone.utc)
+                    for r in results:
+                        cid = r.get("chunk_id") if isinstance(r, dict) else getattr(r, "id", None)
+                        if cid:
+                            self._store.record_access(cid, now, query)
+                except Exception:
+                    pass
 
             elapsed = time.time() - start_time
             if elapsed > RETRIEVE_LATENCY_TARGET:

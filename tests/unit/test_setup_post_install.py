@@ -16,7 +16,6 @@ from unittest.mock import patch
 
 import pytest
 
-
 pytestmark = pytest.mark.skip(reason="setup.py no longer exists - project uses pyproject.toml")
 
 

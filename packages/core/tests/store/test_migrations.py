@@ -478,9 +478,9 @@ class TestMigrationRollback:
         error_msg = str(exc_info.value)
         assert "v5 -> v6" in error_msg, "Error should include version numbers"
         # Check for the sqlite error message
-        assert "no such table" in error_msg.lower() or "table" in error_msg.lower(), (
-            "Error should include original error details"
-        )
+        assert (
+            "no such table" in error_msg.lower() or "table" in error_msg.lower()
+        ), "Error should include original error details"
 
         conn.close()
 

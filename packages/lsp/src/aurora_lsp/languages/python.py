@@ -10,7 +10,6 @@ To add another language, copy this file and modify the config values.
 
 from aurora_lsp.languages.base import LanguageConfig
 
-
 # Python branch types for complexity calculation
 # These AST node types represent decision points in control flow
 PYTHON_BRANCH_TYPES = {

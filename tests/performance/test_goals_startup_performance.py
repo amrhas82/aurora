@@ -22,7 +22,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-
 # Test markers
 pytestmark = [pytest.mark.performance]
 
@@ -242,9 +241,9 @@ class TestGoalsCommandStartup:
         is_valid, error = _validate_goal("Add OAuth2 authentication with JWT tokens")
         elapsed = time.time() - start
 
-        assert elapsed < 0.01, (
-            f"Goal validation took {elapsed:.3f}s (target: <0.01s). Validation should be instant."
-        )
+        assert (
+            elapsed < 0.01
+        ), f"Goal validation took {elapsed:.3f}s (target: <0.01s). Validation should be instant."
         assert is_valid is True
         assert error is None
 
@@ -637,9 +636,9 @@ class TestBackgroundPreloading:
                     thread.join(timeout=5.0)
 
                     assert not thread.is_alive(), "Preload thread should complete"
-                    assert provider.is_model_loaded(), (
-                        "Model should be loaded after thread completes"
-                    )
+                    assert (
+                        provider.is_model_loaded()
+                    ), "Model should be loaded after thread completes"
 
 
 class TestModelLoadingTiming:

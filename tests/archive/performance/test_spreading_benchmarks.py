@@ -182,9 +182,9 @@ class TestSpreadingPerformanceLinear:
 
         # Linear traversal should be very fast (<20ms)
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.020, (
-            f"Linear spreading too slow: {mean_time_ms:.1f}ms > 20ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.020
+        ), f"Linear spreading too slow: {mean_time_ms:.1f}ms > 20ms"
 
     def test_spreading_linear_1000_chunks(self, benchmark, spreading_calculator):
         """Benchmark spreading on linear graph with 1000 chunks."""
@@ -203,9 +203,9 @@ class TestSpreadingPerformanceLinear:
 
         # Should still be fast for linear graphs (<50ms)
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.050, (
-            f"Linear spreading too slow for 1000: {mean_time_ms:.1f}ms > 50ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.050
+        ), f"Linear spreading too slow for 1000: {mean_time_ms:.1f}ms > 50ms"
 
 
 class TestSpreadingPerformanceTree:
@@ -231,9 +231,9 @@ class TestSpreadingPerformanceTree:
 
         # Tree traversal should be fast (<30ms)
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.030, (
-            f"Tree spreading too slow: {mean_time_ms:.1f}ms > 30ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.030
+        ), f"Tree spreading too slow: {mean_time_ms:.1f}ms > 30ms"
 
     def test_spreading_tree_depth5_branch2(self, benchmark, spreading_calculator_3hops):
         """Benchmark spreading on tree with depth=5, branching=2."""
@@ -253,9 +253,9 @@ class TestSpreadingPerformanceTree:
 
         # Should be fast despite deeper tree (<40ms)
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.040, (
-            f"Deep tree spreading too slow: {mean_time_ms:.1f}ms > 40ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.040
+        ), f"Deep tree spreading too slow: {mean_time_ms:.1f}ms > 40ms"
 
 
 class TestSpreadingPerformanceDense:
@@ -285,9 +285,9 @@ class TestSpreadingPerformanceDense:
 
         # Performance target: <100ms for 500 edges
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.100, (
-            f"Dense spreading (500 edges) too slow: {mean_time_ms:.1f}ms > 100ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.100
+        ), f"Dense spreading (500 edges) too slow: {mean_time_ms:.1f}ms > 100ms"
 
         print(f"\nDense graph (100 chunks, 500 edges): {mean_time_ms:.1f}ms")
 
@@ -314,9 +314,9 @@ class TestSpreadingPerformanceDense:
 
         # PRIMARY PERFORMANCE TARGET: <200ms for 1000 edges
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.200, (
-            f"Dense spreading (1000 edges) too slow: {mean_time_ms:.1f}ms > 200ms (PRD target)"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.200
+        ), f"Dense spreading (1000 edges) too slow: {mean_time_ms:.1f}ms > 200ms (PRD target)"
 
         print(
             f"\n*** PRD TARGET *** Dense graph (200 chunks, 1000 edges): {mean_time_ms:.1f}ms (target: <200ms)",
@@ -341,9 +341,9 @@ class TestSpreadingPerformanceDense:
 
         # With max_edges=1000, should still be fast (hits edge limit)
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.250, (
-            f"Large sparse graph too slow: {mean_time_ms:.1f}ms > 250ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.250
+        ), f"Large sparse graph too slow: {mean_time_ms:.1f}ms > 250ms"
 
         print(
             f"\nLarge sparse graph (500 chunks, 1500 edges, limited to 1000): {mean_time_ms:.1f}ms",
@@ -373,9 +373,9 @@ class TestSpreadingPerformanceClustered:
 
         # Clustered graphs should be efficient (<80ms)
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.080, (
-            f"Clustered spreading too slow: {mean_time_ms:.1f}ms > 80ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.080
+        ), f"Clustered spreading too slow: {mean_time_ms:.1f}ms > 80ms"
 
     def test_spreading_clustered_10clusters_50chunks(self, benchmark, spreading_calculator_3hops):
         """Benchmark spreading on larger clustered graph: 10 clusters, 50 chunks each."""
@@ -395,9 +395,9 @@ class TestSpreadingPerformanceClustered:
 
         # Should handle large clustered graphs efficiently (<150ms)
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.150, (
-            f"Large clustered graph too slow: {mean_time_ms:.1f}ms > 150ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.150
+        ), f"Large clustered graph too slow: {mean_time_ms:.1f}ms > 150ms"
 
 
 class TestSpreadingEdgeCases:
@@ -464,9 +464,9 @@ class TestSpreadingEdgeCases:
 
         # Should be fast because it stops at 100 edges (<50ms)
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.050, (
-            f"Edge-limited spreading too slow: {mean_time_ms:.1f}ms > 50ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.050
+        ), f"Edge-limited spreading too slow: {mean_time_ms:.1f}ms > 50ms"
 
 
 class TestSpreadingScalability:

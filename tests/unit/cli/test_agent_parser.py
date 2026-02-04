@@ -252,9 +252,9 @@ category: {category_input}
             agent = parser.parse_file(agent_file)
 
             assert agent is not None, f"Failed for category: {category_input}"
-            assert agent.category == expected, (
-                f"Expected {expected} for {category_input}, got {agent.category}"
-            )
+            assert (
+                agent.category == expected
+            ), f"Expected {expected} for {category_input}, got {agent.category}"
 
 
 class TestAgentParserParseContent:

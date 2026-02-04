@@ -552,9 +552,9 @@ class TestQueryChunkSimilarity:
         sim_less_relevant = np.dot(chunk_emb, query_less_rel_emb)
 
         # More relevant query should have higher similarity
-        assert sim_relevant > sim_less_relevant, (
-            f"Expected relevant query ({sim_relevant}) > less relevant ({sim_less_relevant})"
-        )
+        assert (
+            sim_relevant > sim_less_relevant
+        ), f"Expected relevant query ({sim_relevant}) > less relevant ({sim_less_relevant})"
 
 
 class TestCosineSimilarity:

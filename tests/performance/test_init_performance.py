@@ -270,9 +270,9 @@ def test_memory_usage_during_init(temp_project, mock_git_init):
 
     # Verify memory constraint (100MB target for 10K chunks, scale down for 100 files)
     # 100 files ≈ 1000 chunks, so expect <10MB increase
-    assert memory_increase < 50.0, (
-        f"Memory increase: {memory_increase:.2f}MB (target: <10MB for 1K chunks)"
-    )
+    assert (
+        memory_increase < 50.0
+    ), f"Memory increase: {memory_increase:.2f}MB (target: <10MB for 1K chunks)"
 
 
 def test_progress_bar_updates_smoothly(temp_project, mock_git_init):

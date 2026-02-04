@@ -34,7 +34,6 @@ from aurora_core.store import SQLiteStore
 
 from .conftest import run_cli_command
 
-
 pytestmark = pytest.mark.ml
 
 
@@ -238,9 +237,9 @@ class TestCompleteCLIWorkflow:
 
         # Verify search found relevant code
         output = search_result.stdout.lower()
-        assert "auth" in output or "authenticate" in output, (
-            "Should find authentication-related code"
-        )
+        assert (
+            "auth" in output or "authenticate" in output
+        ), "Should find authentication-related code"
 
         # Step 3: Verify database contains indexed code
         import sqlite3
@@ -316,9 +315,9 @@ class TestCompleteCLIWorkflow:
         # Verify stats output contains expected information
         output = stats_result.stdout.lower()
         # Stats should mention chunks or database information
-        assert "chunk" in output or "database" in output or "total" in output, (
-            "Stats should display database information"
-        )
+        assert (
+            "chunk" in output or "database" in output or "total" in output
+        ), "Stats should display database information"
 
 
 # ==============================================================================
@@ -416,15 +415,15 @@ class TestNewUserSetupWorkflow:
                 result = manager.index_path(str(temp_cli_project))
                 stats_after = manager.get_stats()
 
-                assert result.files_indexed > 0, (
-                    f"Should index some files, got {result.files_indexed}"
-                )
-                assert result.chunks_created > 0, (
-                    f"Should create chunks, got {result.chunks_created}"
-                )
-                assert stats_after.total_chunks > stats_before.total_chunks, (
-                    f"Total chunks should increase: before={stats_before.total_chunks}, after={stats_after.total_chunks}"
-                )
+                assert (
+                    result.files_indexed > 0
+                ), f"Should index some files, got {result.files_indexed}"
+                assert (
+                    result.chunks_created > 0
+                ), f"Should create chunks, got {result.chunks_created}"
+                assert (
+                    stats_after.total_chunks > stats_before.total_chunks
+                ), f"Total chunks should increase: before={stats_before.total_chunks}, after={stats_after.total_chunks}"
 
                 # Step 3: Search using direct API
                 search_results = manager.search("AuthManager authenticate", limit=5)

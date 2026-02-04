@@ -171,9 +171,9 @@ class TestBLAPerformance:
 
         # Performance target: <100ms total (part of activation calculation)
         # BLA should be < 50ms for 100 candidates (half of budget)
-        assert benchmark.stats.stats.mean < 0.050, (
-            f"BLA calculation too slow: {benchmark.stats.stats.mean * 1000:.1f}ms > 50ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.050
+        ), f"BLA calculation too slow: {benchmark.stats.stats.mean * 1000:.1f}ms > 50ms"
 
     def test_bla_1000_candidates(self, benchmark, bla_calculator):
         """Benchmark BLA calculation for 1000 candidates."""
@@ -194,9 +194,9 @@ class TestBLAPerformance:
 
         # Performance target: <200ms total (part of activation calculation)
         # BLA should be < 100ms for 1000 candidates (half of budget)
-        assert benchmark.stats.stats.mean < 0.100, (
-            f"BLA calculation too slow: {benchmark.stats.stats.mean * 1000:.1f}ms > 100ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.100
+        ), f"BLA calculation too slow: {benchmark.stats.stats.mean * 1000:.1f}ms > 100ms"
 
 
 class TestContextBoostPerformance:
@@ -222,9 +222,9 @@ class TestContextBoostPerformance:
         assert len(result) == 100
 
         # Context boost should be very fast (<10ms for 100 candidates)
-        assert benchmark.stats.stats.mean < 0.010, (
-            f"Context boost too slow: {benchmark.stats.stats.mean * 1000:.1f}ms > 10ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.010
+        ), f"Context boost too slow: {benchmark.stats.stats.mean * 1000:.1f}ms > 10ms"
 
     def test_context_boost_1000_candidates(self, benchmark, context_boost_calculator):
         """Benchmark context boost for 1000 candidates."""
@@ -246,9 +246,9 @@ class TestContextBoostPerformance:
         assert len(result) == 1000
 
         # Context boost should be very fast (<50ms for 1000 candidates)
-        assert benchmark.stats.stats.mean < 0.050, (
-            f"Context boost too slow: {benchmark.stats.stats.mean * 1000:.1f}ms > 50ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.050
+        ), f"Context boost too slow: {benchmark.stats.stats.mean * 1000:.1f}ms > 50ms"
 
 
 class TestDecayPerformance:
@@ -273,9 +273,9 @@ class TestDecayPerformance:
         assert len(result) == 100
 
         # Decay should be very fast (<10ms for 100 candidates)
-        assert benchmark.stats.stats.mean < 0.010, (
-            f"Decay calculation too slow: {benchmark.stats.stats.mean * 1000:.1f}ms > 10ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.010
+        ), f"Decay calculation too slow: {benchmark.stats.stats.mean * 1000:.1f}ms > 10ms"
 
     def test_decay_1000_candidates(self, benchmark, decay_calculator):
         """Benchmark decay calculation for 1000 candidates."""
@@ -296,9 +296,9 @@ class TestDecayPerformance:
         assert len(result) == 1000
 
         # Decay should be very fast (<50ms for 1000 candidates)
-        assert benchmark.stats.stats.mean < 0.050, (
-            f"Decay calculation too slow: {benchmark.stats.stats.mean * 1000:.1f}ms > 50ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.050
+        ), f"Decay calculation too slow: {benchmark.stats.stats.mean * 1000:.1f}ms > 50ms"
 
 
 class TestFullActivationPerformance:
@@ -344,9 +344,9 @@ class TestFullActivationPerformance:
 
         # Performance target: <100ms for 100 candidates
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.100, (
-            f"Full activation too slow for 100 candidates: {mean_time_ms:.1f}ms > 100ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.100
+        ), f"Full activation too slow for 100 candidates: {mean_time_ms:.1f}ms > 100ms"
 
         print(f"\n100 candidates: {mean_time_ms:.1f}ms (target: <100ms)")
 
@@ -387,9 +387,9 @@ class TestFullActivationPerformance:
 
         # Performance target: <200ms for 1000 candidates
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.200, (
-            f"Full activation too slow for 1000 candidates: {mean_time_ms:.1f}ms > 200ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.200
+        ), f"Full activation too slow for 1000 candidates: {mean_time_ms:.1f}ms > 200ms"
 
         print(f"\n1000 candidates: {mean_time_ms:.1f}ms (target: <200ms)")
 

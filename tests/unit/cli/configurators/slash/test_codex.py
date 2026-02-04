@@ -193,12 +193,12 @@ class TestCodexSlashCommandConfiguratorFrontmatter:
             frontmatter = config.get_frontmatter(cmd_id)
             assert frontmatter is not None, f"Frontmatter for {cmd_id} should not be None"
             assert "$ARGUMENTS" in frontmatter, f"Frontmatter for {cmd_id} should have $ARGUMENTS"
-            assert "description:" in frontmatter, (
-                f"Frontmatter for {cmd_id} should have description"
-            )
-            assert "argument-hint:" in frontmatter, (
-                f"Frontmatter for {cmd_id} should have argument-hint"
-            )
+            assert (
+                "description:" in frontmatter
+            ), f"Frontmatter for {cmd_id} should have description"
+            assert (
+                "argument-hint:" in frontmatter
+            ), f"Frontmatter for {cmd_id} should have argument-hint"
 
 
 class TestCodexSlashCommandConfiguratorBody:

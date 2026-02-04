@@ -19,7 +19,6 @@ from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 from aurora_cli.config import DEFAULTS_FILE, _get_aurora_home
 from aurora_cli.errors import ErrorHandler
 
-
 __all__ = ["InteractiveWizard"]
 
 console = Console()

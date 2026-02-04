@@ -30,7 +30,6 @@ from aurora_cli.memory_manager import IndexProgress, MemoryManager, SearchResult
 from aurora_core.metrics.query_metrics import QueryMetrics
 from aurora_lsp.languages import get_complexity_branch_types, get_config
 
-
 __all__ = ["memory_group", "run_indexing", "display_indexing_summary"]
 
 logger = logging.getLogger(__name__)
@@ -334,9 +333,7 @@ def _get_lsp_usage(
     # Hybrid fallback: if LSP found 0 refs, try text search
     text_fallback = False
     if total_usages == 0 and symbol_name and not _is_garbage_symbol_name(symbol_name):
-        text_file_count, text_matches, text_file_list = _count_text_matches(
-            symbol_name, Path.cwd()
-        )
+        text_file_count, text_matches, text_file_list = _count_text_matches(symbol_name, Path.cwd())
         if text_matches > 0:
             files_affected = text_file_count
             total_usages = text_matches
@@ -885,9 +882,11 @@ def index_command(
     "--type",
     "-t",
     "chunk_type",
-    type=click.Choice(["function", "class", "method", "knowledge", "document", "kb", "code"]),
+    type=click.Choice(
+        ["function", "class", "method", "knowledge", "document", "kb", "code", "doc", "reas"]
+    ),
     default=None,
-    help="Filter results by chunk type (function, class, method, kb, code)",
+    help="Filter results by chunk type (code, kb, doc, reas, or element types: function, class, method)",
 )
 @click.option(
     "--show-scores",
@@ -946,11 +945,6 @@ def search_command(
         # Show detailed score explanations
         aur mem search "authentication" --show-scores
     """
-    # Ensure ML dependencies are installed (auto-install if needed)
-    if not _ensure_ml_installed():
-        console.print("[red]ML dependencies required for search[/]")
-        raise click.Abort()
-
     # Start background model loading immediately (before any other work)
     # This gives the model a head start while we do other initialization
     _start_background_model_loading()
@@ -994,6 +988,14 @@ def search_command(
 
     store = SQLiteStore(str(db_path_resolved))
     retriever = MemoryRetriever(store=store, config=config)
+
+    # Check if ML is available (fast check without importing)
+    from importlib.util import find_spec
+
+    if find_spec("sentence_transformers") is None:
+        console.print(
+            "[yellow]Using keyword search only. For semantic search: pip install sentence-transformers[/]"
+        )
 
     # Perform hybrid search - waits for embedding model if loading
     # If type filter is specified, retrieve 3x limit to ensure enough results after filtering
@@ -1532,8 +1534,10 @@ def _get_type_abbreviation(element_type: str) -> str:
         "class": "class",
         "code": "code",
         "reasoning": "reas",
+        "reas": "reas",  # Reasoning traces (SOAR/goals output)
         "knowledge": "know",
         "document": "doc",
+        "doc": "doc",  # Document chunks (PDF, DOCX, TXT)
         "kb": "kb",  # Knowledge base (markdown files)
         "section": "sect",  # Markdown sections
     }

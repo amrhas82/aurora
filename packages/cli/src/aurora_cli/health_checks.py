@@ -19,7 +19,6 @@ from typing import Any
 
 from aurora_cli.config import Config
 
-
 # Health check result type: (status, message, details)
 # status: "pass", "warning", "fail"
 # message: human-readable description

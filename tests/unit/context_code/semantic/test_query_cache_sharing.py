@@ -282,6 +282,6 @@ def test_query_cache_stats_aggregation(tmp_path):
     stats_a = retriever_a.get_cache_stats()
     assert stats_a["hits"] == 1, "Should have 1 hit"
     assert stats_a["misses"] == 1, "Should have 1 miss"
-    assert abs(stats_a["hit_rate"] - 0.5) < 0.01, (
-        f"Hit rate should be 50%, got {stats_a['hit_rate']}"
-    )
+    assert (
+        abs(stats_a["hit_rate"] - 0.5) < 0.01
+    ), f"Hit rate should be 50%, got {stats_a['hit_rate']}"

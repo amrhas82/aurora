@@ -12,7 +12,6 @@ import pytest
 from aurora_cli.config import Config
 from aurora_cli.memory_manager import MemoryManager
 
-
 pytestmark = [pytest.mark.performance, pytest.mark.ml]
 
 
@@ -590,9 +589,9 @@ def function_{i}():
         # Should see multiple phases
         phases_seen = set(call["phase"] for call in progress_calls)
         expected_phases = {"discovering", "parsing", "embedding", "storing"}
-        assert len(phases_seen & expected_phases) >= 2, (
-            f"Should see multiple phases, got {phases_seen}"
-        )
+        assert (
+            len(phases_seen & expected_phases) >= 2
+        ), f"Should see multiple phases, got {phases_seen}"
 
         # Final call should be "complete"
         assert progress_calls[-1]["phase"] == "complete", "Final phase should be 'complete'"

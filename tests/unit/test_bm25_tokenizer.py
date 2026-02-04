@@ -273,18 +273,18 @@ def test_bm25_idf_calculation():
     expected_idf_auth = math.log((3 - 2 + 0.5) / (2 + 0.5) + 1)
     actual_idf_auth = scorer.idf.get("auth", 0.0)
 
-    assert abs(actual_idf_auth - expected_idf_auth) < 0.01, (
-        f"IDF for 'auth' should be {expected_idf_auth:.3f}, got {actual_idf_auth:.3f}"
-    )
+    assert (
+        abs(actual_idf_auth - expected_idf_auth) < 0.01
+    ), f"IDF for 'auth' should be {expected_idf_auth:.3f}, got {actual_idf_auth:.3f}"
 
     # Calculate expected IDF for "config" (n(t) = 1, N = 3)
     # IDF = log((3 - 1 + 0.5) / (1 + 0.5) + 1) = log(2.5 / 1.5 + 1)
     expected_idf_config = math.log((3 - 1 + 0.5) / (1 + 0.5) + 1)
     actual_idf_config = scorer.idf.get("config", 0.0)
 
-    assert abs(actual_idf_config - expected_idf_config) < 0.01, (
-        f"IDF for 'config' should be {expected_idf_config:.3f}, got {actual_idf_config:.3f}"
-    )
+    assert (
+        abs(actual_idf_config - expected_idf_config) < 0.01
+    ), f"IDF for 'config' should be {expected_idf_config:.3f}, got {actual_idf_config:.3f}"
 
 
 def test_bm25_term_frequency():
@@ -344,9 +344,9 @@ def test_bm25_document_length_normalization():
     score_long = scorer.score("auth", "auth " + " ".join(["word"] * 50))
 
     # Shorter document should score higher
-    assert score_short > score_long, (
-        f"Shorter doc should score higher: short={score_short:.3f}, long={score_long:.3f}"
-    )
+    assert (
+        score_short > score_long
+    ), f"Shorter doc should score higher: short={score_short:.3f}, long={score_long:.3f}"
 
 
 def test_bm25_multiple_term_scoring():

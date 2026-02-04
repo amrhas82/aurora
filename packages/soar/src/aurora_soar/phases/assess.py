@@ -21,7 +21,6 @@ from dataclasses import dataclass, field
 from enum import IntEnum
 from typing import TYPE_CHECKING, Any, Literal
 
-
 if TYPE_CHECKING:
     from aurora_reasoning.llm_client import LLMClient
 

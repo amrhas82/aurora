@@ -26,7 +26,6 @@ from unittest.mock import MagicMock
 import numpy as np
 import pytest
 
-
 pytestmark = [pytest.mark.performance]
 
 
@@ -232,9 +231,9 @@ class TestActivationRetrieval:
 
         assert len(candidates) > 0
         # Activation retrieval should be fast (<100ms for 500 chunks)
-        assert profiler.timings["activation_retrieval"].total_ms < 100, (
-            f"Activation retrieval too slow: {profiler.timings['activation_retrieval'].total_ms:.2f}ms"
-        )
+        assert (
+            profiler.timings["activation_retrieval"].total_ms < 100
+        ), f"Activation retrieval too slow: {profiler.timings['activation_retrieval'].total_ms:.2f}ms"
 
 
 class TestBM25Components:
@@ -514,9 +513,9 @@ class TestFullPipelineProfile:
 
         # Assertions
         assert len(final_results) == top_k
-        assert profiler.total_search_ms < 500, (
-            f"Total search too slow: {profiler.total_search_ms:.2f}ms"
-        )
+        assert (
+            profiler.total_search_ms < 500
+        ), f"Total search too slow: {profiler.total_search_ms:.2f}ms"
 
 
 class TestAccessRecordingPerformance:
@@ -619,9 +618,9 @@ class TestScalabilityProfile:
         store.close()
 
         # Linear scaling check
-        assert profiler.total_search_ms < num_chunks * 2, (
-            f"Search scales poorly: {profiler.total_search_ms:.2f}ms for {num_chunks} chunks"
-        )
+        assert (
+            profiler.total_search_ms < num_chunks * 2
+        ), f"Search scales poorly: {profiler.total_search_ms:.2f}ms for {num_chunks} chunks"
 
 
 class TestQueryCacheProfile:

@@ -18,13 +18,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-
 # Add package to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from aurora_lsp.client import AuroraLSPClient
 from aurora_lsp.filters import ImportFilter
-
 
 logging.basicConfig(
     level=logging.INFO,

@@ -30,7 +30,6 @@ import pytest
 
 from .conftest import run_cli_command
 
-
 # Mark all tests in this file as E2E tests
 pytestmark = [pytest.mark.e2e]
 
@@ -350,9 +349,9 @@ class TestQueryUsesIndex:
         )
 
         # Search should find it
-        assert "hybrid" in search_result.stdout.lower(), (
-            f"Search should find HybridRetriever:\n{search_result.stdout}"
-        )
+        assert (
+            "hybrid" in search_result.stdout.lower()
+        ), f"Search should find HybridRetriever:\n{search_result.stdout}"
 
         # Now query should also find it (but currently doesn't - Issue #15)
 

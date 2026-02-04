@@ -8,7 +8,6 @@ from pathlib import Path
 
 import pytest
 
-
 # Python 3.11+ has tomllib built-in, but Python 3.10 needs tomli
 try:
     import tomllib

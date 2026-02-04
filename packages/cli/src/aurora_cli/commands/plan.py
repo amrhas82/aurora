@@ -26,7 +26,6 @@ from aurora_cli.config import Config
 from aurora_cli.errors import handle_errors
 from aurora_cli.planning.core import archive_plan, list_plans, show_plan
 
-
 if TYPE_CHECKING:
     pass
 

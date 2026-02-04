@@ -22,7 +22,6 @@ from typing import Any
 
 import pytest
 
-
 pytestmark = pytest.mark.ml
 
 
@@ -236,9 +235,9 @@ class TestCLIMemSearch:
         # Now search for a function
         search_result = cli_runner("mem", "search", "hello_world")
 
-        assert search_result.returncode == 0, (
-            f"STDOUT: {search_result.stdout}\nSTDERR: {search_result.stderr}"
-        )
+        assert (
+            search_result.returncode == 0
+        ), f"STDOUT: {search_result.stdout}\nSTDERR: {search_result.stderr}"
         assert "hello_world" in search_result.stdout or "Hello" in search_result.stdout
 
     def test_search_with_no_results(self, cli_runner, temp_project_dir, temp_aurora_home):

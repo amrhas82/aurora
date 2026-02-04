@@ -158,9 +158,9 @@ class TestCacheKeyComputationPerformance:
 
         # Target: <0.1ms (100 microseconds)
         mean_time_us = benchmark.stats.stats.mean * 1_000_000
-        assert benchmark.stats.stats.mean < 0.0001, (
-            f"Key computation too slow: {mean_time_us:.1f}μs > 100μs"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.0001
+        ), f"Key computation too slow: {mean_time_us:.1f}μs > 100μs"
 
     def test_key_computation_with_context(self, benchmark, memory_cache):
         """Benchmark key computation with context files."""
@@ -176,9 +176,9 @@ class TestCacheKeyComputationPerformance:
 
         # Target: <0.2ms with context files
         mean_time_us = benchmark.stats.stats.mean * 1_000_000
-        assert benchmark.stats.stats.mean < 0.0002, (
-            f"Key computation with context too slow: {mean_time_us:.1f}μs > 200μs"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.0002
+        ), f"Key computation with context too slow: {mean_time_us:.1f}μs > 200μs"
 
 
 class TestMemoryCacheGetPerformance:
@@ -202,9 +202,9 @@ class TestMemoryCacheGetPerformance:
         mean_time_ms = benchmark.stats.stats.mean * 1000
         p99_time_ms = (benchmark.stats.stats.mean + 2 * benchmark.stats.stats.stddev) * 1000
 
-        assert benchmark.stats.stats.mean < 0.001, (
-            f"Memory cache hit too slow: {mean_time_ms:.3f}ms > 1ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.001
+        ), f"Memory cache hit too slow: {mean_time_ms:.3f}ms > 1ms"
         assert p99_time_ms < 1.0, f"99th percentile too slow: {p99_time_ms:.3f}ms > 1ms"
 
         print(f"\nMemory cache hit: {mean_time_ms:.3f}ms (p99: {p99_time_ms:.3f}ms, target: <1ms)")
@@ -222,9 +222,9 @@ class TestMemoryCacheGetPerformance:
 
         # Target: <1ms for memory cache miss
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.001, (
-            f"Memory cache miss too slow: {mean_time_ms:.3f}ms > 1ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.001
+        ), f"Memory cache miss too slow: {mean_time_ms:.3f}ms > 1ms"
 
     def test_cache_hit_with_lru_access(self, benchmark, memory_cache, sample_subgoals):
         """Benchmark cache hits that update LRU ordering."""
@@ -243,9 +243,9 @@ class TestMemoryCacheGetPerformance:
 
         # LRU update should still be very fast
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.002, (
-            f"Cache hit with LRU update too slow: {mean_time_ms:.3f}ms > 2ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.002
+        ), f"Cache hit with LRU update too slow: {mean_time_ms:.3f}ms > 2ms"
 
 
 class TestMemoryCacheSetPerformance:
@@ -265,9 +265,9 @@ class TestMemoryCacheSetPerformance:
 
         # Target: <5ms for cache SET
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.005, (
-            f"Memory cache SET too slow: {mean_time_ms:.3f}ms > 5ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.005
+        ), f"Memory cache SET too slow: {mean_time_ms:.3f}ms > 5ms"
 
         print(f"\nMemory cache SET: {mean_time_ms:.3f}ms (target: <5ms)")
 
@@ -290,9 +290,9 @@ class TestMemoryCacheSetPerformance:
 
         # Eviction should add minimal overhead
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.010, (
-            f"Cache SET with eviction too slow: {mean_time_ms:.3f}ms > 10ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.010
+        ), f"Cache SET with eviction too slow: {mean_time_ms:.3f}ms > 10ms"
 
     def test_cache_update_existing(self, benchmark, memory_cache, sample_subgoals):
         """Benchmark updating existing cache entries."""
@@ -309,9 +309,9 @@ class TestMemoryCacheSetPerformance:
 
         # Update should be similar to new entry
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.005, (
-            f"Cache update too slow: {mean_time_ms:.3f}ms > 5ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.005
+        ), f"Cache update too slow: {mean_time_ms:.3f}ms > 5ms"
 
 
 class TestPersistentCacheGetPerformance:
@@ -335,9 +335,9 @@ class TestPersistentCacheGetPerformance:
 
         # Target: <5ms for persistent cache hit (cold)
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.005, (
-            f"Persistent cache hit too slow: {mean_time_ms:.3f}ms > 5ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.005
+        ), f"Persistent cache hit too slow: {mean_time_ms:.3f}ms > 5ms"
 
         print(f"\nPersistent cache hit (cold): {mean_time_ms:.3f}ms (target: <5ms)")
 
@@ -361,9 +361,9 @@ class TestPersistentCacheGetPerformance:
 
         # After promotion, should be as fast as memory cache
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.001, (
-            f"Warm cache hit too slow: {mean_time_ms:.3f}ms > 1ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.001
+        ), f"Warm cache hit too slow: {mean_time_ms:.3f}ms > 1ms"
 
 
 class TestPersistentCacheSetPerformance:
@@ -383,9 +383,9 @@ class TestPersistentCacheSetPerformance:
 
         # Target: <10ms for persistent SET
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.010, (
-            f"Persistent cache SET too slow: {mean_time_ms:.3f}ms > 10ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.010
+        ), f"Persistent cache SET too slow: {mean_time_ms:.3f}ms > 10ms"
 
         print(f"\nPersistent cache SET: {mean_time_ms:.3f}ms (target: <10ms)")
 
@@ -401,9 +401,9 @@ class TestPersistentCacheSetPerformance:
 
         # 100 writes should complete in reasonable time
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 1.0, (
-            f"Bulk write (100 items) too slow: {mean_time_ms:.1f}ms > 1000ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 1.0
+        ), f"Bulk write (100 items) too slow: {mean_time_ms:.1f}ms > 1000ms"
 
         print(f"\nBulk write (100 items): {mean_time_ms:.1f}ms")
 
@@ -428,9 +428,9 @@ class TestCacheScalabilityPerformance:
 
         # Should still be fast even at capacity
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.002, (
-            f"Full cache access too slow: {mean_time_ms:.3f}ms > 2ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.002
+        ), f"Full cache access too slow: {mean_time_ms:.3f}ms > 2ms"
 
     def test_eviction_at_scale(self, benchmark, sample_subgoals):
         """Benchmark eviction performance at large scale."""
@@ -450,9 +450,9 @@ class TestCacheScalabilityPerformance:
 
         # Eviction should be efficient even at scale
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.010, (
-            f"Eviction at scale too slow: {mean_time_ms:.3f}ms > 10ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.010
+        ), f"Eviction at scale too slow: {mean_time_ms:.3f}ms > 10ms"
 
 
 class TestEndToEndCacheSpeedup:
@@ -535,9 +535,9 @@ class TestCacheMetricsPerformance:
         mean_time_ms = benchmark.stats.stats.mean * 1000
 
         # Metrics should add minimal overhead
-        assert benchmark.stats.stats.mean < 0.002, (
-            f"Metrics overhead too high: {mean_time_ms:.3f}ms > 2ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.002
+        ), f"Metrics overhead too high: {mean_time_ms:.3f}ms > 2ms"
 
     def test_metrics_overhead_disabled(self, benchmark, sample_subgoals):
         """Benchmark performance when metrics are disabled."""
@@ -554,9 +554,9 @@ class TestCacheMetricsPerformance:
 
         # Should be slightly faster without metrics
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.001, (
-            f"Cache without metrics too slow: {mean_time_ms:.3f}ms > 1ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.001
+        ), f"Cache without metrics too slow: {mean_time_ms:.3f}ms > 1ms"
 
 
 class TestCacheSerializationPerformance:
@@ -573,9 +573,9 @@ class TestCacheSerializationPerformance:
 
         # Serialization should be very fast
         mean_time_us = benchmark.stats.stats.mean * 1_000_000
-        assert benchmark.stats.stats.mean < 0.001, (
-            f"Serialization too slow: {mean_time_us:.1f}μs > 1000μs"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.001
+        ), f"Serialization too slow: {mean_time_us:.1f}μs > 1000μs"
 
     def test_subgoal_deserialization(self, benchmark, memory_cache, sample_subgoals):
         """Benchmark deserialization of subgoals."""
@@ -589,9 +589,9 @@ class TestCacheSerializationPerformance:
 
         # Deserialization should be very fast
         mean_time_us = benchmark.stats.stats.mean * 1_000_000
-        assert benchmark.stats.stats.mean < 0.001, (
-            f"Deserialization too slow: {mean_time_us:.1f}μs > 1000μs"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.001
+        ), f"Deserialization too slow: {mean_time_us:.1f}μs > 1000μs"
 
 
 class TestCacheConcurrentAccess:
@@ -619,9 +619,9 @@ class TestCacheConcurrentAccess:
 
         # Mixed workload should be efficient
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.005, (
-            f"Mixed read/write too slow: {mean_time_ms:.3f}ms > 5ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.005
+        ), f"Mixed read/write too slow: {mean_time_ms:.3f}ms > 5ms"
 
     def test_read_heavy_workload(self, benchmark, memory_cache, sample_subgoals):
         """Benchmark read-heavy workload (90% reads, 10% writes)."""
@@ -648,9 +648,9 @@ class TestCacheConcurrentAccess:
 
         # Read-heavy should be very fast
         mean_time_ms = benchmark.stats.stats.mean * 1000
-        assert benchmark.stats.stats.mean < 0.002, (
-            f"Read-heavy workload too slow: {mean_time_ms:.3f}ms > 2ms"
-        )
+        assert (
+            benchmark.stats.stats.mean < 0.002
+        ), f"Read-heavy workload too slow: {mean_time_ms:.3f}ms > 2ms"
 
 
 class TestCacheComparisonSummary:

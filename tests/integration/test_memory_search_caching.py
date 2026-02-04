@@ -69,16 +69,16 @@ def test_end_to_end_cache_hit(tmp_path):
     # Get retriever (first call - cache miss)
     retriever1 = get_cached_retriever(store, engine, None)
     stats_after_first = get_cache_stats()
-    assert stats_after_first["total_misses"] > initial_stats["total_misses"], (
-        "Should have cache miss"
-    )
+    assert (
+        stats_after_first["total_misses"] > initial_stats["total_misses"]
+    ), "Should have cache miss"
 
     # Get retriever again (second call - cache hit)
     retriever2 = get_cached_retriever(store, engine, None)
     stats_after_second = get_cache_stats()
-    assert stats_after_second["total_hits"] > stats_after_first["total_hits"], (
-        "Should have cache hit"
-    )
+    assert (
+        stats_after_second["total_hits"] > stats_after_first["total_hits"]
+    ), "Should have cache hit"
 
     # Verify same instance returned (caching works)
     assert id(retriever1) == id(retriever2), "Should reuse same retriever instance"
@@ -141,9 +141,9 @@ def test_cache_invalidation_on_config_change(tmp_path):
     retriever_b = get_cached_retriever(store, engine, None, config_b)
 
     # Verify different retriever instances (cache miss due to config change)
-    assert id(retriever_a) != id(retriever_b), (
-        "Different configs should create different retrievers"
-    )
+    assert id(retriever_a) != id(
+        retriever_b
+    ), "Different configs should create different retrievers"
 
     # Verify cache size increased again
     stats_after_b = get_cache_stats()
@@ -207,9 +207,9 @@ def test_cross_retriever_query_cache_sharing(tmp_path):
     retriever_b = get_cached_retriever(store, engine, None, config_b)
 
     # Verify they are different retriever instances
-    assert id(retriever_a) != id(retriever_b), (
-        "Different configs should create different retrievers"
-    )
+    assert id(retriever_a) != id(
+        retriever_b
+    ), "Different configs should create different retrievers"
 
     # Verify retriever B can access the shared query cache
     cached_b = retriever_b._query_cache.get(test_query)
@@ -217,9 +217,9 @@ def test_cross_retriever_query_cache_sharing(tmp_path):
     assert np.array_equal(cached_a, cached_b), "Should get same embedding from shared cache"
 
     # Verify they share the same cache instance
-    assert id(retriever_a._query_cache) == id(retriever_b._query_cache), (
-        "Should share same QueryEmbeddingCache instance"
-    )
+    assert id(retriever_a._query_cache) == id(
+        retriever_b._query_cache
+    ), "Should share same QueryEmbeddingCache instance"
 
 
 def test_bm25_persistence_integration(tmp_path):
@@ -331,12 +331,12 @@ def test_activation_engine_singleton_integration(tmp_path):
     retriever_c = get_cached_retriever(store, engine1, None, config_c)
 
     # Verify different retriever instances
-    assert id(retriever_a) != id(retriever_b), (
-        "Different configs should create different retrievers"
-    )
-    assert id(retriever_b) != id(retriever_c), (
-        "Different configs should create different retrievers"
-    )
+    assert id(retriever_a) != id(
+        retriever_b
+    ), "Different configs should create different retrievers"
+    assert id(retriever_b) != id(
+        retriever_c
+    ), "Different configs should create different retrievers"
 
     # Verify they all use the same engine
     assert id(retriever_a.activation_engine) == id(engine1), "Should use same engine"
@@ -379,18 +379,18 @@ def test_memory_overhead_validation(tmp_path):
     # Verify all are the same instance (memory efficient)
     first_id = id(retrievers[0])
     for i, retriever in enumerate(retrievers[1:], start=1):
-        assert id(retriever) == first_id, (
-            f"Retriever {i} should be same instance (memory efficient caching)"
-        )
+        assert (
+            id(retriever) == first_id
+        ), f"Retriever {i} should be same instance (memory efficient caching)"
 
     # Verify shared query cache
     first_cache_id = id(retrievers[0]._query_cache) if retrievers[0]._query_cache else None
     if first_cache_id:
         for i, retriever in enumerate(retrievers[1:], start=1):
             if retriever._query_cache:
-                assert id(retriever._query_cache) == first_cache_id, (
-                    f"Retriever {i} should share query cache"
-                )
+                assert (
+                    id(retriever._query_cache) == first_cache_id
+                ), f"Retriever {i} should share query cache"
 
 
 def test_search_result_equivalence(tmp_path):
@@ -454,36 +454,36 @@ def test_search_result_equivalence(tmp_path):
     scores_2 = [result["hybrid_score"] for result in results2]
 
     # Verify results are identical
-    assert len(chunk_ids_1) == len(chunk_ids_2), (
-        f"Result count mismatch: {len(chunk_ids_1)} vs {len(chunk_ids_2)}"
-    )
-    assert chunk_ids_1 == chunk_ids_2, (
-        f"Chunk IDs differ:\nUncached: {chunk_ids_1}\nCached: {chunk_ids_2}"
-    )
+    assert len(chunk_ids_1) == len(
+        chunk_ids_2
+    ), f"Result count mismatch: {len(chunk_ids_1)} vs {len(chunk_ids_2)}"
+    assert (
+        chunk_ids_1 == chunk_ids_2
+    ), f"Chunk IDs differ:\nUncached: {chunk_ids_1}\nCached: {chunk_ids_2}"
 
     # Verify scores are bit-exact (within floating point tolerance)
     import numpy as np
 
     scores_array_1 = np.array(scores_1)
     scores_array_2 = np.array(scores_2)
-    assert np.allclose(scores_array_1, scores_array_2, rtol=1e-9, atol=1e-9), (
-        f"Scores differ:\nUncached: {scores_1}\nCached: {scores_2}"
-    )
+    assert np.allclose(
+        scores_array_1, scores_array_2, rtol=1e-9, atol=1e-9
+    ), f"Scores differ:\nUncached: {scores_1}\nCached: {scores_2}"
 
     # Verify all score components are identical (bit-exact)
     for i, (r1, r2) in enumerate(zip(results1, results2)):
         assert r1["chunk_id"] == r2["chunk_id"], f"Result {i}: chunk_id mismatch"
-        assert np.isclose(r1["bm25_score"], r2["bm25_score"], rtol=1e-9, atol=1e-9), (
-            f"Result {i}: bm25_score mismatch"
-        )
-        assert np.isclose(r1["activation_score"], r2["activation_score"], rtol=1e-9, atol=1e-9), (
-            f"Result {i}: activation_score mismatch"
-        )
+        assert np.isclose(
+            r1["bm25_score"], r2["bm25_score"], rtol=1e-9, atol=1e-9
+        ), f"Result {i}: bm25_score mismatch"
+        assert np.isclose(
+            r1["activation_score"], r2["activation_score"], rtol=1e-9, atol=1e-9
+        ), f"Result {i}: activation_score mismatch"
         # semantic_score may differ if embeddings are involved (not bit-exact)
         # but hybrid_score should be very close
-        assert np.isclose(r1["hybrid_score"], r2["hybrid_score"], rtol=1e-6, atol=1e-6), (
-            f"Result {i}: hybrid_score mismatch"
-        )
+        assert np.isclose(
+            r1["hybrid_score"], r2["hybrid_score"], rtol=1e-6, atol=1e-6
+        ), f"Result {i}: hybrid_score mismatch"
 
 
 def test_soar_multi_phase_embedding_cache(tmp_path):
@@ -577,12 +577,12 @@ def test_soar_multi_phase_embedding_cache(tmp_path):
 
     # If cache is actually being used, hits should increase
     if total_ops_phase2 > 0:
-        assert phase5_hits >= phase2_hits, (
-            f"Phase 5 hits ({phase5_hits}) should be >= phase 2 hits ({phase2_hits})"
-        )
-        assert phase8_hits >= phase5_hits, (
-            f"Phase 8 hits ({phase8_hits}) should be >= phase 5 hits ({phase5_hits})"
-        )
+        assert (
+            phase5_hits >= phase2_hits
+        ), f"Phase 5 hits ({phase5_hits}) should be >= phase 2 hits ({phase2_hits})"
+        assert (
+            phase8_hits >= phase5_hits
+        ), f"Phase 8 hits ({phase8_hits}) should be >= phase 5 hits ({phase5_hits})"
 
     # Verify results are consistent across phases (cache correctness)
     chunk_ids_phase2 = [r["chunk_id"] for r in results_phase2]
@@ -593,12 +593,12 @@ def test_soar_multi_phase_embedding_cache(tmp_path):
     assert chunk_ids_phase2 == chunk_ids_phase8, "Phase 2 and 8 results should match"
 
     # Verify all three retrievers share the same query cache instance
-    assert id(retriever_phase2._query_cache) == id(retriever_phase5._query_cache), (
-        "Phase 2 and 5 should share query cache"
-    )
-    assert id(retriever_phase2._query_cache) == id(retriever_phase8._query_cache), (
-        "Phase 2 and 8 should share query cache"
-    )
+    assert id(retriever_phase2._query_cache) == id(
+        retriever_phase5._query_cache
+    ), "Phase 2 and 5 should share query cache"
+    assert id(retriever_phase2._query_cache) == id(
+        retriever_phase8._query_cache
+    ), "Phase 2 and 8 should share query cache"
 
 
 def test_concurrent_searches_thread_safety(tmp_path):
@@ -687,9 +687,9 @@ def test_concurrent_searches_thread_safety(tmp_path):
     # Verify all results are consistent (same chunks returned)
     first_chunk_ids = results[0]["chunk_ids"]
     for i, result in enumerate(results[1:], start=1):
-        assert result["chunk_ids"] == first_chunk_ids, (
-            f"Thread {i} got different results: {result['chunk_ids']} != {first_chunk_ids}"
-        )
+        assert (
+            result["chunk_ids"] == first_chunk_ids
+        ), f"Thread {i} got different results: {result['chunk_ids']} != {first_chunk_ids}"
 
     # Verify cache hit rate is high (9 out of 10 should hit cache)
     # Note: First thread may miss, others should hit

@@ -29,7 +29,6 @@ from typing import Any
 
 import pytest
 
-
 pytestmark = [pytest.mark.performance, pytest.mark.ml]
 
 
@@ -365,9 +364,9 @@ class TestBaselineBenchmarks:
 
         print(suite.summary())
 
-        assert suite.mean_files_per_sec > 0.3, (
-            "Medium codebase should maintain reasonable throughput"
-        )
+        assert (
+            suite.mean_files_per_sec > 0.3
+        ), "Medium codebase should maintain reasonable throughput"
 
     def test_baseline_large_codebase(self, tmp_path: Path) -> None:
         """Baseline: 100 files, ~1000 functions."""

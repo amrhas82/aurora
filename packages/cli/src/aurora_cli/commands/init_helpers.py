@@ -16,7 +16,6 @@ from rich.console import Console
 from aurora_cli.configurators import ToolRegistry
 from aurora_cli.configurators.slash import SlashCommandRegistry
 
-
 console = Console()
 
 AURORA_DIR_NAME = ".aurora"

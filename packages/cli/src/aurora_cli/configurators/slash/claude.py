@@ -6,7 +6,6 @@ Configures slash commands for Claude Code in .claude/commands/aur/ directory.
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # File paths for each command
 FILE_PATHS: dict[str, str] = {
     "search": ".claude/commands/aur/search.md",

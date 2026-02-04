@@ -9,7 +9,6 @@ from pathlib import Path
 
 from aurora_context_code.parser import CodeParser
 
-
 logger = logging.getLogger(__name__)
 
 

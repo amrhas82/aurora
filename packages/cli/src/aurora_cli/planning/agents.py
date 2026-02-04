@@ -12,7 +12,6 @@ from typing import Any, Optional
 
 from aurora_cli.planning.models import AgentGap, Subgoal
 
-
 # Try to import ManifestManager - graceful fallback if not available
 try:
     from aurora_cli.agent_discovery.manifest import AgentManifest, ManifestManager

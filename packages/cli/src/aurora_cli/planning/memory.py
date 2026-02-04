@@ -7,7 +7,6 @@ Provides memory search functionality for goal decomposition context.
 import logging
 from pathlib import Path as PathLib
 
-
 # Code file extensions to include in memory search results
 CODE_EXTENSIONS = {
     # Python
@@ -94,7 +93,6 @@ from aurora_cli.config import Config  # noqa: E402
 from aurora_cli.memory.retrieval import MemoryRetriever  # noqa: E402
 from aurora_cli.planning.models import FileResolution, Subgoal  # noqa: E402
 from aurora_core.store.sqlite import SQLiteStore  # noqa: E402
-
 
 logger = logging.getLogger(__name__)
 

@@ -27,7 +27,6 @@ from click.testing import CliRunner
 
 from aurora_cli.main import cli
 
-
 pytestmark = pytest.mark.integration
 
 

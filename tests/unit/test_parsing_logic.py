@@ -11,7 +11,6 @@ and focus on text processing correctness.
 from aurora_core.chunks.code_chunk import CodeChunk
 from aurora_core.context.code_provider import CodeContextProvider
 
-
 # ==============================================================================
 # Query Parsing Tests
 # ==============================================================================

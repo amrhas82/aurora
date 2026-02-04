@@ -9,7 +9,6 @@ from aurora_cli.policies.models import (
     RecoveryConfig,
 )
 
-
 __all__ = [
     "PoliciesEngine",
     "Operation",

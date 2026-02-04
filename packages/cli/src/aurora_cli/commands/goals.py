@@ -48,7 +48,6 @@ from aurora_cli.errors import handle_errors
 from aurora_cli.llm.cli_pipe_client import CLIPipeLLMClient
 from aurora_cli.planning.core import create_plan
 
-
 if TYPE_CHECKING:
     from rich.table import Table
 
@@ -98,6 +97,7 @@ __all__ = [
     "_ensure_aurora_initialized",
     "_generate_goals_plan",
     "_display_goals_results",
+    "_index_goals_result",
 ]
 
 logger = logging.getLogger(__name__)
@@ -543,6 +543,10 @@ def goals_command(
     if json_output is not None:
         print(json_output)
 
+    # Index goals.json as 'reas' type for memory retrieval
+    goals_file = Path(result.plan_dir) / "goals.json"
+    _index_goals_result(goals_file)
+
 
 def _display_header(goal: str, tool: str) -> None:
     """Display the goals command header panel.
@@ -592,3 +596,82 @@ def _show_agent_matching_results(subgoals: list) -> None:
             f"   {status} sg-{i}: {sg.assigned_agent} "
             f"([{color}]{'GAP' if is_gap else 'MATCHED'}[/{color}])",
         )
+
+
+def _index_goals_result(goals_file: Path, store: object | None = None) -> None:
+    """Index goals.json as 'reas' type for memory retrieval.
+
+    Args:
+        goals_file: Path to goals.json file
+        store: Optional store instance (creates one if not provided)
+    """
+    if not goals_file.exists():
+        logger.warning(f"Goals file not found for indexing: {goals_file}")
+        return
+
+    try:
+        from aurora_context_code.knowledge_parser import KnowledgeParser
+        from aurora_context_code.semantic import EmbeddingProvider
+        from aurora_core.chunk_types import get_chunk_type
+        from aurora_core.chunks import CodeChunk
+        from aurora_core.store import SQLiteStore
+
+        # Get or create store
+        if store is None:
+            db_path = Path.cwd() / ".aurora" / "memory.db"
+            if not db_path.parent.exists():
+                logger.debug("No .aurora directory, skipping indexing")
+                return
+            store = SQLiteStore(db_path)
+
+        # Parse goals.json as knowledge
+        parser = KnowledgeParser()
+        chunks = parser.parse_conversation_log(goals_file)
+
+        if not chunks:
+            logger.debug(f"No chunks extracted from {goals_file}")
+            return
+
+        # Get reas type for goals output
+        reas_type = get_chunk_type(context="goals_output")
+
+        # Convert to CodeChunk and set type
+        embedding_provider = EmbeddingProvider()
+        for i, kchunk in enumerate(chunks):
+            import hashlib
+
+            content_hash = hashlib.sha256(kchunk.content.encode("utf-8")).hexdigest()[:16]
+            chunk_id = f"{goals_file.stem}_section_{i}_{content_hash}"
+
+            code_chunk = CodeChunk(
+                chunk_id=chunk_id,
+                file_path=str(goals_file),
+                element_type="knowledge",
+                name=kchunk.metadata.get("section", goals_file.stem),
+                line_start=1,
+                line_end=len(kchunk.content.split("\n")),
+                signature="",
+                docstring=kchunk.content,
+                dependencies=[],
+                complexity_score=0,
+                language="json",
+                metadata={
+                    **kchunk.metadata,
+                    "chunk_index": i,
+                    "is_goals_output": True,
+                },
+            )
+            code_chunk.type = reas_type
+
+            # Generate embedding
+            code_chunk.embedding = embedding_provider.embed_chunk(code_chunk)
+
+            # Save to store
+            store.save_chunk(code_chunk)
+
+        logger.info(f"Indexed {len(chunks)} chunks from goals as 'reas' type")
+
+    except ImportError as e:
+        logger.debug(f"Indexing dependencies not available: {e}")
+    except Exception as e:
+        logger.warning(f"Failed to index goals result: {e}")

@@ -42,9 +42,9 @@ class TestAIToolsConstant:
         registry_tool_ids = {c.tool_id for c in SlashCommandRegistry.get_all()}
 
         for tool in AI_TOOLS:
-            assert tool["value"] in registry_tool_ids, (
-                f"Tool value '{tool['value']}' not found in SlashCommandRegistry"
-            )
+            assert (
+                tool["value"] in registry_tool_ids
+            ), f"Tool value '{tool['value']}' not found in SlashCommandRegistry"
 
     def test_all_tools_have_available_true(self):
         """All tools should have available: True (all are always available per PRD)."""

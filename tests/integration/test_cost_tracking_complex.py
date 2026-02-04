@@ -161,9 +161,9 @@ class TestComplexQueryCostTracking:
             print(f"  {operation}: ${cost:.6f}")
 
         # At minimum, solving LLM should have been called and tracked
-        assert solving_llm.default_model in breakdown_by_model, (
-            f"Solving LLM not tracked. Models: {list(breakdown_by_model.keys())}"
-        )
+        assert (
+            solving_llm.default_model in breakdown_by_model
+        ), f"Solving LLM not tracked. Models: {list(breakdown_by_model.keys())}"
 
     def test_cost_accumulation_across_phases(self, orchestrator, reasoning_llm, solving_llm):
         """Test that costs accumulate correctly as phases execute."""
@@ -239,12 +239,12 @@ class TestComplexQueryCostTracking:
 
             assert "input" in tokens_used, "Input tokens not tracked in metadata"
             assert "output" in tokens_used, "Output tokens not tracked in metadata"
-            assert tokens_used["input"] >= total_input_tokens, (
-                "Tracked input tokens less than actual"
-            )
-            assert tokens_used["output"] >= total_output_tokens, (
-                "Tracked output tokens less than actual"
-            )
+            assert (
+                tokens_used["input"] >= total_input_tokens
+            ), "Tracked input tokens less than actual"
+            assert (
+                tokens_used["output"] >= total_output_tokens
+            ), "Tracked output tokens less than actual"
 
         except Exception:
             # Even if execution fails, cost tracker should have entries

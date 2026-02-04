@@ -6,7 +6,6 @@ Configures slash commands for iFlow AI in .iflow/commands/ directory.
 from aurora_cli.configurators.slash.base import SlashCommandConfigurator
 from aurora_cli.templates.slash_commands import get_command_body
 
-
 # Frontmatter for each command
 FRONTMATTER: dict[str, str] = {
     "search": """---

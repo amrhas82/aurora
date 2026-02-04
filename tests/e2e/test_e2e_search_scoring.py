@@ -31,7 +31,6 @@ import pytest
 
 from .conftest import run_cli_command
 
-
 # Mark all tests in this file as E2E tests
 pytestmark = [pytest.mark.e2e]
 
@@ -688,9 +687,9 @@ class TestSearchScoring:
 
         # With non-Git directory, default BLA is 0.5
         # The key test is that activation records exist and were initialized
-        assert len(base_levels) > 0, (
-            "No activation records found!\nExpected activation table to have base_level values"
-        )
+        assert (
+            len(base_levels) > 0
+        ), "No activation records found!\nExpected activation table to have base_level values"
 
         # Verify at least some non-zero base levels or default 0.5
         non_zero_count = sum(1 for bl in base_levels if bl != 0.0)

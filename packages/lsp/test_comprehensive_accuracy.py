@@ -6,13 +6,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from aurora_lsp.analysis import CodeAnalyzer
 from aurora_lsp.client import AuroraLSPClient
 from aurora_lsp.filters import ImportFilter
-
 
 WORKSPACE = Path("/home/hamr/PycharmProjects/aurora")
 

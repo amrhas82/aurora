@@ -19,7 +19,6 @@ from typing import Literal
 
 from mcp.server.fastmcp import FastMCP
 
-
 # Create MCP server
 mcp = FastMCP("aurora-lsp-poc")
 

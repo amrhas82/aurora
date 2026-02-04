@@ -13,7 +13,6 @@ from aurora_cli.planning.parsers.requirements import (
     parse_modification_spec,
 )
 
-
 __all__ = [
     "MarkdownParser",
     "PlanParser",

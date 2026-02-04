@@ -37,7 +37,6 @@ import pytest
 
 from .conftest import run_cli_command
 
-
 # Mark all tests in this file as E2E tests
 pytestmark = [pytest.mark.e2e]
 
@@ -654,9 +653,9 @@ def hello():
             )
 
             # Should succeed (not crash on missing Git)
-            assert result.returncode == 0, (
-                f"Indexing non-Git directory should not crash:\nstderr: {result.stderr}"
-            )
+            assert (
+                result.returncode == 0
+            ), f"Indexing non-Git directory should not crash:\nstderr: {result.stderr}"
 
             # Query database
             db_path = clean_aurora_home / "memory.db"
@@ -682,9 +681,9 @@ def hello():
 
                     # Should have fallback value (0.5 or similar)
                     # Not 0.0 (which indicates not initialized at all)
-                    assert base_level >= 0.0, (
-                        f"Non-Git file should have default base_level\nGot: {base_level}"
-                    )
+                    assert (
+                        base_level >= 0.0
+                    ), f"Non-Git file should have default base_level\nGot: {base_level}"
 
     def test_1_6_11_comprehensive_git_bla_check(
         self,

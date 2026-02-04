@@ -17,7 +17,6 @@ from typing import Any
 
 from aurora_cli.errors import ConfigurationError
 
-
 logger = logging.getLogger(__name__)
 
 # Path to package defaults

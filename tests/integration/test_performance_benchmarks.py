@@ -19,7 +19,6 @@ from aurora_cli.memory_manager import MemoryManager
 from aurora_context_code.semantic import EmbeddingProvider
 from aurora_core.store.sqlite import SQLiteStore
 
-
 pytestmark = pytest.mark.ml  # Requires ML dependencies
 
 
@@ -228,9 +227,9 @@ class TestMemoryUsage:
         stats = memory_manager.index_path(large_codebase)
 
         # Verify we have ~10K chunks
-        assert stats.chunks_created >= 8000, (
-            f"Expected ~10K chunks, got {stats.chunks_created}. Test setup may be incorrect."
-        )
+        assert (
+            stats.chunks_created >= 8000
+        ), f"Expected ~10K chunks, got {stats.chunks_created}. Test setup may be incorrect."
 
         # Run several searches to exercise retrieval
         queries = [

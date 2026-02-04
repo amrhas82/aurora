@@ -479,9 +479,9 @@ class TestVerificationRetry:
         )
 
         # Verify retry occurred
-        assert llm_client.call_count >= 4, (
-            "Should have multiple LLM calls (decompose + verify, then retry)"
-        )
+        assert (
+            llm_client.call_count >= 4
+        ), "Should have multiple LLM calls (decompose + verify, then retry)"
 
         # Verify feedback was generated and used
         assert len(llm_client.feedback_received) > 0, "Should have received retry feedback"
@@ -592,6 +592,6 @@ class TestVerificationRetry:
 
         # Verify feedback contains actionable content
         feedback_text = llm_client.feedback_generated[0]
-        assert "improve" in feedback_text.lower() or "add" in feedback_text.lower(), (
-            "Feedback should contain improvement suggestions"
-        )
+        assert (
+            "improve" in feedback_text.lower() or "add" in feedback_text.lower()
+        ), "Feedback should contain improvement suggestions"

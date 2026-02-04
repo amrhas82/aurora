@@ -129,9 +129,9 @@ class TestClaudeSlashCommandConfiguratorFrontmatter:
             assert frontmatter is not None, f"Frontmatter for {cmd_id} should not be None"
             assert "---" in frontmatter, f"Frontmatter for {cmd_id} should have YAML delimiters"
             assert "name:" in frontmatter, f"Frontmatter for {cmd_id} should have name"
-            assert "description:" in frontmatter, (
-                f"Frontmatter for {cmd_id} should have description"
-            )
+            assert (
+                "description:" in frontmatter
+            ), f"Frontmatter for {cmd_id} should have description"
 
 
 class TestClaudeSlashCommandConfiguratorBody:

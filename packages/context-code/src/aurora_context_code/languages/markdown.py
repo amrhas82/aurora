@@ -10,8 +10,8 @@ from pathlib import Path
 
 from aurora_context_code.knowledge_parser import KnowledgeParser
 from aurora_context_code.parser import CodeParser
+from aurora_core.chunk_types import get_chunk_type
 from aurora_core.chunks.code_chunk import CodeChunk
-
 
 logger = logging.getLogger(__name__)
 
@@ -107,8 +107,8 @@ class MarkdownParser(CodeParser):
                         },
                     )
 
-                    # Override chunk type to "kb" (CodeChunk defaults to "code")
-                    code_chunk.type = "kb"
+                    # Set chunk type based on file extension using central registry
+                    code_chunk.type = get_chunk_type(file_path=file_path)
 
                     code_chunks.append(code_chunk)
 

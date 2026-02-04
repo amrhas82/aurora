@@ -30,7 +30,6 @@ from aurora_core.store.connection_pool import get_connection_pool
 from aurora_core.store.schema import get_init_statements
 from aurora_core.types import ChunkID
 
-
 if TYPE_CHECKING:
     from aurora_core.chunks.base import Chunk
     from aurora_core.chunks.doc_chunk import DocChunk
@@ -394,8 +393,8 @@ class SQLiteStore(Store):
             # Deserialize based on chunk type
             chunk_type = row_data["type"]
             chunk: Chunk
-            if chunk_type in ("code", "kb"):
-                # Both code and kb (knowledge base/markdown) use CodeChunk structure
+            if chunk_type in ("code", "kb", "reas"):
+                # code, kb (knowledge base/markdown), and reas (reasoning traces) use CodeChunk structure
                 chunk = CodeChunk.from_json(full_data)
             elif chunk_type == "reasoning":
                 chunk = ReasoningChunk.from_json(full_data)

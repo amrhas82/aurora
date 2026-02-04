@@ -19,7 +19,6 @@ from aurora_reasoning.llm_client import LLMClient
 from aurora_soar import AgentInfo, AgentRegistry
 from aurora_soar.orchestrator import SOAROrchestrator
 
-
 # Performance targets from PRD
 SIMPLE_QUERY_TARGET_S = 2.0
 COMPLEX_QUERY_TARGET_S = 10.0
@@ -196,9 +195,9 @@ class TestSOARPerformance:
         elapsed_s = end - start
         print(f"\nSimple query latency: {elapsed_s:.3f}s")
 
-        assert elapsed_s < SIMPLE_QUERY_TARGET_S, (
-            f"Simple query took {elapsed_s:.3f}s, target is {SIMPLE_QUERY_TARGET_S}s"
-        )
+        assert (
+            elapsed_s < SIMPLE_QUERY_TARGET_S
+        ), f"Simple query took {elapsed_s:.3f}s, target is {SIMPLE_QUERY_TARGET_S}s"
 
         # Verify result structure
         assert "answer" in result
@@ -215,9 +214,9 @@ class TestSOARPerformance:
         elapsed_s = end - start
         print(f"\nComplex query latency: {elapsed_s:.3f}s")
 
-        assert elapsed_s < COMPLEX_QUERY_TARGET_S, (
-            f"Complex query took {elapsed_s:.3f}s, target is {COMPLEX_QUERY_TARGET_S}s"
-        )
+        assert (
+            elapsed_s < COMPLEX_QUERY_TARGET_S
+        ), f"Complex query took {elapsed_s:.3f}s, target is {COMPLEX_QUERY_TARGET_S}s"
 
         # Verify result structure
         assert "answer" in result
@@ -250,9 +249,9 @@ class TestSOARPerformance:
         elapsed_s = end - start
         print(f"\nVerification phase: {elapsed_s:.3f}s")
 
-        assert elapsed_s < VERIFICATION_TARGET_S, (
-            f"Verification took {elapsed_s:.3f}s, target is {VERIFICATION_TARGET_S}s"
-        )
+        assert (
+            elapsed_s < VERIFICATION_TARGET_S
+        ), f"Verification took {elapsed_s:.3f}s, target is {VERIFICATION_TARGET_S}s"
 
     def test_throughput_sequential(self, orchestrator):
         """Benchmark sequential query throughput."""

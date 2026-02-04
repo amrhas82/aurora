@@ -370,30 +370,30 @@ class TestStagedRetrievalArchitecture:
         # Verify: All scores are in [0, 1] range
         for result in results:
             # Check score ranges
-            assert 0.0 <= result["activation_score"] <= 1.0, (
-                f"Activation score out of range: {result['activation_score']}"
-            )
-            assert 0.0 <= result["semantic_score"] <= 1.0, (
-                f"Semantic score out of range: {result['semantic_score']}"
-            )
-            assert 0.0 <= result["hybrid_score"] <= 1.0, (
-                f"Hybrid score out of range: {result['hybrid_score']}"
-            )
+            assert (
+                0.0 <= result["activation_score"] <= 1.0
+            ), f"Activation score out of range: {result['activation_score']}"
+            assert (
+                0.0 <= result["semantic_score"] <= 1.0
+            ), f"Semantic score out of range: {result['semantic_score']}"
+            assert (
+                0.0 <= result["hybrid_score"] <= 1.0
+            ), f"Hybrid score out of range: {result['hybrid_score']}"
 
             # Verify hybrid score is weighted combination
             expected_hybrid = (
                 config.activation_weight * result["activation_score"]
                 + config.semantic_weight * result["semantic_score"]
             )
-            assert abs(result["hybrid_score"] - expected_hybrid) < 0.01, (
-                f"Hybrid score mismatch: {result['hybrid_score']} != {expected_hybrid}"
-            )
+            assert (
+                abs(result["hybrid_score"] - expected_hybrid) < 0.01
+            ), f"Hybrid score mismatch: {result['hybrid_score']} != {expected_hybrid}"
 
         # Verify: Results are sorted by hybrid score (descending)
         for i in range(len(results) - 1):
-            assert results[i]["hybrid_score"] >= results[i + 1]["hybrid_score"], (
-                "Results not sorted by hybrid score"
-            )
+            assert (
+                results[i]["hybrid_score"] >= results[i + 1]["hybrid_score"]
+            ), "Results not sorted by hybrid score"
 
     def test_empty_query_handling(
         self,

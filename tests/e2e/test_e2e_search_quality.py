@@ -17,7 +17,6 @@ from aurora_cli.memory_manager import MemoryManager
 from aurora_context_code.semantic import EmbeddingProvider
 from aurora_core.store.sqlite import SQLiteStore
 
-
 pytestmark = pytest.mark.ml  # Requires ML dependencies
 
 
@@ -189,9 +188,9 @@ class TestEndToEndSearchQuality:
                     print(f"  ✓ {query} → rank {rank}")
 
         # Assert MRR meets threshold
-        assert mrr >= 0.85, (
-            f"MRR {mrr:.3f} below threshold 0.85. BM25 tri-hybrid search quality insufficient."
-        )
+        assert (
+            mrr >= 0.85
+        ), f"MRR {mrr:.3f} below threshold 0.85. BM25 tri-hybrid search quality insufficient."
 
     def test_exact_match_top_rank(self, memory_manager, memory_store, aurora_subset):
         """Test that exact identifier matches rank first."""
@@ -288,9 +287,9 @@ class TestEndToEndSearchQuality:
 
         # Check that results span multiple files (not all from one file)
         file_paths = set(r.file_path for r in results)
-        assert len(file_paths) >= 3, (
-            f"Results should span multiple files, got {len(file_paths)} files"
-        )
+        assert (
+            len(file_paths) >= 3
+        ), f"Results should span multiple files, got {len(file_paths)} files"
 
         # Check that results span multiple element types
         element_types = set(r.element_type for r in results)

@@ -52,7 +52,6 @@ from aurora_soar.phases import (
 )
 from aurora_soar.phases.respond import Verbosity
 
-
 if TYPE_CHECKING:
     from aurora_core.store.base import Store
     from aurora_reasoning.llm_client import LLMClient
@@ -1943,6 +1942,8 @@ class SOAROrchestrator:
                     "parent_chunk_id": chunk.id,
                 },
             )
+            # Preserve parent chunk's type (fixes kb/reas chunks becoming 'code')
+            section_chunk.type = chunk.type
             split_chunks.append(section_chunk)
 
         logger.info(f"Split chunk {chunk.id} into {len(split_chunks)} sections")
@@ -2373,6 +2374,7 @@ class SOAROrchestrator:
 
             from aurora_context_code.languages.markdown import MarkdownParser
             from aurora_context_code.semantic import EmbeddingProvider
+            from aurora_core.chunk_types import get_chunk_type
 
             # Parse markdown log into chunks (ensure absolute path)
             parser = MarkdownParser()
@@ -2381,6 +2383,12 @@ class SOAROrchestrator:
             if not chunks:
                 logger.debug(f"No chunks extracted from {log_path}")
                 return
+
+            # Set chunk type to 'reas' for SOAR reasoning traces
+            # This overrides the default 'kb' type from MarkdownParser
+            soar_type = get_chunk_type(context="soar_result")
+            for chunk in chunks:
+                chunk.type = soar_type
 
             # Generate embeddings and store chunks
             embedding_provider = EmbeddingProvider()

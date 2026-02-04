@@ -5,6 +5,7 @@ when multiple tools produce differing outputs.
 """
 
 import pytest
+
 from aurora_cli.concurrent_executor import (
     ConflictDetector,
     ConflictInfo,
@@ -12,7 +13,6 @@ from aurora_cli.concurrent_executor import (
     ConflictSeverity,
     ToolResult,
 )
-
 
 # ---------------------------------------------------------------------------
 # ---------------------------------------------------------------------------

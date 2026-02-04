@@ -21,7 +21,6 @@ from aurora_spawner.models import SpawnResult, SpawnTask
 from aurora_spawner.observability import FailureReason, get_health_monitor
 from aurora_spawner.timeout_policy import SpawnPolicy
 
-
 logger = logging.getLogger(__name__)
 
 # Default timeout for backwards compatibility

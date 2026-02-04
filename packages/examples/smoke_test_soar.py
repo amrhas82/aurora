@@ -14,7 +14,6 @@ Exit codes:
 import sys
 from unittest.mock import Mock
 
-
 try:
     from aurora_core.store.memory import MemoryStore
     from aurora_soar.agent_registry import AgentInfo, AgentRegistry

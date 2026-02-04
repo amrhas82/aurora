@@ -130,9 +130,9 @@ def test_engine_cache_thread_safety(tmp_path):
     # Verify all engines are the same instance (no race conditions)
     first_id = id(engines[0])
     for i, engine in enumerate(engines[1:], start=1):
-        assert id(engine) == first_id, (
-            f"Engine {i} has different id: {id(engine)} vs {first_id} (race condition detected)"
-        )
+        assert (
+            id(engine) == first_id
+        ), f"Engine {i} has different id: {id(engine)} vs {first_id} (race condition detected)"
 
 
 def test_engine_cache_lazy_initialization():

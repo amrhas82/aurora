@@ -62,6 +62,6 @@ def test_filtering_logic_structure():
     assert filter_check_found, "Should have conditional check for min_semantic_score"
 
     # Verify the filtering actually filters based on semantic score
-    assert "raw_semantic" in source or "semantic_score" in source, (
-        "Filtering should compare against semantic score"
-    )
+    assert (
+        "raw_semantic" in source or "semantic_score" in source
+    ), "Filtering should compare against semantic score"

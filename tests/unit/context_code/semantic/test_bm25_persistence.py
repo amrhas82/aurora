@@ -227,9 +227,9 @@ def test_bm25_path_resolution_absolute_vs_relative(tmp_path):
 
     assert index_path_abs is not None, "Index path should not be None"
     assert index_path_abs.is_absolute(), "Index path should be absolute"
-    assert str(index_path_abs).endswith("indexes/bm25_index.pkl"), (
-        "Index path should end with indexes/bm25_index.pkl"
-    )
+    assert str(index_path_abs).endswith(
+        "indexes/bm25_index.pkl"
+    ), "Index path should end with indexes/bm25_index.pkl"
 
     # Test with relative path
     rel_db_path = "relative_test.db"
@@ -238,6 +238,6 @@ def test_bm25_path_resolution_absolute_vs_relative(tmp_path):
     index_path_rel = retriever_rel._get_bm25_index_path()
 
     assert index_path_rel is not None, "Index path should not be None"
-    assert str(index_path_rel).endswith("indexes/bm25_index.pkl"), (
-        "Index path should end with indexes/bm25_index.pkl"
-    )
+    assert str(index_path_rel).endswith(
+        "indexes/bm25_index.pkl"
+    ), "Index path should end with indexes/bm25_index.pkl"

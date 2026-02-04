@@ -364,13 +364,29 @@ def _enrich_full(result: dict[str, Any], workspace: Path) -> dict[str, Any]:
         line_0indexed = start_line - 1
         col = 10
 
-        # Get callers (functions that call this symbol)
+        # Get callers (functions that call this symbol) - include file:line
         callers = lsp.get_callers(file_path, line_0indexed, col=col)
-        result["called_by"] = [caller.get("name", "") for caller in callers[:5]]
+        result["called_by"] = [
+            f"{caller.get('name', '')}:{Path(caller.get('file', '')).name}:{caller.get('line', 0) + 1}"
+            if caller.get('file') else caller.get('name', '')
+            for caller in callers[:5]
+        ]
 
-        # Get callees (functions this symbol calls)
+        # Get callees (functions this symbol calls) - include line
         callees = lsp.get_callees(file_path, line_0indexed, col=col)
-        result["calling"] = [callee.get("name", "") for callee in callees[:5]]
+        result["calling"] = []
+        for callee in callees[:5]:
+            name = callee.get('name', '')
+            # Clean up: remove newlines, args, quotes, trailing parens
+            name = name.split('\n')[0].split('(')[0].strip().rstrip(')')
+            # Skip truncated/garbage names (e.g., partial code)
+            if not name or len(name) < 2:
+                continue
+            line_num = callee.get('line', 0)
+            if line_num:
+                result["calling"].append(f"{name}:{line_num}")
+            else:
+                result["calling"].append(name)
 
     except Exception as e:
         logger.debug(f"LSP callers/callees failed for {file_path}:{line_start}: {e}")
@@ -382,7 +398,7 @@ def _enrich_full(result: dict[str, Any], workspace: Path) -> dict[str, Any]:
     return result
 
 
-def mem_search(query: str, limit: int = 5, enrich: bool = False) -> list[dict]:
+def mem_search(query: str, limit: int = 5, enrich: bool = False, code_only: bool = True) -> list[dict]:
     """Search codebase for symbols, functions, classes with LSP-enriched results.
 
     WHEN TO USE:
@@ -413,19 +429,21 @@ def mem_search(query: str, limit: int = 5, enrich: bool = False) -> list[dict]:
         query: Symbol name, function name, or description (e.g., "SOAROrchestrator", "handle errors")
         limit: Max results (default 5, increase for broader search)
         enrich: Add full enrichment - callers, callees, git info (slower). Default False.
+        code_only: Only return code results, skip KB/docs (default True). Set False to include markdown docs.
 
     Returns:
         List of matches with LSP context:
         - type: "code" or "kb" (knowledge base)
         - file: Filename (where)
+        - path: Full file path for navigation
         - name: Function/class name (what)
         - lines: Line range
         - used_by: "19f 43r c:74" (files, refs, complexity%)
         - risk: "HIGH" | "MED" | "LOW" | "-"
         - score: Relevance (0-1)
         When enrich=True, also includes:
-        - called_by: Functions that call this symbol
-        - calling: Functions this symbol calls
+        - called_by: Functions that call this symbol (format: "name:file:line")
+        - calling: Functions this symbol calls (format: "name:line")
         - git: Recent commit info
     """
     workspace = Path.cwd()
@@ -455,6 +473,10 @@ def mem_search(query: str, limit: int = 5, enrich: bool = False) -> list[dict]:
 
         metadata = result.get("metadata", {})
 
+        # Filter by type if code_only is set
+        if code_only and metadata.get("type", "code") != "code":
+            continue
+
         # Build lines string from line_start/line_end
         line_start = metadata.get("line_start")
         line_end = metadata.get("line_end")
@@ -470,6 +492,7 @@ def mem_search(query: str, limit: int = 5, enrich: bool = False) -> list[dict]:
         enriched = {
             "type": metadata.get("type", "code"),
             "file": Path(full_path).name if full_path != "unknown" else "unknown",
+            "path": full_path,  # Full path for navigation
             "name": metadata.get("name", ""),  # Function/class name
             "lines": lines_str,
             "used_by": "-",  # Will be set by _get_usage_only

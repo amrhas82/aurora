@@ -99,8 +99,10 @@ class ClaudeMCPConfigurator(MCPConfigurator):
             }
 
         # Use python with module path for development
+        # Prefer python3.12 if available (Python 3.14 has anyio compatibility issues)
+        python_cmd = "python3.12" if shutil.which("python3.12") else "python3"
         return {
-            "command": "python3",
+            "command": python_cmd,
             "args": ["-m", "aurora_mcp.server"],
             "env": {
                 "PYTHONPATH": ":".join(pythonpath_parts),

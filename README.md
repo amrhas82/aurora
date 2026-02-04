@@ -287,10 +287,11 @@ aur goals "Add auth"  →     /aur:plan add-auth  →  /aur:implement add-auth
 
 | Step | Command | Output |
 |------|---------|--------|
-| Setup (once) | `aur init` | `.aurora/` directory, indexed codebase |
+| Setup (once) | `aur init` + complete `project.md` | `.aurora/` directory, indexed codebase |
 | Decompose | `aur goals "goal"` | Subgoals mapped to agents + source files |
 | Plan | `/aur:plan [id]` | PRD, design doc, tasks.md |
 | Implement | `/aur:implement [id]` | Code changes with validation |
+| Regen tasks | `/aur:tasks [id]` | Regenerate tasks after PRD edits (optional) |
 
 > **Quick prototype?** Skip `aur goals` and run `/aur:plan` directly.
 

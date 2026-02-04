@@ -245,6 +245,34 @@ aur spawn tasks.md --verbose
 
 ---
 
+### Friction Analysis (Terminal)
+
+`aur friction` - Analyze stuck patterns across your coding sessions:
+
+```bash
+aur friction ~/.claude/projects
+Per-Project:
+aurora        56% BAD (40/72)  median: 16.0  🔴
+mcp-gov       40% BAD (2/5)    median: 0.5   🟡
+liteagents     0% BAD (0/1)    median: 0.0   ✅
+
+Session Extremes:
+WORST: aurora/0203-1630-11eb903a  peak=225  turns=127
+BEST:  liteagents/0202-2121-8d8608e1  peak=0  turns=4
+
+Last 2 Weeks:
+2026-02-02  15 sessions  10 BAD  ██████░░░░  67%
+2026-02-03  29 sessions  12 BAD  ████░░░░░░  41%
+2026-02-04   6 sessions   2 BAD  ███░░░░░░░  33%
+
+Verdict: ✓ USEFUL
+Intervention predictability: 93%
+```
+
+Identifies sessions where you got stuck, measures improvement over time.
+
+---
+
 ## Planning Workflow
 
 3 simple steps from goal to implementation.

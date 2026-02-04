@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.6] - 2026-02-04
+
+### Added
+
+**CLI Hybrid LSP Fallback:**
+- Extended hybrid fallback to `aur mem search` CLI command
+- When LSP returns 0 refs, ripgrep text search provides file/ref counts
+- Shows `~Nf ~Mr` format (tilde indicates approximate text-based counts)
+- Populates Files list from text search results
+- Updated documentation for hybrid fallback feature
+
 ## [0.13.5] - 2026-02-04
 
 ### Fixed

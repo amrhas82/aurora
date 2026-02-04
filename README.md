@@ -341,7 +341,10 @@ aur goals "Add user authentication"
 
 Works with 20+ CLI tools: Claude Code, Cursor, Aider, Cline, Windsurf, Gemini CLI, and more.
 
+Configuration is per-project (not global) to keep your CLI clean:
+
 ```bash
+cd /path/to/project
 aur init --tools=claude,cursor
 ```
 

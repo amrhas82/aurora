@@ -381,6 +381,104 @@ Aurora-LSP is integrated into Aurora's MCP server as the `lsp` tool, providing c
 See [MCP Tools Documentation](../mcp/MCP.md) for complete MCP integration details.
 See [Code Intelligence Status](CODE_INTELLIGENCE_STATUS.md) for all 16 features and implementation status.
 
+## Claude Code Pre-Edit Hook
+
+For tools that support hooks (like Claude Code), you can automatically run `lsp check` before every file edit. This ensures Claude always sees usage impact before making changes.
+
+### Setup (Claude Code)
+
+The hook is automatically configured when you run `aur init --tools=claude`. It creates:
+
+- `.claude/hooks/pre-edit-lsp-check.py` - Hook script that calls LSP check
+- `.claude/settings.json` - Project-local settings with PreToolUse hook
+
+### Manual Setup
+
+If you want to configure manually or for user-wide settings:
+
+1. Create the hook script at `~/.claude/hooks/pre-edit-lsp-check.py`:
+
+```python
+#!/usr/bin/env python3
+"""Pre-Edit hook that runs LSP check before file edits."""
+import json
+import os
+import sys
+from pathlib import Path
+
+def main():
+    input_data = json.load(sys.stdin)
+    tool_input = input_data.get("tool_input", {})
+    file_path = tool_input.get("file_path", "")
+    cwd = input_data.get("cwd", "")
+
+    # Skip non-code files
+    if not any(file_path.endswith(ext) for ext in [".py", ".js", ".ts", ".go", ".rs"]):
+        sys.exit(0)
+
+    # Find workspace and call LSP
+    workspace = Path(cwd) if cwd else Path.cwd()
+    sys.path.insert(0, str(workspace / "src"))
+    sys.path.insert(0, str(workspace / "packages/lsp/src"))
+
+    from aurora_mcp.lsp_tool import lsp
+    os.chdir(workspace)
+
+    # Find line number from old_string
+    with open(file_path) as f:
+        content = f.read()
+    old_string = tool_input.get("old_string", "")
+    if old_string not in content:
+        sys.exit(0)
+    line = content[:content.find(old_string)].count('\n') + 1
+
+    result = lsp(action="check", path=file_path, line=line)
+
+    # Return context to Claude
+    output = {
+        "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow",
+            "additionalContext": f"LSP CHECK: {result.get('used_by', 0)} refs | Risk: {result.get('risk', 'low').upper()}"
+        }
+    }
+    print(json.dumps(output))
+    sys.exit(0)
+
+if __name__ == "__main__":
+    main()
+```
+
+2. Add to `~/.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/pre-edit-lsp-check.py"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### What It Does
+
+Before every Edit tool call on code files, Claude sees:
+
+```
+LSP CHECK: 'AuroraLSP' @ line 26 | 3 LSP refs | Risk: MEDIUM
+```
+
+This helps Claude understand the impact of changes before making them, without relying on Claude's attention to remember to call `lsp check` manually.
+
 ## See Also
 
 - [Code Intelligence Status](CODE_INTELLIGENCE_STATUS.md) - All 16 features, language matrix, benchmarks

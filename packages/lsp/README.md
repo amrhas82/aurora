@@ -177,6 +177,25 @@ pytest tests/
 mypy src/
 ```
 
+## Claude Code Pre-Edit Hook
+
+For Claude Code users, Aurora can automatically run `lsp check` before every file edit. This is configured automatically when you run:
+
+```bash
+aur init --tools=claude
+```
+
+This creates:
+- `.claude/hooks/pre-edit-lsp-check.py` - Hook script
+- `.claude/settings.json` - Project-local settings with PreToolUse hook
+
+Before every Edit, Claude sees:
+```
+LSP CHECK: 'MyClass' @ line 26 | 3 LSP refs | Risk: MEDIUM
+```
+
+See [LSP.md](../../docs/02-features/lsp/LSP.md) for manual setup instructions.
+
 ## License
 
 MIT

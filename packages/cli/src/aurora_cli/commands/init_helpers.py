@@ -958,6 +958,134 @@ def get_mcp_capable_from_selection(tool_ids: list[str]) -> list[str]:
     return [tid for tid in tool_ids if MCPConfigRegistry.supports_mcp(tid)]
 
 
+def detect_claude_hooks(project_path: Path) -> dict[str, bool]:
+    """Detect if Claude Code hooks are configured.
+
+    Checks for pre-edit LSP check hook in project-local .claude/settings.json.
+
+    Args:
+        project_path: Path to project root
+
+    Returns:
+        Dictionary with hook names and their configured status
+    """
+    hooks_status = {
+        "pre_edit_lsp_check": False,
+    }
+
+    settings_path = project_path / ".claude" / "settings.json"
+    if not settings_path.exists():
+        return hooks_status
+
+    try:
+        settings = json.loads(settings_path.read_text(encoding="utf-8"))
+        hooks = settings.get("hooks", {})
+        pre_tool_use = hooks.get("PreToolUse", [])
+
+        for hook_group in pre_tool_use:
+            if hook_group.get("matcher") == "Edit":
+                for hook in hook_group.get("hooks", []):
+                    if "pre-edit-lsp-check" in hook.get("command", ""):
+                        hooks_status["pre_edit_lsp_check"] = True
+                        break
+    except (json.JSONDecodeError, OSError):
+        pass
+
+    return hooks_status
+
+
+def configure_claude_hooks(project_path: Path) -> tuple[int, int]:
+    """Configure Claude Code hooks for this project.
+
+    Creates project-local .claude/hooks/ directory and settings.json
+    with pre-edit LSP check hook.
+
+    Args:
+        project_path: Path to project root
+
+    Returns:
+        Tuple of (hooks_created, hooks_updated)
+    """
+    from aurora_cli.templates.hooks import get_hook_template
+
+    hooks_created = 0
+    hooks_updated = 0
+
+    # Create .claude/hooks directory
+    hooks_dir = project_path / ".claude" / "hooks"
+    hooks_dir.mkdir(parents=True, exist_ok=True)
+
+    # Write hook script from template
+    hook_script = hooks_dir / "pre-edit-lsp-check.py"
+    template_content = get_hook_template("pre_edit_lsp_check")
+
+    if template_content:
+        existed = hook_script.exists()
+        hook_script.write_text(template_content, encoding="utf-8")
+        # Make executable
+        hook_script.chmod(0o755)
+
+        if existed:
+            hooks_updated += 1
+        else:
+            hooks_created += 1
+
+    # Update .claude/settings.json
+    settings_path = project_path / ".claude" / "settings.json"
+
+    # Load existing settings or create new
+    if settings_path.exists():
+        try:
+            settings = json.loads(settings_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            settings = {}
+    else:
+        settings = {}
+
+    # Ensure hooks structure exists
+    if "hooks" not in settings:
+        settings["hooks"] = {}
+
+    if "PreToolUse" not in settings["hooks"]:
+        settings["hooks"]["PreToolUse"] = []
+
+    # Check if Edit hook already exists
+    edit_hook_exists = False
+    for hook_group in settings["hooks"]["PreToolUse"]:
+        if hook_group.get("matcher") == "Edit":
+            # Update existing Edit hook
+            hook_group["hooks"] = [
+                {
+                    "type": "command",
+                    "command": ".claude/hooks/pre-edit-lsp-check.py",
+                }
+            ]
+            edit_hook_exists = True
+            break
+
+    if not edit_hook_exists:
+        # Add new Edit hook
+        settings["hooks"]["PreToolUse"].append(
+            {
+                "matcher": "Edit",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": ".claude/hooks/pre-edit-lsp-check.py",
+                    }
+                ],
+            }
+        )
+
+    # Write settings
+    settings_path.write_text(
+        json.dumps(settings, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+    return hooks_created, hooks_updated
+
+
 def _validate_mcp_config(config_path: Path, _project_path: Path) -> tuple[bool, list[str]]:
     """Validate MCP configuration file with soft failures.
 

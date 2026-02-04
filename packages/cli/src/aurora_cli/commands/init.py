@@ -10,12 +10,14 @@ import click
 from rich.console import Console
 
 from aurora_cli.commands.init_helpers import (
+    configure_claude_hooks,
     configure_mcp_servers,
     configure_slash_commands,
     configure_tools,
     create_agents_md,
     create_directory_structure,
     create_project_md,
+    detect_claude_hooks,
     detect_configured_tools,
     detect_git_repository,
     get_configured_tool_ids,
@@ -455,12 +457,35 @@ def run_step_3_tool_configuration(
             if tool_agent_count > 0:
                 parts.append(f"{tool_agent_count} agent{'s' if tool_agent_count != 1 else ''}")
 
+            # Configure Claude hooks if this is Claude
+            if tool_id == "claude":
+                hooks_created, hooks_updated = configure_claude_hooks(project_path)
+                if hooks_created > 0:
+                    parts.append(f"{hooks_created} pre-edit hook")
+                elif hooks_updated > 0:
+                    parts.append(f"{hooks_updated} pre-edit hook [dim](updated)[/]")
+
             # Format output
             if parts:
                 details = ", ".join(parts)
                 console.print(f"  [cyan]▌[/] {display_name}: {details}")
             else:
                 console.print(f"  [cyan]▌[/] {display_name}")
+
+    # Check if Claude was previously configured but not selected (hooks missing warning)
+    if "claude" not in selected_tool_ids:
+        # Check if Claude slash commands exist (previously configured)
+        from aurora_cli.commands.init_helpers import detect_configured_slash_tools
+
+        configured_slash = detect_configured_slash_tools(project_path)
+        if configured_slash.get("claude", False):
+            # Claude is configured but not in current selection - check hooks
+            hooks_status = detect_claude_hooks(project_path)
+            if not hooks_status.get("pre_edit_lsp_check", False):
+                console.print(
+                    "  [yellow]⚠[/] Claude Code: pre-edit hook not installed "
+                    "(run with --tools=claude to enable)"
+                )
 
     # Save combined manifest for all selected tools
     try:

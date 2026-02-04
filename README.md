@@ -74,7 +74,7 @@ Found 5 results for 'soar reasoning'
 ┃ Type   ┃ File                   ┃ Name                 ┃ Lines      ┃ Risk   ┃ Git ┃   Score ┃
 ┡━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━╇━━━━━╇━━━━━━━━━┩
 │ code   │ core.py                │ generate_goals_json  │ 1091-1175  │ MED    │ 8d  │   0.619 │
-│ code   │ core.py                │ <chunk>              │ 1473-1855  │ -      │ 1d  │   0.589 │
+│ code   │ soar.py                │ <chunk>              │ 1473-1855  │ -      │ 1d  │   0.589 │
 │ code   │ orchestrator.py        │ SOAROrchestrator._c… │ 2141-2257  │ HIGH   │ 1d  │   0.532 │
 │ code   │ test_goals_startup_pe… │ TestGoalsCommandSta… │ 190-273    │ LOW    │ 1d  │   0.517 │
 │ code   │ goals.py               │ <chunk>              │ 437-544    │ -      │ 7d  │   0.486 │

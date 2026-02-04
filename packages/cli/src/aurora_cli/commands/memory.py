@@ -174,6 +174,64 @@ def _calculate_risk(files: int, refs: int, complexity: int) -> str:
     return "LOW"
 
 
+def _count_text_matches(symbol_name: str, workspace: Path) -> tuple[int, int, list[str]]:
+    """Count text matches for a symbol using ripgrep.
+
+    Uses word boundary matching to reduce false positives.
+    This is used as a fallback when LSP returns 0 references.
+
+    Args:
+        symbol_name: Name of the symbol to search
+        workspace: Workspace root directory
+
+    Returns:
+        Tuple of (file_count, total_matches, list_of_files)
+    """
+    import subprocess
+
+    if not symbol_name:
+        return 0, 0, []
+
+    try:
+        # Use ripgrep with word boundary, count matches per file
+        result = subprocess.run(
+            ["rg", "-w", "-c", "--type", "py", symbol_name, "."],
+            cwd=workspace,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+
+        if result.returncode not in (0, 1):  # 1 means no matches
+            return 0, 0, []
+
+        # Parse output: each line is "file:count"
+        file_count = 0
+        total_matches = 0
+        files_list: list[str] = []
+        for line in result.stdout.strip().split("\n"):
+            if ":" in line:
+                file_count += 1
+                # Extract file path (everything before the last colon)
+                parts = line.rsplit(":", 1)
+                if len(parts) == 2:
+                    file_path = parts[0]
+                    # Normalize path (remove ./ prefix)
+                    if file_path.startswith("./"):
+                        file_path = file_path[2:]
+                    files_list.append(str(workspace / file_path))
+                    try:
+                        count = int(parts[1])
+                        total_matches += count
+                    except ValueError:
+                        total_matches += 1
+
+        return file_count, total_matches, files_list[:5]  # Return top 5 files
+
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        return 0, 0, []
+
+
 def _get_lsp_usage(
     file_path: str, line_start: int, symbol_name: str = "", line_end: int = 0
 ) -> dict[str, Any]:
@@ -273,6 +331,21 @@ def _get_lsp_usage(
     except Exception as e:
         logger.debug(f"LSP usage lookup failed: {e}")
 
+    # Hybrid fallback: if LSP found 0 refs, try text search
+    text_fallback = False
+    if total_usages == 0 and symbol_name and not _is_garbage_symbol_name(symbol_name):
+        text_file_count, text_matches, text_file_list = _count_text_matches(
+            symbol_name, Path.cwd()
+        )
+        if text_matches > 0:
+            files_affected = text_file_count
+            total_usages = text_matches
+            top_files = text_file_list  # Use text search file list
+            text_fallback = True
+            logger.debug(
+                f"Hybrid fallback for {symbol_name}: {text_matches} text matches in {text_file_count} files"
+            )
+
     # Calculate complexity
     end_line = line_end if line_end > 0 else line_start + 50
     complexity = _get_complexity(file_path, line_start, end_line)
@@ -280,11 +353,13 @@ def _get_lsp_usage(
     # Calculate risk
     risk = _calculate_risk(files_affected, total_usages, complexity)
 
-    # Format compact: "19f 43r c:95"
+    # Format compact: "19f 43r c:95" or "~19f ~43r c:95" for text fallback
     if files_affected > 0 or complexity >= 0:
         parts = []
         if files_affected > 0:
-            parts.append(f"{files_affected}f {total_usages}r")
+            # Use ~ prefix to indicate text search (approximate)
+            prefix = "~" if text_fallback else ""
+            parts.append(f"{prefix}{files_affected}f {prefix}{total_usages}r")
         if complexity >= 0:
             parts.append(f"c:{complexity}")
         used_by = " ".join(parts) if parts else "-"

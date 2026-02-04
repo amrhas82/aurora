@@ -259,8 +259,57 @@ def _get_git_info(file_path: str, workspace: Path) -> str:
         return "-"
 
 
+def _count_text_matches(symbol_name: str, workspace: Path) -> tuple[int, int]:
+    """Count text matches for a symbol using ripgrep.
+
+    Uses word boundary matching to reduce false positives.
+
+    Args:
+        symbol_name: Name of the symbol to search
+        workspace: Workspace root directory
+
+    Returns:
+        Tuple of (file_count, total_matches)
+    """
+    if not symbol_name:
+        return 0, 0
+
+    try:
+        # Use ripgrep with word boundary, count matches per file
+        result = subprocess.run(
+            ["rg", "-w", "-c", "--type", "py", symbol_name, "."],
+            cwd=workspace,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+
+        if result.returncode not in (0, 1):  # 1 means no matches
+            return 0, 0
+
+        # Parse output: each line is "file:count"
+        file_count = 0
+        total_matches = 0
+        for line in result.stdout.strip().split("\n"):
+            if ":" in line:
+                file_count += 1
+                try:
+                    count = int(line.split(":")[-1])
+                    total_matches += count
+                except ValueError:
+                    total_matches += 1
+
+        return file_count, total_matches
+
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        return 0, 0
+
+
 def _get_usage_only(result: dict[str, Any], workspace: Path) -> dict[str, Any]:
     """Get usage count, complexity, and risk (fast).
+
+    Includes hybrid fallback: if LSP returns 0 refs, uses ripgrep text search
+    to detect cross-package references.
 
     Args:
         result: Search result dict with metadata
@@ -282,6 +331,7 @@ def _get_usage_only(result: dict[str, Any], workspace: Path) -> dict[str, Any]:
     file_path = metadata.get("file_path", "")
     line_start = metadata.get("line_start")
     line_end = metadata.get("line_end")
+    symbol_name = metadata.get("name", "")
 
     if not file_path or not line_start:
         result["used_by"] = "-"
@@ -314,11 +364,26 @@ def _get_usage_only(result: dict[str, Any], workspace: Path) -> dict[str, Any]:
         except Exception as e:
             logger.debug(f"LSP usage check failed for {file_path}:{start_line}: {e}")
 
-    # Format: "19f 43r c:74"
+    # Hybrid fallback: if LSP found 0 refs, try text search
+    text_fallback = False
+    if total_usages == 0 and symbol_name:
+        text_files, text_matches = _count_text_matches(symbol_name, workspace)
+        if text_matches > 0:
+            # Use text search results as fallback
+            files_affected = text_files
+            total_usages = text_matches
+            text_fallback = True
+            logger.debug(
+                f"Hybrid fallback for {symbol_name}: {text_matches} text matches in {text_files} files"
+            )
+
+    # Format: "19f 43r c:74" or "~19f ~43r c:74" for text fallback
     if files_affected > 0 or complexity >= 0:
         parts = []
         if files_affected > 0:
-            parts.append(f"{files_affected}f {total_usages}r")
+            # Use ~ prefix to indicate text search (approximate)
+            prefix = "~" if text_fallback else ""
+            parts.append(f"{prefix}{files_affected}f {prefix}{total_usages}r")
         if complexity >= 0:
             parts.append(f"c:{complexity}")
         result["used_by"] = " ".join(parts) if parts else "-"

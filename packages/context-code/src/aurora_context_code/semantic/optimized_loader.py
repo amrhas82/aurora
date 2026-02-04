@@ -347,7 +347,10 @@ class OptimizedEmbeddingLoader:
         """Load full model in background (BACKGROUND strategy)."""
         try:
             # Set offline mode if model is cached
-            from aurora_context_code.semantic.model_utils import is_model_cached
+            from aurora_context_code.semantic.model_utils import (
+                _suppress_model_loading_output,
+                is_model_cached,
+            )
 
             if is_model_cached(self.model_name):
                 os.environ["HF_HUB_OFFLINE"] = "1"
@@ -356,8 +359,11 @@ class OptimizedEmbeddingLoader:
             from aurora_context_code.semantic.embedding_provider import EmbeddingProvider
 
             device = self._device_hint or self.resource_profile.recommended_device
-            provider = EmbeddingProvider(model_name=self.model_name, device=device)
-            provider.preload_model()  # Force immediate load
+
+            # Suppress verbose "Loading weights" progress bars during model load
+            with _suppress_model_loading_output():
+                provider = EmbeddingProvider(model_name=self.model_name, device=device)
+                provider.preload_model()  # Force immediate load
 
             # Save metadata for future fast lookups
             self._save_metadata(provider)
@@ -384,7 +390,10 @@ class OptimizedEmbeddingLoader:
         """
         try:
             # Phase 1: Load metadata only (< 100ms)
-            from aurora_context_code.semantic.model_utils import is_model_cached
+            from aurora_context_code.semantic.model_utils import (
+                _suppress_model_loading_output,
+                is_model_cached,
+            )
 
             if is_model_cached(self.model_name):
                 os.environ["HF_HUB_OFFLINE"] = "1"
@@ -393,11 +402,14 @@ class OptimizedEmbeddingLoader:
             from aurora_context_code.semantic.embedding_provider import EmbeddingProvider
 
             device = self._device_hint or self.resource_profile.recommended_device
-            provider = EmbeddingProvider(model_name=self.model_name, device=device)
 
-            # At this point, embedding_dim is available from cache or will be loaded
-            # Phase 3: Load full model weights
-            provider.preload_model()
+            # Suppress verbose "Loading weights" progress bars during model load
+            with _suppress_model_loading_output():
+                provider = EmbeddingProvider(model_name=self.model_name, device=device)
+
+                # At this point, embedding_dim is available from cache or will be loaded
+                # Phase 3: Load full model weights
+                provider.preload_model()
 
             # Save metadata
             self._save_metadata(provider)
@@ -424,7 +436,10 @@ class OptimizedEmbeddingLoader:
         Falls back to standard loading if quantization fails.
         """
         try:
-            from aurora_context_code.semantic.model_utils import is_model_cached
+            from aurora_context_code.semantic.model_utils import (
+                _suppress_model_loading_output,
+                is_model_cached,
+            )
 
             if is_model_cached(self.model_name):
                 os.environ["HF_HUB_OFFLINE"] = "1"
@@ -446,8 +461,11 @@ class OptimizedEmbeddingLoader:
             from aurora_context_code.semantic.embedding_provider import EmbeddingProvider
 
             device = self._device_hint or self.resource_profile.recommended_device
-            provider = EmbeddingProvider(model_name=self.model_name, device=device)
-            provider.preload_model()
+
+            # Suppress verbose "Loading weights" progress bars during model load
+            with _suppress_model_loading_output():
+                provider = EmbeddingProvider(model_name=self.model_name, device=device)
+                provider.preload_model()
 
             self._save_metadata(provider)
 

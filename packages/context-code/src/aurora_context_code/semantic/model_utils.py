@@ -63,12 +63,16 @@ def _suppress_model_loading_output() -> Generator[None, None, None]:
     # Save original environment variables
     original_env = {
         "HF_HUB_DISABLE_PROGRESS_BARS": os.environ.get("HF_HUB_DISABLE_PROGRESS_BARS"),
+        "HF_HUB_DISABLE_TELEMETRY": os.environ.get("HF_HUB_DISABLE_TELEMETRY"),
         "TRANSFORMERS_VERBOSITY": os.environ.get("TRANSFORMERS_VERBOSITY"),
         "TRANSFORMERS_NO_ADVISORY_WARNINGS": os.environ.get("TRANSFORMERS_NO_ADVISORY_WARNINGS"),
     }
 
     # Suppress warnings from transformers/safetensors
     original_filters = list(warnings.filters)
+
+    # Track transformers progress bar state
+    transformers_progress_was_enabled = None
 
     try:
         # Suppress transformers and huggingface_hub logging
@@ -78,18 +82,38 @@ def _suppress_model_loading_output() -> Generator[None, None, None]:
 
         # Suppress tqdm progress bars from HuggingFace Hub and model loading
         os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
+        os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
         os.environ["TRANSFORMERS_VERBOSITY"] = "error"
         os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
 
         # Suppress all warnings during model loading
         warnings.filterwarnings("ignore")
 
-        # Try to disable tqdm if already imported
+        # Disable transformers' internal progress bar via its logging API
+        # This controls the "Loading weights" tqdm that shows during model loading
+        try:
+            from transformers.utils import logging as transformers_logging
+
+            transformers_progress_was_enabled = transformers_logging.is_progress_bar_enabled()
+            if transformers_progress_was_enabled:
+                transformers_logging.disable_progress_bar()  # type: ignore[no-untyped-call]
+        except (ImportError, AttributeError):
+            pass
+
+        # Also disable huggingface_hub progress bars via its API
+        try:
+            from huggingface_hub import utils as hf_utils
+
+            hf_utils.disable_progress_bars()  # type: ignore[attr-defined]
+        except (ImportError, AttributeError):
+            pass
+
+        # Try to disable tqdm globally if already imported
         original_tqdm_disable = None
         try:
             import tqdm.std  # type: ignore[import-untyped]
 
-            original_tqdm_disable = tqdm.std.tqdm.disable
+            original_tqdm_disable = getattr(tqdm.std.tqdm, "disable", None)
             tqdm.std.tqdm.disable = True
         except (ImportError, AttributeError):
             pass
@@ -105,6 +129,23 @@ def _suppress_model_loading_output() -> Generator[None, None, None]:
                 tqdm.std.tqdm.disable = original_tqdm_disable
             except (ImportError, AttributeError):
                 pass
+
+        # Restore transformers progress bar state
+        if transformers_progress_was_enabled is True:
+            try:
+                from transformers.utils import logging as transformers_logging
+
+                transformers_logging.enable_progress_bar()  # type: ignore[no-untyped-call]
+            except (ImportError, AttributeError):
+                pass
+
+        # Restore huggingface_hub progress bars
+        try:
+            from huggingface_hub import utils as hf_utils
+
+            hf_utils.enable_progress_bars()  # type: ignore[attr-defined]
+        except (ImportError, AttributeError):
+            pass
 
         # Restore warnings filters
         warnings.filters = original_filters

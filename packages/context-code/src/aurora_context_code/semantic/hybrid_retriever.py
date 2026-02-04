@@ -1128,7 +1128,7 @@ class HybridRetriever:
         logger.warning(
             "Embedding model unavailable - using BM25+Activation fallback "
             "(estimated 85% quality vs 95% tri-hybrid). "
-            "To restore full quality, check: pip install sentence-transformers"
+            "To restore full quality: pip install sentence-transformers torch"
         )
 
         # Run Stage 1 BM25 filter to get keyword scores

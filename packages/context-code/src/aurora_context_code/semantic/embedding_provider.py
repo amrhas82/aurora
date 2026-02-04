@@ -200,7 +200,7 @@ class EmbeddingProvider:
         if not _can_import_ml_deps():
             raise ImportError(
                 "sentence-transformers is required for semantic embeddings. "
-                "Install with: pip install aurora-context-code[ml]",
+                "Install with: pip install sentence-transformers torch",
             )
 
         self.model_name = model_name
@@ -283,7 +283,7 @@ class EmbeddingProvider:
                     if _SentenceTransformer is None:
                         raise RuntimeError(
                             "SentenceTransformer not loaded. "
-                            "Install with: pip install aurora-context-code[ml]"
+                            "Install with: pip install sentence-transformers torch"
                         )
                     model = _SentenceTransformer(self.model_name, device=self.device)
                     self._model = cast(_SentenceTransformerProtocol, model)

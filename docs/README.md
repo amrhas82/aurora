@@ -146,6 +146,7 @@ Understanding Aurora's purpose and architecture.
 
 | Document | Description |
 |----------|-------------|
+| [Dependencies](04-process/reference/DEPENDENCIES.md) | Packages, libraries, version requirements |
 | [Config Reference](04-process/reference/CONFIG_REFERENCE.md) | Configuration options |
 | [API Contracts](04-process/reference/API_CONTRACTS_v1.0.md) | Public API specs |
 | [MCP Setup](04-process/reference/MCP_SETUP.md) | MCP integration |

@@ -79,10 +79,7 @@ Found 5 results for 'soar reasoning'
 │ code   │ test_goals_startup_pe… │ TestGoalsCommandSta… │ 190-273    │ LOW    │ 1d ago   │   0.517 │
 │ code   │ goals.py               │ <chunk>              │ 437-544    │ -      │ 7d ago   │   0.486 │
 └────────┴────────────────────────┴──────────────────────┴────────────┴────────┴──────────┴─────────┘
-Average scores:
-  Activation: 0.916
-  Semantic:   0.867
-  Hybrid:     0.801
+Avg scores: Activation 0.916 | Semantic 0.867 | Hybrid 0.801
 
 Refine your search:
   --show-scores    Detailed score breakdown (BM25, semantic, activation)

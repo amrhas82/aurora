@@ -275,38 +275,24 @@ Identifies sessions where you got stuck, measures improvement over time.
 
 ## Planning Workflow
 
-3 simple steps from goal to implementation.
-
-**Code-aware planning:** `aur goals` searches your indexed codebase and maps each subgoal to relevant source files (`source_file`). This context flows through `/aur:plan` → `/aur:implement`, making implementation more accurate.
-
-> **Quick prototype?** Skip `aur goals` and run `/aur:plan` directly - the agent will search on the fly (less structured).
-
 ```
-Setup (once)             Step 1: Decompose        Step 2: Plan             Step 3: Implement
-Terminal                 Terminal                 Slash Command            Slash Command
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐      ┌─────────────────┐
-│   aur init      │     │   aur goals     │ ->  │   /aur:plan     │  ->  │  /aur:implement │
-│   Complete      │     │   "Add feature" │     │   [plan-id]     │      │   [plan-id]     │
-│   project.md*   │     │                 │     │                 │      │                 │
-│   aur mem index │     │                 │     │                 │      │                 │
-└─────────────────┘     └─────────────────┘     └─────────────────┘      └─────────────────┘
-        │                       │                       │                        │
-        v                       v                       v                        v
-   .aurora/                goals.json              5 artifacts:            Code changes
-   - project.md*           - subgoals              - plan.md               - validated
-   - memory.db             - agents                - prd.md                - tested
-                           - source files          - design.md
-                                                   - agents.json
-                                                   - tasks.md
-                                                        │
-                                                 ┌──────┴──────┐
-                                                 │ /aur:tasks  │  <- Optional: regenerate
-                                                 │ [plan-id]   │     tasks after PRD edits
-                                                 └─────────────┘
-
-* Ask your agent to complete project.md: "Please fill out .aurora/project.md with our
-  architecture, conventions, and key patterns." This improves planning accuracy.
+Terminal                    In your AI tool (Claude Code, Cursor, etc.)
+────────                    ─────────────────────────────────────────────
+aur init
+aur goals "Add auth"  →     /aur:plan add-auth  →  /aur:implement add-auth
+     ↓                           ↓                        ↓
+ goals.json               PRD + tasks.md              Code changes
+ (subgoals, agents)       (ready to execute)          (validated)
 ```
+
+| Step | Command | Output |
+|------|---------|--------|
+| Setup (once) | `aur init` | `.aurora/` directory, indexed codebase |
+| Decompose | `aur goals "goal"` | Subgoals mapped to agents + source files |
+| Plan | `/aur:plan [id]` | PRD, design doc, tasks.md |
+| Implement | `/aur:implement [id]` | Code changes with validation |
+
+> **Quick prototype?** Skip `aur goals` and run `/aur:plan` directly.
 
 See [3 Simple Steps Guide](docs/04-process/getting-started/3-SIMPLE-STEPS.md) for detailed walkthrough.
 

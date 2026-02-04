@@ -26,7 +26,7 @@ Multi-agent orchestration that runs locally.
 
 ### Aurora - Lightweight Private Memory & Multi-Agent Orchestration
 
-- **Private & local** - No API keys, no data leaves your machine. Works with Claude Code, Cursor, Aider, 20+ tools
+- **Private & local** - No API keys, no data leaves your machine. Works with Claude Code, Cursor, 20+ tools
 - **Smart Memory** - Indexes code and docs locally. Ranks by recency, relevance, and access patterns
 - **Code Intelligence** - LSP-powered: find unused code, check impact before refactoring, semantic search
 - **Multi-Agent Orchestration** - Decompose goals, spawn agents, coordinate with recovery and state

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aurora-actr"
-version = "0.13.4"
+version = "0.13.5"
 description = "AURORA: Adaptive Unified Reasoning and Orchestration Architecture with MCP Integration"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -55,6 +55,7 @@ dependencies = [
 
     # LSP integration (bundled)
     "multilspy>=0.0.15",
+    "nest-asyncio>=1.5.0",
 
     # ML/Embeddings (required for semantic search)
     "sentence-transformers>=2.2.0",

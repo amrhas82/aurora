@@ -32,6 +32,7 @@ from aurora_core.activation.context_boost import ContextBoost, ContextBoostConfi
 from aurora_core.activation.decay import DecayCalculator, DecayConfig
 from aurora_core.activation.spreading import RelationshipGraph, SpreadingActivation, SpreadingConfig
 
+
 logger = logging.getLogger(__name__)
 
 

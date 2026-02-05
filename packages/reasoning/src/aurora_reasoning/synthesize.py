@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 
 from .prompts.verify_synthesis import VerifySynthesisPromptTemplate
 
+
 if TYPE_CHECKING:
     from .llm_client import LLMClient
 

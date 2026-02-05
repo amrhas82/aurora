@@ -21,7 +21,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class PlanStatus(str, Enum):
@@ -127,6 +127,7 @@ class Subgoal(BaseModel):
     )
     assigned_agent: str = Field(
         ...,
+        validation_alias=AliasChoices("assigned_agent", "agent_id", "agent"),
         description="Best AVAILABLE agent ID in '@agent-id' format",
         examples=["@code-developer", "@quality-assurance"],
     )

@@ -25,12 +25,13 @@ from aurora_cli.commands.plan import plan_group
 from aurora_cli.commands.soar import soar_command
 from aurora_cli.commands.spawn import spawn_command
 
+
 __all__ = ["cli"]
 
 console = Console()
 logger = logging.getLogger(__name__)
 
-AURORA_VERSION = "0.14.1"
+AURORA_VERSION = "0.14.2"
 
 
 def _version_callback(ctx: click.Context, param: click.Parameter, value: bool) -> None:

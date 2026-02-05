@@ -45,6 +45,7 @@ from aurora_context_code.semantic.optimized_loader import (
     ResourceProfile,
 )
 
+
 # Mark all tests in this module as performance tests
 pytestmark = [pytest.mark.performance, pytest.mark.ml]
 

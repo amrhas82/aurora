@@ -1380,7 +1380,7 @@ def main():
     print(
         f"Analyzed: {len(analyses)} sessions ({interactive} interactive*) from {projects_count} project{'s' if projects_count != 1 else ''}"
     )
-    print(f"  *interactive = multi-turn conversations (>1 turn)")
+    print("  *interactive = multi-turn conversations (>1 turn)")
 
     # BAD rate with emoji
     emoji = "🔴" if bad_rate > 0.5 else "🟡" if bad_rate > 0.3 else "✅"
@@ -1471,8 +1471,8 @@ def main():
 
     # Output files
     print("Outputs:")
-    print(f"  📊 .aurora/friction/report.md (detailed analysis)")
-    print(f"  📋 .aurora/friction/antigen_review.md (failure patterns)")
+    print("  📊 .aurora/friction/report.md (detailed analysis)")
+    print("  📋 .aurora/friction/antigen_review.md (failure patterns)")
     print(
         f"  📁 .aurora/friction/*.json (raw data: {len(all_signals)} signals, {len(analyses)} sessions)"
     )

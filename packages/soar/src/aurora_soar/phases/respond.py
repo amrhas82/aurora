@@ -11,6 +11,7 @@ from dataclasses import asdict, is_dataclass
 from enum import Enum
 from typing import TYPE_CHECKING, Any, cast
 
+
 if TYPE_CHECKING:
     from aurora_soar.phases.record import RecordResult
     from aurora_soar.phases.synthesize import SynthesisResult

@@ -30,6 +30,7 @@ from aurora_cli.memory_manager import IndexProgress, MemoryManager, SearchResult
 from aurora_core.metrics.query_metrics import QueryMetrics
 from aurora_lsp.languages import get_complexity_branch_types, get_config
 
+
 __all__ = ["memory_group", "run_indexing", "display_indexing_summary"]
 
 logger = logging.getLogger(__name__)

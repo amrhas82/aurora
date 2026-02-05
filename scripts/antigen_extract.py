@@ -428,7 +428,7 @@ def main():
             f.write("```\n\n")
             f.write("---\n\n")
 
-    print(f"Output: .aurora/friction/antigen_review.md\n")
+    print("Output: .aurora/friction/antigen_review.md\n")
 
     return 0
 

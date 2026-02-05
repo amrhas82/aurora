@@ -13,6 +13,7 @@ Type Taxonomy:
 from pathlib import Path
 from typing import Union
 
+
 # Extension-based type mapping
 EXTENSION_TYPE_MAP: dict[str, str] = {
     # Code (tree-sitter parsed)
@@ -42,7 +43,7 @@ VALID_TYPES: frozenset[str] = frozenset({"code", "kb", "doc", "reas"})
 
 
 def get_chunk_type(
-    file_path: Union[Path, str, None] = None,
+    file_path: Path | str | None = None,
     context: str | None = None,
 ) -> str:
     """Determine chunk type from file extension or context.

@@ -23,6 +23,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+
 if TYPE_CHECKING:
     from aurora_context_code.semantic.embedding_provider import EmbeddingProvider
 

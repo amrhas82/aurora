@@ -11,6 +11,7 @@ MCP (Model Context Protocol) configuration is separate from slash commands:
 from aurora_cli.configurators.mcp.base import ConfigResult, MCPConfigurator, merge_mcp_config
 from aurora_cli.configurators.mcp.registry import MCPConfigRegistry
 
+
 __all__ = [
     "MCPConfigurator",
     "MCPConfigRegistry",

@@ -8,6 +8,7 @@ import json
 
 import pytest
 
+
 # These tests require real API access (LLM calls for query/reasoning)
 pytestmark = pytest.mark.real_api
 

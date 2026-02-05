@@ -21,6 +21,7 @@ from aurora_lsp.languages import (
     is_nested_helper,
 )
 
+
 if TYPE_CHECKING:
     from aurora_lsp.client import AuroraLSPClient
 

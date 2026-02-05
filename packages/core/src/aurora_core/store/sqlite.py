@@ -30,6 +30,7 @@ from aurora_core.store.connection_pool import get_connection_pool
 from aurora_core.store.schema import get_init_statements
 from aurora_core.types import ChunkID
 
+
 if TYPE_CHECKING:
     from aurora_core.chunks.base import Chunk
     from aurora_core.chunks.doc_chunk import DocChunk

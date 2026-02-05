@@ -24,6 +24,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+
 # Color codes for output
 GREEN = "\033[92m"
 RED = "\033[91m"

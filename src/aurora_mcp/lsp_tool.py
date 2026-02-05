@@ -166,7 +166,9 @@ def _get_symbol_name_from_line(file_path: str, line_0indexed: int, workspace: Pa
         return None
 
 
-def _count_text_matches(symbol_name: str, workspace: Path) -> tuple[int, int]:
+def _count_text_matches(
+    symbol_name: str, workspace: Path, top_n: int = 5
+) -> tuple[int, int, list[str]]:
     """Count text matches for a symbol using ripgrep.
 
     Uses word boundary matching to reduce false positives.
@@ -175,14 +177,16 @@ def _count_text_matches(symbol_name: str, workspace: Path) -> tuple[int, int]:
     Args:
         symbol_name: Name of the symbol to search
         workspace: Workspace root directory
+        top_n: Number of top file:line references to return
 
     Returns:
-        Tuple of (file_count, total_matches)
+        Tuple of (file_count, total_matches, top_refs)
+        where top_refs is a list of "file:line" strings
     """
     import subprocess
 
     if not symbol_name:
-        return 0, 0
+        return 0, 0, []
 
     try:
         # Use ripgrep with word boundary, count matches per file
@@ -196,7 +200,7 @@ def _count_text_matches(symbol_name: str, workspace: Path) -> tuple[int, int]:
         )
 
         if result.returncode not in (0, 1):  # 1 means no matches
-            return 0, 0
+            return 0, 0, []
 
         # Parse output: each line is "file:count"
         file_count = 0
@@ -210,10 +214,46 @@ def _count_text_matches(symbol_name: str, workspace: Path) -> tuple[int, int]:
                 except ValueError:
                     total_matches += 1
 
-        return file_count, total_matches
+        # Get top-N concrete file:line references
+        top_refs: list[str] = []
+        if total_matches > 0 and top_n > 0:
+            try:
+                # Get all unique file:line refs, then sort source before tests
+                ref_result = subprocess.run(
+                    ["rg", "-w", "-n", "--no-heading", "--type", "py",
+                     symbol_name, "."],
+                    cwd=workspace,
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                )
+                if ref_result.returncode == 0:
+                    seen_files: set[str] = set()
+                    src_refs: list[str] = []
+                    test_refs: list[str] = []
+                    for ref_line in ref_result.stdout.strip().split("\n"):
+                        if not ref_line or ":" not in ref_line:
+                            continue
+                        parts = ref_line.split(":", 2)
+                        if len(parts) >= 2:
+                            fpath = parts[0].lstrip("./")
+                            lineno = parts[1]
+                            if fpath not in seen_files:
+                                seen_files.add(fpath)
+                                ref = f"{fpath}:{lineno}"
+                                if "/test" in fpath or fpath.startswith("tests/"):
+                                    test_refs.append(ref)
+                                else:
+                                    src_refs.append(ref)
+                    # Source files first, then tests, capped at top_n
+                    top_refs = (src_refs + test_refs)[:top_n]
+            except (subprocess.TimeoutExpired, FileNotFoundError):
+                pass
+
+        return file_count, total_matches, top_refs
 
     except (subprocess.TimeoutExpired, FileNotFoundError):
-        return 0, 0
+        return 0, 0, []
 
 
 def _generate_code_quality_report(dead_code: list[dict], workspace: Path) -> str:
@@ -435,10 +475,14 @@ def lsp(
         if total_usages == 0:
             symbol_name = _get_symbol_name_from_line(path, line_0indexed, workspace)
             if symbol_name:
-                text_files, text_matches = _count_text_matches(symbol_name, workspace)
+                text_files, text_matches, top_refs = _count_text_matches(
+                    symbol_name, workspace
+                )
                 if text_matches > 0:
                     result["text_matches"] = text_matches
                     result["text_files"] = text_files
+                    if top_refs:
+                        result["top_refs"] = top_refs
                     result["note"] = (
                         f"LSP found 0 refs but text search found {text_matches} matches "
                         f"in {text_files} files - likely cross-package usage"
@@ -477,10 +521,14 @@ def lsp(
         if total_usages == 0:
             symbol_name = _get_symbol_name_from_line(path, line_0indexed, workspace)
             if symbol_name:
-                text_files, text_matches = _count_text_matches(symbol_name, workspace)
+                text_files, text_matches, top_refs = _count_text_matches(
+                    symbol_name, workspace
+                )
                 if text_matches > 0:
                     result["text_matches"] = text_matches
                     result["text_files"] = text_files
+                    if top_refs:
+                        result["top_refs"] = top_refs
                     result["note"] = (
                         f"LSP found 0 refs but text search found {text_matches} matches "
                         f"in {text_files} files - likely cross-package usage"

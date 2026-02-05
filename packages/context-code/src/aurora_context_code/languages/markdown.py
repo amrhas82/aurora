@@ -13,6 +13,7 @@ from aurora_context_code.parser import CodeParser
 from aurora_core.chunk_types import get_chunk_type
 from aurora_core.chunks.code_chunk import CodeChunk
 
+
 logger = logging.getLogger(__name__)
 
 

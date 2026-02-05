@@ -36,6 +36,7 @@ from aurora_spawner.models import SpawnTask
 from implement.models import ParsedTask
 from implement.parser import TaskParser
 
+
 console = Console()
 logger = logging.getLogger(__name__)
 

@@ -13,6 +13,7 @@ from click.testing import CliRunner
 
 from aurora_cli.main import cli
 
+
 # Skip: Wizard tests need separate investigation (unrelated to aur query changes)
 pytestmark = pytest.mark.skip(reason="Wizard tests failing - needs separate investigation")
 

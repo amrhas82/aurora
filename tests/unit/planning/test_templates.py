@@ -13,6 +13,7 @@ from datetime import datetime
 
 import pytest
 
+
 # Import renderer from CLI planning (which imports from aurora_planning)
 try:
     # Try CLI imports first (where renderer is re-exported)

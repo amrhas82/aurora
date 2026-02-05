@@ -34,6 +34,7 @@ from typing import Any
 
 from aurora_cli.planning.models import Complexity, Subgoal
 
+
 # Configure logger for cache operations
 logger = logging.getLogger(__name__)
 

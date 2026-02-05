@@ -14,6 +14,7 @@ import sys
 import warnings
 from pathlib import Path
 
+
 # Suppress warnings that would pollute output
 warnings.filterwarnings("ignore")
 os.environ["PYTHONWARNINGS"] = "ignore"
@@ -108,6 +109,7 @@ def main():
         used_by = result.get("used_by", 0)
         text_matches = result.get("text_matches", 0)
         text_files = result.get("text_files", 0)
+        top_refs = result.get("top_refs", [])
         risk = result.get("risk", "low")
         symbol = result.get("symbol") or "unknown"
         note = result.get("note", "")
@@ -122,6 +124,10 @@ def main():
             context += f" | {text_matches} text matches in {text_files} files"
 
         context += f" | Risk: {risk.upper()}"
+
+        # Show concrete references so the agent can reason about impact
+        if top_refs:
+            context += "\nTop refs: " + ", ".join(top_refs)
 
         if note:
             context += f"\n{note}"

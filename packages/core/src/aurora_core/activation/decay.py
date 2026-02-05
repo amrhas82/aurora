@@ -48,6 +48,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
+
 # Default decay rates by chunk type (ACT-R cognitive modeling)
 # Lower values = "stickier" memories (slower forgetting)
 # Higher values = more volatile (faster forgetting)

@@ -17,6 +17,7 @@ import time
 from dataclasses import dataclass
 from typing import Callable
 
+
 logger = logging.getLogger(__name__)
 
 

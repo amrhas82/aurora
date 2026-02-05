@@ -12,6 +12,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Generator
 
+
 if TYPE_CHECKING:
     from rich.console import Console
 

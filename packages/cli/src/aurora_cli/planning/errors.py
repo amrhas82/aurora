@@ -16,6 +16,7 @@ Exceptions:
 
 from __future__ import annotations
 
+
 # All error codes with actionable message templates
 VALIDATION_MESSAGES: dict[str, str] = {
     # Plan ID errors

@@ -31,6 +31,7 @@ from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRe
 from aurora_core.activation.base_level import AccessHistoryEntry
 from aurora_core.activation.engine import ActivationConfig
 
+
 # Mark all tests as requiring ML dependencies
 pytestmark = [
     pytest.mark.ml,

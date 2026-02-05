@@ -16,6 +16,7 @@ from aurora_lsp.analysis import CodeAnalyzer
 from aurora_lsp.client import AuroraLSPClient
 from aurora_lsp.diagnostics import DiagnosticsFormatter
 
+
 # Allow nested event loops (needed when called from MCP server)
 nest_asyncio.apply()
 

@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any
 from .prompts.verify_adversarial import VerifyAdversarialPromptTemplate
 from .prompts.verify_self import VerifySelfPromptTemplate
 
+
 if TYPE_CHECKING:
     from .llm_client import LLMClient
 

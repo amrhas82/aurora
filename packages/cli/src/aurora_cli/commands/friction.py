@@ -15,18 +15,24 @@ console = Console()
 
 
 def _get_scripts_dir() -> Path:
-    """Find the scripts directory."""
-    # Try relative to this file (development) - resolve symlinks first
+    """Find the scripts directory.
+
+    Looks for bundled scripts in the installed package first,
+    then falls back to the repo scripts/ dir for development.
+    """
+    # Bundled with the package (works after pip install)
+    pkg_path = Path(__file__).resolve().parent.parent / "scripts"
+    if pkg_path.exists():
+        return pkg_path
+
+    # Development: resolve symlinks to find repo root
     dev_path = Path(__file__).resolve().parents[5] / "scripts"
     if dev_path.exists():
         return dev_path
 
-    # Try relative to cwd (running from repo root)
-    cwd_path = Path.cwd() / "scripts"
-    if cwd_path.exists():
-        return cwd_path
-
-    raise FileNotFoundError("Cannot find scripts directory")
+    raise FileNotFoundError(
+        "Cannot find friction scripts. Reinstall aurora-cli: pip install aurora-cli"
+    )
 
 
 def _load_script_module(script_name: str):

@@ -23,7 +23,7 @@ sed -i "s/^version = \".*\"/version = \"$VERSION\"/" pyproject.toml
 echo "✓ Updated pyproject.toml"
 
 # Update CLI version in main.py
-sed -i "s/@click.version_option(version=\".*\"/@click.version_option(version=\"$VERSION\"/" packages/cli/src/aurora_cli/main.py
+sed -i "s/^AURORA_VERSION = \".*\"/AURORA_VERSION = \"$VERSION\"/" packages/cli/src/aurora_cli/main.py
 echo "✓ Updated packages/cli/src/aurora_cli/main.py"
 
 echo ""

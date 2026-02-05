@@ -1,0 +1,1 @@
+../../../../../scripts/antigen_extract.py

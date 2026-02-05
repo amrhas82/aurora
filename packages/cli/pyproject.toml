@@ -57,6 +57,10 @@ packages = ["src/aurora_cli"]
 [tool.hatch.build.targets.wheel.force-include]
 "src/aurora_cli/py.typed" = "aurora_cli/py.typed"
 "src/aurora_cli/commands/py.typed" = "aurora_cli/commands/py.typed"
+"../../scripts/friction.py" = "aurora_cli/scripts/friction.py"
+"../../scripts/friction_analyze.py" = "aurora_cli/scripts/friction_analyze.py"
+"../../scripts/antigen_extract.py" = "aurora_cli/scripts/antigen_extract.py"
+"../../scripts/friction_config.json" = "aurora_cli/scripts/friction_config.json"
 
 [tool.hatch.build.targets.sdist]
 include = [

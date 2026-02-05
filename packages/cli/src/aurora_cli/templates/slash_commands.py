@@ -162,7 +162,6 @@ PLAN_REFERENCES = """**Reference**
       "title": "Brief subgoal title",
       "description": "Detailed subgoal description explaining what needs to be done",
       "agent_id": "@code-developer",
-      "status": "pending",
       "dependencies": []
     }
   ]
@@ -175,13 +174,12 @@ PLAN_REFERENCES = """**Reference**
 - **status** (required): One of: active, completed, archived, failed
 - **complexity** (optional): One of: simple, moderate, complex
 - **created_at** (required): ISO 8601 timestamp (UTC)
-- **updated_at** (required): ISO 8601 timestamp (UTC)
-- **subgoals** (required): Array of subgoal objects (1-20 items)
+- **updated_at** (optional): ISO 8601 timestamp (UTC), defaults to created_at
+- **subgoals** (required): Array of subgoal objects (1-10 items)
   - **id**: Subgoal identifier (format: sg-N)
   - **title**: Brief subgoal title (5-100 chars, imperative form)
   - **description**: Detailed description (10-500 chars)
   - **agent_id**: Recommended agent (format: @agent-name)
-  - **status**: One of: pending, in_progress, completed, blocked
   - **dependencies**: Array of subgoal IDs that must complete first
 
 **Full schema reference:** `packages/planning/src/aurora_planning/schemas/agents.schema.json`

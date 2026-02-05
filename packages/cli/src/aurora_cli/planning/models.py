@@ -29,11 +29,13 @@ class PlanStatus(str, Enum):
 
     States:
     - ACTIVE: Plan is currently being worked on
-    - ARCHIVED: Plan has been completed and archived
+    - COMPLETED: All tasks finished, ready to archive
+    - ARCHIVED: Plan has been archived
     - FAILED: Plan failed and was abandoned
     """
 
     ACTIVE = "active"
+    COMPLETED = "completed"
     ARCHIVED = "archived"
     FAILED = "failed"
 
@@ -278,6 +280,10 @@ class Plan(BaseModel):
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         description="UTC timestamp when plan was created",
+    )
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="UTC timestamp when plan was last updated",
     )
     status: PlanStatus = Field(
         default=PlanStatus.ACTIVE,

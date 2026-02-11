@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from aurora_lsp.languages.base import LanguageConfig
+from aurora_lsp.languages.go import GO
 from aurora_lsp.languages.javascript import JAVASCRIPT
 from aurora_lsp.languages.python import PYTHON
 from aurora_lsp.languages.typescript import TYPESCRIPT
@@ -36,6 +37,7 @@ LANGUAGES: dict[str, LanguageConfig] = {
     "python": PYTHON,
     "javascript": JAVASCRIPT,
     "typescript": TYPESCRIPT,
+    "go": GO,
 }
 
 # Extension to language mapping
@@ -47,6 +49,7 @@ EXTENSION_MAP: dict[str, str] = {
     ".mjs": "javascript",
     ".ts": "typescript",
     ".tsx": "typescript",
+    ".go": "go",
 }
 
 

@@ -110,6 +110,21 @@ def _find_symbol_column(file_path: str, line_0indexed: int, workspace: Path) -> 
         if match:
             return match.start(1)
 
+        # Go: func Name(
+        match = re.search(r"\bfunc\s+(\w+)\s*\(", line)
+        if match:
+            return match.start(1)
+
+        # Go: func (receiver) Name(
+        match = re.search(r"\bfunc\s+\([^)]+\)\s+(\w+)\s*\(", line)
+        if match:
+            return match.start(1)
+
+        # Go: type Name struct/interface
+        match = re.search(r"\btype\s+(\w+)\s+(?:struct|interface)", line)
+        if match:
+            return match.start(1)
+
         # Python: variable = ... (at start of line, possibly indented)
         match = re.match(r"^(\s*)(\w+)\s*[=:]", line)
         if match:
@@ -206,6 +221,21 @@ def _get_symbol_name_from_line(file_path: str, line_0indexed: int, workspace: Pa
         if match:
             return match.group(1)
 
+        # Go: func Name(
+        match = re.search(r"\bfunc\s+(\w+)\s*\(", line)
+        if match:
+            return match.group(1)
+
+        # Go: func (receiver) Name(
+        match = re.search(r"\bfunc\s+\([^)]+\)\s+(\w+)\s*\(", line)
+        if match:
+            return match.group(1)
+
+        # Go: type Name struct/interface
+        match = re.search(r"\btype\s+(\w+)\s+(?:struct|interface)", line)
+        if match:
+            return match.group(1)
+
         # Python: variable = ...
         match = re.match(r"^\s*(\w+)\s*[=:]", line)
         if match:
@@ -222,6 +252,7 @@ def _ext_to_rg_type(ext: str) -> str:
         ".py": "py", ".pyi": "py",
         ".js": "js", ".jsx": "js", ".mjs": "js",
         ".ts": "ts", ".tsx": "ts",
+        ".go": "go",
     }.get(ext, "py")
 
 

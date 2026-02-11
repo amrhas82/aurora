@@ -302,6 +302,9 @@ class AuroraLSP:
         if is_js_ts:
             return self._get_imported_by_js_ts(module_path)
 
+        if ext == ".go":
+            return self._get_imported_by_go(module_path)
+
         # Python module resolution
         # "src/aurora_lsp/analysis.py" -> "aurora_lsp.analysis"
         if module_path.suffix == ".py":
@@ -436,6 +439,87 @@ class AuroraLSP:
                 for line in result.stdout.strip().split("\n"):
                     file_path = Path(line)
                     if file_path.resolve() != module_path.resolve():
+                        try:
+                            rel = file_path.relative_to(self.workspace)
+                            importing_files.append(str(rel))
+                        except ValueError:
+                            importing_files.append(str(file_path))
+
+            return {
+                "module": module_name,
+                "imported_by": sorted(importing_files),
+                "import_count": len(importing_files),
+            }
+
+        except subprocess.TimeoutExpired:
+            return {"module": module_name, "imported_by": [], "import_count": 0, "error": "Search timed out"}
+        except FileNotFoundError:
+            return {"module": module_name, "imported_by": [], "import_count": 0, "error": "ripgrep not installed"}
+
+    def _get_imported_by_go(self, module_path: Path) -> dict:
+        """Find Go files that import the package containing this file.
+
+        Go imports are package-level, so we find the package import path
+        and search for it in import statements.
+
+        Args:
+            module_path: Absolute path to the Go source file.
+
+        Returns:
+            Dict with module, imported_by, import_count.
+        """
+        import re
+        import subprocess
+
+        # Determine the Go package import path from go.mod + relative path
+        # e.g., if go.mod has "module github.com/user/repo" and file is at
+        # internal/album/api.go, the import path is "github.com/user/repo/internal/album"
+        try:
+            rel_path = module_path.relative_to(self.workspace)
+        except ValueError:
+            rel_path = module_path
+
+        # Find go.mod to get module name
+        go_mod = self.workspace / "go.mod"
+        module_prefix = ""
+        if go_mod.exists():
+            for line in go_mod.read_text().splitlines():
+                if line.startswith("module "):
+                    module_prefix = line.split("module ", 1)[1].strip()
+                    break
+
+        # Package path = module_prefix + directory of the file
+        pkg_dir = str(rel_path.parent)
+        if pkg_dir == ".":
+            pkg_import = module_prefix
+        elif module_prefix:
+            pkg_import = f"{module_prefix}/{pkg_dir}"
+        else:
+            pkg_import = pkg_dir
+
+        module_name = pkg_import
+
+        # Also get just the package directory name for local imports
+        pkg_name = rel_path.parent.name
+
+        # Build pattern: match import lines containing the package path
+        # Go imports: import "pkg/path" or within import ( ... ) blocks
+        pattern = re.escape(pkg_import)
+
+        try:
+            result = subprocess.run(
+                ["rg", "-l", "--type", "go", "-e", pattern, str(self.workspace)],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+
+            importing_files = []
+            if result.returncode == 0 and result.stdout.strip():
+                for line in result.stdout.strip().split("\n"):
+                    file_path = Path(line)
+                    # Exclude files in the same package directory
+                    if file_path.resolve().parent != module_path.resolve().parent:
                         try:
                             rel = file_path.relative_to(self.workspace)
                             importing_files.append(str(rel))

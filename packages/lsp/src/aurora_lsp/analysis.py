@@ -66,6 +66,7 @@ def _ext_to_rg_type(ext: str) -> str:
         ".py": "py", ".pyi": "py",
         ".js": "js", ".jsx": "js", ".mjs": "js",
         ".ts": "ts", ".tsx": "ts",
+        ".go": "go",
     }.get(ext, "py")
 
 
@@ -155,7 +156,7 @@ def _fallback_grep_search(
         file_types = ["py"]
 
     # Map rg types to grep --include patterns
-    _type_to_exts = {"py": ["*.py"], "js": ["*.js", "*.jsx", "*.mjs"], "ts": ["*.ts", "*.tsx"]}
+    _type_to_exts = {"py": ["*.py"], "js": ["*.js", "*.jsx", "*.mjs"], "ts": ["*.ts", "*.tsx"], "go": ["*.go"]}
     include_flags = []
     for ft in file_types:
         for ext in _type_to_exts.get(ft, [f"*.{ft}"]):
@@ -186,6 +187,11 @@ def _get_skip_names(language: str) -> set[str]:
         from aurora_lsp.languages.javascript import JS_SKIP_NAMES
 
         return JS_SKIP_NAMES
+
+    if language == "go":
+        from aurora_lsp.languages.go import GO_SKIP_NAMES
+
+        return GO_SKIP_NAMES
 
     # Python built-ins and common methods
     return {

@@ -183,5 +183,21 @@ def _register_builtin_parsers(registry: ParserRegistry) -> None:
     except Exception as e:
         logger.warning(f"Failed to auto-register JavaScriptParser: {e}")
 
+    try:
+        from aurora_context_code.languages.go import GoParser
+
+        registry.register(GoParser())
+        logger.debug("Auto-registered GoParser")
+    except Exception as e:
+        logger.warning(f"Failed to auto-register GoParser: {e}")
+
+    try:
+        from aurora_context_code.languages.java import JavaParser
+
+        registry.register(JavaParser())
+        logger.debug("Auto-registered JavaParser")
+    except Exception as e:
+        logger.warning(f"Failed to auto-register JavaParser: {e}")
+
 
 __all__ = ["ParserRegistry", "get_global_registry"]

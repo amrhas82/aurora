@@ -59,7 +59,7 @@ cd aurora && ./install.sh
 
 - **BM25** - Keyword search
 - **Git signals** - Recent changes rank higher
-- **Tree-sitter/cAST** - Code stored as class/method (Python, TypeScript, Java)
+- **Tree-sitter/cAST** - Code stored as class/method (Python, JS/TS, Go, Java)
 - **LSP enrichment** - Risk level, usage count, complexity (see Code Intelligence below)
 - **Markdown indexing** - Search docs, save tokens
 
@@ -128,8 +128,10 @@ Aurora provides fast code intelligence via MCP tools - many operations use ripgr
 - After changes: `lsp deadcode` to clean up orphaned code
 
 **Language support:**
-- **Python:** Full (LSP + tree-sitter complexity + import filtering)
-- **JS/TS/Go/Rust/Java:** Partial (LSP refs, ripgrep deadcode)
+- **Python:** Full (LSP + tree-sitter complexity + import filtering + indexing)
+- **JavaScript/TypeScript:** LSP refs + tree-sitter indexing + import filtering
+- **Go:** LSP refs + tree-sitter indexing + import filtering
+- **Java:** LSP refs + tree-sitter indexing + import filtering
 
 See [Code Intelligence Guide](docs/02-features/lsp/CODE_INTELLIGENCE_STATUS.md) for all 16 features and implementation details.
 

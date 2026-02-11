@@ -42,6 +42,10 @@ dependencies = [
     # Context/code analysis dependencies
     "tree-sitter>=0.20.0",
     "tree-sitter-python>=0.20.0",
+    "tree-sitter-javascript>=0.20.0",
+    "tree-sitter-typescript>=0.20.0",
+    "tree-sitter-go>=0.20.0",
+    "tree-sitter-java>=0.20.0",
     "numpy>=1.24.0",
 
     # Reasoning dependencies

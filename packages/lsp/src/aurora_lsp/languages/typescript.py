@@ -14,7 +14,6 @@ from aurora_lsp.languages.javascript import (
     JS_ENTRY_POINTS,
     JS_FUNCTION_DEF_TYPES,
     JS_NESTED_PATTERNS,
-    JS_SKIP_NAMES,
 )
 
 
@@ -30,9 +29,6 @@ TS_FUNCTION_DEF_TYPES = JS_FUNCTION_DEF_TYPES | {
     "type_alias_declaration",
     "interface_declaration",
 }
-
-# TS reuses JS skip names
-TS_SKIP_NAMES = JS_SKIP_NAMES
 
 TYPESCRIPT = LanguageConfig(
     name="typescript",

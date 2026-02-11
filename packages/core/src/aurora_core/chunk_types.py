@@ -23,6 +23,8 @@ EXTENSION_TYPE_MAP: dict[str, str] = {
     ".jsx": "code",
     ".ts": "code",
     ".tsx": "code",
+    ".go": "code",
+    ".java": "code",
     # Knowledge Base (markdown documentation)
     ".md": "kb",
     ".markdown": "kb",

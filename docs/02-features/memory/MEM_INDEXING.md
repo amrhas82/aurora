@@ -84,6 +84,8 @@ Each language has a dedicated parser using tree-sitter for AST parsing:
 | Python | `PythonParser` | functions, classes, methods, imports |
 | JavaScript | `JavaScriptParser` | functions, classes, arrow functions |
 | TypeScript | `TypeScriptParser` | functions, classes, interfaces, types |
+| Go | `GoParser` | functions, methods, structs, interfaces |
+| Java | `JavaParser` | classes, interfaces, methods, enums |
 | Markdown | `MarkdownParser` | sections by `##` headers |
 
 **Parser Interface:**
@@ -124,7 +126,7 @@ Chunks are categorized by source:
 
 | Type | Extensions | Description |
 |------|------------|-------------|
-| `code` | `.py`, `.js`, `.ts`, `.tsx`, `.jsx` | Source code (tree-sitter parsed) |
+| `code` | `.py`, `.js`, `.ts`, `.tsx`, `.jsx`, `.go`, `.java` | Source code (tree-sitter parsed) |
 | `kb` | `.md`, `.markdown` | Knowledge base (documentation) |
 | `doc` | `.pdf`, `.docx`, `.txt` | Documents |
 | `reas` | context-based | Reasoning traces (SOAR/goals output) |
@@ -135,6 +137,7 @@ EXTENSION_TYPE_MAP = {
     ".py": "code", ".pyi": "code",
     ".js": "code", ".jsx": "code",
     ".ts": "code", ".tsx": "code",
+    ".go": "code", ".java": "code",
     ".md": "kb", ".markdown": "kb",
     ".pdf": "doc", ".docx": "doc", ".txt": "doc",
 }
@@ -399,6 +402,10 @@ Final Score = BM25 × 0.3 + Semantic × 0.4 + Activation × 0.3
 | CLI command | `packages/cli/src/aurora_cli/commands/memory.py` |
 | Indexing orchestrator | `packages/cli/src/aurora_cli/memory_manager.py` |
 | Python parser | `packages/context-code/src/aurora_context_code/languages/python.py` |
+| JavaScript parser | `packages/context-code/src/aurora_context_code/languages/javascript.py` |
+| TypeScript parser | `packages/context-code/src/aurora_context_code/languages/typescript.py` |
+| Go parser | `packages/context-code/src/aurora_context_code/languages/go.py` |
+| Java parser | `packages/context-code/src/aurora_context_code/languages/java.py` |
 | Markdown parser | `packages/context-code/src/aurora_context_code/languages/markdown.py` |
 | Embedding provider | `packages/context-code/src/aurora_context_code/semantic/embedding_provider.py` |
 | Hybrid retriever | `packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py` |

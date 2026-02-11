@@ -15,8 +15,8 @@ from aurora_lsp.languages import get_complexity_branch_types, get_config
 
 logger = logging.getLogger(__name__)
 
-# Lazy-loaded tree-sitter parser
-_ts_parser = None
+# Lazy-loaded tree-sitter parsers per language
+_ts_parsers: dict[str, Any] = {}
 
 
 def _get_complexity(file_path: str, line_start: int, line_end: int) -> int:
@@ -32,35 +32,49 @@ def _get_complexity(file_path: str, line_start: int, line_end: int) -> int:
     Returns:
         Complexity percentage (0-100), or -1 if unavailable
     """
-    global _ts_parser
+    global _ts_parsers
 
     try:
         path = Path(file_path)
         if not path.exists():
             return -1
 
-        # Get language config - only Python supported for now
         config = get_config(file_path)
         if config is None or config.tree_sitter_module is None:
             return -1
 
-        # Lazy init tree-sitter (Python only for now)
-        if _ts_parser is None:
-            try:
-                import tree_sitter
-                import tree_sitter_python
+        # Cache key includes extension for TSX vs TS distinction
+        cache_key = f"{config.tree_sitter_module}:{path.suffix}"
 
-                python_lang = tree_sitter.Language(tree_sitter_python.language())
-                _ts_parser = tree_sitter.Parser(python_lang)
+        if cache_key not in _ts_parsers:
+            try:
+                import importlib
+
+                import tree_sitter
+
+                ts_module = importlib.import_module(config.tree_sitter_module)
+
+                if config.tree_sitter_module == "tree_sitter_typescript":
+                    if path.suffix == ".tsx":
+                        lang = tree_sitter.Language(ts_module.language_tsx())
+                    else:
+                        lang = tree_sitter.Language(ts_module.language_typescript())
+                else:
+                    lang = tree_sitter.Language(ts_module.language())
+
+                _ts_parsers[cache_key] = tree_sitter.Parser(lang)
             except ImportError:
-                logger.debug("tree-sitter not available for complexity")
+                logger.debug(f"tree-sitter module {config.tree_sitter_module} not available")
                 return -1
+
+        parser = _ts_parsers[cache_key]
 
         # Parse file
         source = path.read_bytes()
-        tree = _ts_parser.parse(source)
+        tree = parser.parse(source)
 
-        # Find node at line_start
+        # Find node at line_start using language-specific def types
+        func_def_types = config.function_def_types
         target_node = None
 
         def find_node(node):
@@ -68,10 +82,7 @@ def _get_complexity(file_path: str, line_start: int, line_end: int) -> int:
             # tree-sitter uses 0-indexed lines
             node_start = node.start_point[0] + 1
             node_end = node.end_point[0] + 1
-            if node_start == line_start and node.type in (
-                "function_definition",
-                "class_definition",
-            ):
+            if node_start == line_start and node.type in func_def_types:
                 target_node = node
                 return
             for child in node.children:
@@ -259,7 +270,16 @@ def _get_git_info(file_path: str, workspace: Path) -> str:
         return "-"
 
 
-def _count_text_matches(symbol_name: str, workspace: Path) -> tuple[int, int]:
+def _ext_to_rg_type(ext: str) -> str:
+    """Map file extension to ripgrep --type value."""
+    return {
+        ".py": "py", ".pyi": "py",
+        ".js": "js", ".jsx": "js", ".mjs": "js",
+        ".ts": "ts", ".tsx": "ts",
+    }.get(ext, "py")
+
+
+def _count_text_matches(symbol_name: str, workspace: Path, file_path: str = "") -> tuple[int, int]:
     """Count text matches for a symbol using ripgrep.
 
     Uses word boundary matching to reduce false positives.
@@ -267,6 +287,7 @@ def _count_text_matches(symbol_name: str, workspace: Path) -> tuple[int, int]:
     Args:
         symbol_name: Name of the symbol to search
         workspace: Workspace root directory
+        file_path: Optional file path to derive language type from
 
     Returns:
         Tuple of (file_count, total_matches)
@@ -274,10 +295,12 @@ def _count_text_matches(symbol_name: str, workspace: Path) -> tuple[int, int]:
     if not symbol_name:
         return 0, 0
 
+    rg_type = _ext_to_rg_type(Path(file_path).suffix.lower()) if file_path else "py"
+
     try:
         # Use ripgrep with word boundary, count matches per file
         result = subprocess.run(
-            ["rg", "-w", "-c", "--type", "py", symbol_name, "."],
+            ["rg", "-w", "-c", "--type", rg_type, symbol_name, "."],
             cwd=workspace,
             capture_output=True,
             text=True,
@@ -367,7 +390,7 @@ def _get_usage_only(result: dict[str, Any], workspace: Path) -> dict[str, Any]:
     # Hybrid fallback: if LSP found 0 refs, try text search
     text_fallback = False
     if total_usages == 0 and symbol_name:
-        text_files, text_matches = _count_text_matches(symbol_name, workspace)
+        text_files, text_matches = _count_text_matches(symbol_name, workspace, file_path=file_path)
         if text_matches > 0:
             # Use text search results as fallback
             files_affected = text_files

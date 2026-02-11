@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 from aurora_lsp.filters import get_filter_for_file
 from aurora_lsp.languages import (
     get_call_node_type,
+    get_config,
     get_function_def_types,
     is_entry_point,
     is_nested_helper,
@@ -59,10 +60,19 @@ class SymbolKind(IntEnum):
     TYPE_PARAMETER = 26
 
 
+def _ext_to_rg_type(ext: str) -> str:
+    """Map file extension to ripgrep --type value."""
+    return {
+        ".py": "py", ".pyi": "py",
+        ".js": "js", ".jsx": "js", ".mjs": "js",
+        ".ts": "ts", ".tsx": "ts",
+    }.get(ext, "py")
+
+
 def _batched_ripgrep_search(
     symbols: list[str],
     workspace: Path,
-    file_type: str = "py",
+    file_types: list[str] | None = None,
 ) -> dict[str, list[str]]:
     """Run single ripgrep call to find files containing each symbol.
 
@@ -71,13 +81,16 @@ def _batched_ripgrep_search(
     Args:
         symbols: List of symbol names to search
         workspace: Workspace root directory
-        file_type: File type filter (default: py)
+        file_types: File type filters (default: ["py"])
 
     Returns:
         Dict mapping symbol name to list of files containing it
     """
     if not symbols:
         return {}
+
+    if file_types is None:
+        file_types = ["py"]
 
     unique_symbols = list(set(symbols))
 
@@ -88,9 +101,14 @@ def _batched_ripgrep_search(
         patterns_file = f.name
 
     try:
+        # Build type flags: -t py -t js -t ts
+        type_flags = []
+        for ft in file_types:
+            type_flags.extend(["-t", ft])
+
         # Single ripgrep call with JSON output
         result = subprocess.run(
-            ["rg", "--json", "-w", "-f", patterns_file, "-t", file_type, "."],
+            ["rg", "--json", "-w", "-f", patterns_file, *type_flags, "."],
             cwd=workspace,
             capture_output=True,
             text=True,
@@ -124,19 +142,31 @@ def _batched_ripgrep_search(
         return {sym: [] for sym in unique_symbols}
     except FileNotFoundError:
         logger.warning("ripgrep (rg) not found, falling back to per-symbol grep")
-        return _fallback_grep_search(unique_symbols, workspace)
+        return _fallback_grep_search(unique_symbols, workspace, file_types=file_types)
     finally:
         Path(patterns_file).unlink(missing_ok=True)
 
 
-def _fallback_grep_search(symbols: list[str], workspace: Path) -> dict[str, list[str]]:
+def _fallback_grep_search(
+    symbols: list[str], workspace: Path, file_types: list[str] | None = None
+) -> dict[str, list[str]]:
     """Fallback to grep if ripgrep not available (slower)."""
+    if file_types is None:
+        file_types = ["py"]
+
+    # Map rg types to grep --include patterns
+    _type_to_exts = {"py": ["*.py"], "js": ["*.js", "*.jsx", "*.mjs"], "ts": ["*.ts", "*.tsx"]}
+    include_flags = []
+    for ft in file_types:
+        for ext in _type_to_exts.get(ft, [f"*.{ft}"]):
+            include_flags.extend([f"--include={ext}"])
+
     usage_map = {sym: [] for sym in symbols}
 
     for sym in symbols:
         try:
             result = subprocess.run(
-                ["grep", "-r", "--include=*.py", "-l", "-w", sym, "."],
+                ["grep", "-r", *include_flags, "-l", "-w", sym, "."],
                 cwd=workspace,
                 capture_output=True,
                 text=True,
@@ -148,6 +178,27 @@ def _fallback_grep_search(symbols: list[str], workspace: Path) -> dict[str, list
             continue
 
     return usage_map
+
+
+def _get_skip_names(language: str) -> set[str]:
+    """Get built-in/common names to skip in callee analysis for a language."""
+    if language in ("javascript", "typescript"):
+        from aurora_lsp.languages.javascript import JS_SKIP_NAMES
+
+        return JS_SKIP_NAMES
+
+    # Python built-ins and common methods
+    return {
+        "int", "str", "float", "bool", "list", "dict", "set", "tuple",
+        "len", "range", "enumerate", "zip", "map", "filter", "sorted",
+        "print", "isinstance", "hasattr", "getattr", "setattr",
+        "min", "max", "sum", "abs", "round", "type", "id", "hash",
+        "open", "super", "next", "iter",
+        "get", "items", "keys", "values", "update", "pop",
+        "append", "extend", "insert", "remove", "clear", "copy",
+        "format", "join", "split", "strip", "replace",
+        "lower", "upper", "startswith", "endswith",
+    }
 
 
 class CodeAnalyzer:
@@ -397,7 +448,9 @@ class CodeAnalyzer:
                     if import_filter.is_import_line(line_content):
                         continue
 
-                    if kind == SymbolKind.CLASS and sym_line < 50:
+                    # Python-only: skip stdlib type imports (TS handles via `import type`)
+                    ext = Path(str(file_path)).suffix.lower()
+                    if kind == SymbolKind.CLASS and sym_line < 50 and ext in (".py", ".pyi"):
                         type_import_names = {
                             "Any",
                             "Optional",
@@ -483,7 +536,13 @@ class CodeAnalyzer:
         else:
             # Phase 2 (fast): ONE batched ripgrep call for ALL symbols (80-85% accuracy)
             symbol_names = list(set(s["name"] for s in all_symbols))
-            usage_map = _batched_ripgrep_search(symbol_names, self.workspace)
+            # Derive ripgrep file types from the files being analyzed
+            rg_types = set()
+            for s in all_symbols:
+                ext = Path(s["file"]).suffix.lower()
+                rg_types.add(_ext_to_rg_type(ext))
+            file_types = sorted(rg_types) if rg_types else ["py"]
+            usage_map = _batched_ripgrep_search(symbol_names, self.workspace, file_types=file_types)
 
             # Phase 3: Check which symbols have no external usages
             for sym in all_symbols:
@@ -612,13 +671,27 @@ class CodeAnalyzer:
             return []  # Language not supported
 
         try:
-            # Lazy import tree-sitter
-            import tree_sitter
-            import tree_sitter_python
+            import importlib
 
-            # Initialize parser
-            python_lang = tree_sitter.Language(tree_sitter_python.language())
-            parser = tree_sitter.Parser(python_lang)
+            import tree_sitter
+
+            # Get language config for dynamic parser loading
+            config = get_config(str(file_path))
+            if config is None or config.tree_sitter_module is None:
+                return []
+
+            ts_module = importlib.import_module(config.tree_sitter_module)
+
+            # Handle tree_sitter_typescript which exposes language_typescript()/language_tsx()
+            if config.tree_sitter_module == "tree_sitter_typescript":
+                if file_path.suffix == ".tsx":
+                    lang = tree_sitter.Language(ts_module.language_tsx())
+                else:
+                    lang = tree_sitter.Language(ts_module.language_typescript())
+            else:
+                lang = tree_sitter.Language(ts_module.language())
+
+            parser = tree_sitter.Parser(lang)
 
             # Read and parse file
             source = file_path.read_bytes()
@@ -654,65 +727,8 @@ class CodeAnalyzer:
             callees = []
             seen_names = set()
 
-            # Built-ins and common methods to skip
-            skip_names = {
-                # Built-in functions
-                "int",
-                "str",
-                "float",
-                "bool",
-                "list",
-                "dict",
-                "set",
-                "tuple",
-                "len",
-                "range",
-                "enumerate",
-                "zip",
-                "map",
-                "filter",
-                "sorted",
-                "print",
-                "isinstance",
-                "hasattr",
-                "getattr",
-                "setattr",
-                "min",
-                "max",
-                "sum",
-                "abs",
-                "round",
-                "type",
-                "id",
-                "hash",
-                "open",
-                "super",
-                "next",
-                "iter",
-                # Common dict/list methods (too noisy)
-                "get",
-                "items",
-                "keys",
-                "values",
-                "update",
-                "pop",
-                "append",
-                "extend",
-                "insert",
-                "remove",
-                "clear",
-                "copy",
-                # String methods
-                "format",
-                "join",
-                "split",
-                "strip",
-                "replace",
-                "lower",
-                "upper",
-                "startswith",
-                "endswith",
-            }
+            # Language-specific built-ins and common methods to skip
+            skip_names = _get_skip_names(config.name)
 
             def find_calls(node):
                 if node.type == call_node_type:
@@ -722,12 +738,12 @@ class CodeAnalyzer:
                         call_name = source_text[func_node.start_byte : func_node.end_byte]
 
                         # Clean up the name
-                        # For "self.method()", extract "method"
+                        # For "self.method()" / "this.method()", extract "method"
                         # For "obj.method()", extract "obj.method" or just method
                         base_name = call_name
                         if "." in call_name:
                             parts = call_name.split(".")
-                            if parts[0] == "self":
+                            if parts[0] in ("self", "this"):
                                 base_name = parts[-1]  # Just the method name
                             else:
                                 base_name = parts[-1]  # Last part for filtering

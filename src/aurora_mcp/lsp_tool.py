@@ -70,22 +70,47 @@ def _find_symbol_column(file_path: str, line_0indexed: int, workspace: Path) -> 
 
         line = lines[line_0indexed]
 
-        # Pattern: class ClassName
+        # Python: class ClassName
         match = re.search(r"\bclass\s+(\w+)", line)
         if match:
             return match.start(1)
 
-        # Pattern: async def func_name
+        # Python: async def func_name
         match = re.search(r"\basync\s+def\s+(\w+)", line)
         if match:
             return match.start(1)
 
-        # Pattern: def func_name
+        # Python: def func_name
         match = re.search(r"\bdef\s+(\w+)", line)
         if match:
             return match.start(1)
 
-        # Pattern: variable = ... (at start of line, possibly indented)
+        # JS/TS: export default function/class
+        match = re.search(r"\bexport\s+default\s+(?:function|class)\s+(\w+)", line)
+        if match:
+            return match.start(1)
+
+        # JS/TS: export function/class
+        match = re.search(r"\bexport\s+(?:function|class)\s+(\w+)", line)
+        if match:
+            return match.start(1)
+
+        # JS/TS: async function X(
+        match = re.search(r"\basync\s+function\s+(\w+)", line)
+        if match:
+            return match.start(1)
+
+        # JS/TS: function X(
+        match = re.search(r"\bfunction\s+(\w+)", line)
+        if match:
+            return match.start(1)
+
+        # JS/TS: const/let/var X =
+        match = re.search(r"\b(?:const|let|var)\s+(\w+)\s*[=:]", line)
+        if match:
+            return match.start(1)
+
+        # Python: variable = ... (at start of line, possibly indented)
         match = re.match(r"^(\s*)(\w+)\s*[=:]", line)
         if match:
             return len(match.group(1))  # Column after indentation
@@ -141,22 +166,47 @@ def _get_symbol_name_from_line(file_path: str, line_0indexed: int, workspace: Pa
 
         line = lines[line_0indexed]
 
-        # Pattern: class ClassName
+        # Python: class ClassName
         match = re.search(r"\bclass\s+(\w+)", line)
         if match:
             return match.group(1)
 
-        # Pattern: async def func_name
+        # Python: async def func_name
         match = re.search(r"\basync\s+def\s+(\w+)", line)
         if match:
             return match.group(1)
 
-        # Pattern: def func_name
+        # Python: def func_name
         match = re.search(r"\bdef\s+(\w+)", line)
         if match:
             return match.group(1)
 
-        # Pattern: variable = ...
+        # JS/TS: export default function/class
+        match = re.search(r"\bexport\s+default\s+(?:function|class)\s+(\w+)", line)
+        if match:
+            return match.group(1)
+
+        # JS/TS: export function/class
+        match = re.search(r"\bexport\s+(?:function|class)\s+(\w+)", line)
+        if match:
+            return match.group(1)
+
+        # JS/TS: async function X(
+        match = re.search(r"\basync\s+function\s+(\w+)", line)
+        if match:
+            return match.group(1)
+
+        # JS/TS: function X(
+        match = re.search(r"\bfunction\s+(\w+)", line)
+        if match:
+            return match.group(1)
+
+        # JS/TS: const/let/var X =
+        match = re.search(r"\b(?:const|let|var)\s+(\w+)\s*[=:]", line)
+        if match:
+            return match.group(1)
+
+        # Python: variable = ...
         match = re.match(r"^\s*(\w+)\s*[=:]", line)
         if match:
             return match.group(1)
@@ -166,8 +216,17 @@ def _get_symbol_name_from_line(file_path: str, line_0indexed: int, workspace: Pa
         return None
 
 
+def _ext_to_rg_type(ext: str) -> str:
+    """Map file extension to ripgrep --type value."""
+    return {
+        ".py": "py", ".pyi": "py",
+        ".js": "js", ".jsx": "js", ".mjs": "js",
+        ".ts": "ts", ".tsx": "ts",
+    }.get(ext, "py")
+
+
 def _count_text_matches(
-    symbol_name: str, workspace: Path, top_n: int = 5
+    symbol_name: str, workspace: Path, top_n: int = 5, file_path: str = ""
 ) -> tuple[int, int, list[str]]:
     """Count text matches for a symbol using ripgrep.
 
@@ -178,6 +237,7 @@ def _count_text_matches(
         symbol_name: Name of the symbol to search
         workspace: Workspace root directory
         top_n: Number of top file:line references to return
+        file_path: Optional file path to derive language type from
 
     Returns:
         Tuple of (file_count, total_matches, top_refs)
@@ -188,11 +248,13 @@ def _count_text_matches(
     if not symbol_name:
         return 0, 0, []
 
+    # Derive ripgrep file type from the file being analyzed
+    rg_type = _ext_to_rg_type(Path(file_path).suffix.lower()) if file_path else "py"
+
     try:
         # Use ripgrep with word boundary, count matches per file
-        # -w: word boundary, -c: count, --type py: Python files only
         result = subprocess.run(
-            ["rg", "-w", "-c", "--type", "py", symbol_name, "."],
+            ["rg", "-w", "-c", "--type", rg_type, symbol_name, "."],
             cwd=workspace,
             capture_output=True,
             text=True,
@@ -220,7 +282,7 @@ def _count_text_matches(
             try:
                 # Get all unique file:line refs, then sort source before tests
                 ref_result = subprocess.run(
-                    ["rg", "-w", "-n", "--no-heading", "--type", "py",
+                    ["rg", "-w", "-n", "--no-heading", "--type", rg_type,
                      symbol_name, "."],
                     cwd=workspace,
                     capture_output=True,
@@ -476,7 +538,7 @@ def lsp(
             symbol_name = _get_symbol_name_from_line(path, line_0indexed, workspace)
             if symbol_name:
                 text_files, text_matches, top_refs = _count_text_matches(
-                    symbol_name, workspace
+                    symbol_name, workspace, file_path=path
                 )
                 if text_matches > 0:
                     result["text_matches"] = text_matches
@@ -522,7 +584,7 @@ def lsp(
             symbol_name = _get_symbol_name_from_line(path, line_0indexed, workspace)
             if symbol_name:
                 text_files, text_matches, top_refs = _count_text_matches(
-                    symbol_name, workspace
+                    symbol_name, workspace, file_path=path
                 )
                 if text_matches > 0:
                     result["text_matches"] = text_matches

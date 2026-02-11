@@ -164,16 +164,34 @@ def extract_errors_from_turn(event):
 
 
 def extract_user_message(event):
-    """Extract user message text."""
+    """Extract user message text, filtering out system-injected markup."""
     content = event.get("message", {}).get("content", "")
 
+    text = ""
     if isinstance(content, str):
-        return content[:500]
+        text = content
     elif isinstance(content, list):
         for block in content:
             if isinstance(block, dict) and block.get("type") == "text":
-                return block.get("text", "")[:500]
-    return ""
+                text = block.get("text", "")
+                break
+
+    # Filter out system-injected markup (not real user messages)
+    if not text:
+        return ""
+    trimmed = text.strip()
+    if trimmed.startswith("<local-command-caveat>"):
+        return ""
+    if trimmed.startswith("<command-message>"):
+        return ""
+    if trimmed.startswith("<command-name>"):
+        return ""
+    if trimmed.startswith("<system-reminder>"):
+        return ""
+    if trimmed.startswith("<local-command-stdout>"):
+        return ""
+
+    return text[:500]
 
 
 def analyze_bad_session(session_file, analysis, signals):
@@ -310,6 +328,89 @@ def analyze_bad_session(session_file, analysis, signals):
     return candidates
 
 
+def cluster_candidates(all_candidates):
+    """Group raw candidates by (anchor_signal, tool_pattern) and score clusters."""
+    signal_weights = {
+        "user_intervention": 10,
+        "session_abandoned": 10,
+        "false_success": 8,
+        "no_resolution": 8,
+        "interrupt_cascade": 5,
+        "tool_loop": 6,
+        "rapid_exit": 6,
+    }
+
+    cluster_map = {}
+
+    for c in all_candidates:
+        # Normalize tool sequence: strip :error/:ok suffixes for grouping
+        tool_norm = ",".join(
+            re.sub(r":error|:ok", "", t) for t in c["tool_sequence"]
+        ) or "(none)"
+        key = c["anchor_signal"] + "|" + tool_norm
+
+        if key not in cluster_map:
+            cluster_map[key] = {
+                "anchor_signal": c["anchor_signal"],
+                "tool_pattern": tool_norm,
+                "count": 0,
+                "sessions": set(),
+                "contexts": [],
+                "errors": [],
+                "files": defaultdict(int),
+                "keywords": defaultdict(int),
+                "peaks": [],
+            }
+
+        cl = cluster_map[key]
+        cl["count"] += 1
+        cl["sessions"].add(c["session_id"])
+        cl["peaks"].append(c["peak_friction"])
+
+        # Collect unique user contexts (up to 5 per cluster, deduplicated)
+        if c["user_context"] and len(cl["contexts"]) < 5:
+            for ctx in c["user_context"][:1]:
+                if len(ctx) > 10 and ctx not in cl["contexts"]:
+                    cl["contexts"].append(ctx)
+
+        # Collect unique errors (up to 5 per cluster)
+        if c["errors"] and len(cl["errors"]) < 5:
+            for err in c["errors"][:1]:
+                if err not in cl["errors"]:
+                    cl["errors"].append(err)
+
+        # Tally files and keywords
+        for f in c["files"]:
+            cl["files"][f] += 1
+        for kw in c["keywords"]:
+            cl["keywords"][kw] += 1
+
+    # Score and sort clusters
+    clusters = []
+    for cl in cluster_map.values():
+        weight = signal_weights.get(cl["anchor_signal"], 1)
+        peaks = sorted(cl["peaks"])
+        top_files = sorted(cl["files"].items(), key=lambda x: -x[1])[:5]
+        top_keywords = sorted(cl["keywords"].items(), key=lambda x: -x[1])[:10]
+
+        clusters.append({
+            "anchor_signal": cl["anchor_signal"],
+            "tool_pattern": cl["tool_pattern"],
+            "count": cl["count"],
+            "score": cl["count"] * weight,
+            "sessions": len(cl["sessions"]),
+            "median_peak": peaks[len(peaks) // 2],
+            "max_peak": peaks[-1],
+            "contexts": cl["contexts"],
+            "errors": cl["errors"],
+            "top_files": [f for f, _ in top_files],
+            "top_keywords": [k for k, _ in top_keywords],
+        })
+
+    clusters.sort(key=lambda x: -x["score"])
+    return clusters
+
+
 def main():
     if len(sys.argv) < 2:
         print(__doc__)
@@ -361,71 +462,91 @@ def main():
         candidates = analyze_bad_session(session_file, analysis, signals)
         all_candidates.extend(candidates)
 
-    # Summarize patterns
-    pattern_counts = defaultdict(int)
-    for c in all_candidates:
-        pattern_counts[c["anchor_signal"]] += 1
+    # Cluster candidates by (anchor_signal, tool_pattern)
+    clusters = cluster_candidates(all_candidates)
 
-    print(f"✓ Extracted {len(all_candidates)} antigen candidates")
-    for pattern, count in sorted(pattern_counts.items(), key=lambda x: -x[1])[:5]:
-        print(f"  - {count} {pattern} patterns")
+    # Terminal output
+    print(f">> {len(all_candidates)} raw candidates -> {len(clusters)} clusters")
+    for cl in clusters[:5]:
+        print(
+            f"  {cl['count']:3d}x {cl['anchor_signal']} | {cl['tool_pattern']}"
+            f" ({cl['sessions']} sessions, score: {cl['score']})"
+        )
 
     if failed:
-        print(f"\n⚠  Could not find session files for {len(failed)} sessions")
+        print(f"\n!!  Could not find session files for {len(failed)} sessions")
     print()
 
-    # Save candidates
+    # Save outputs
     output_dir = Path(".aurora/friction")
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    output_file = output_dir / "antigen_candidates.json"
-    with open(output_file, "w") as f:
+    # Raw candidates (kept for debugging)
+    with open(output_dir / "antigen_candidates.json", "w") as f:
         json.dump(all_candidates, f, indent=2)
 
-    # Also save as YAML-like for easy editing
+    # Clustered output (primary machine-readable artifact)
+    with open(output_dir / "antigen_clusters.json", "w") as f:
+        json.dump(clusters, f, indent=2)
+
+    # Clustered review markdown (top 25)
+    max_clusters = 25
+    review_clusters = clusters[:max_clusters]
     review_file = output_dir / "antigen_review.md"
+
     with open(review_file, "w") as f:
-        f.write("# Antigen Candidates for Review\n\n")
+        f.write("# Friction Antigen Clusters\n\n")
         f.write(f"Generated: {datetime.now().isoformat()}\n")
-        f.write(f"BAD sessions analyzed: {len(bad_sessions)}\n")
-        f.write(f"Candidates extracted: {len(all_candidates)}\n\n")
-        f.write("---\n\n")
+        f.write(
+            f"BAD sessions: {len(bad_sessions)} | "
+            f"Raw candidates: {len(all_candidates)} | "
+            f"Clusters: {len(clusters)}\n\n"
+        )
 
-        for i, c in enumerate(all_candidates, 1):
-            f.write(f'## Candidate {i}: {c["session_id"]}\n\n')
-            f.write(f'**Anchor:** {c["anchor_signal"]} at {c["anchor_ts"]}\n')
-            f.write(f'**Peak friction:** {c["peak_friction"]}\n\n')
+        # Summary table
+        f.write("## Cluster Summary\n\n")
+        f.write("| # | Signal | Tool Pattern | Count | Sessions | Score | Median Peak |\n")
+        f.write("|---|--------|-------------|-------|----------|-------|-------------|\n")
+        for idx, cl in enumerate(review_clusters, 1):
+            f.write(
+                f"| {idx} | {cl['anchor_signal']} | {cl['tool_pattern']} "
+                f"| {cl['count']} | {cl['sessions']} | {cl['score']} "
+                f"| {cl['median_peak']} |\n"
+            )
+        f.write("\n---\n\n")
 
-            f.write("### Trigger Pattern\n\n")
-            f.write("```yaml\n")
-            f.write("files:\n")
-            for file in c["files"][:5]:
-                f.write(f'  - "{file}"\n')
-            f.write("keywords:\n")
-            for kw in c["keywords"][:10]:
-                f.write(f'  - "{kw}"\n')
-            f.write("tool_sequence:\n")
-            for tool in c["tool_sequence"][:10]:
-                f.write(f'  - "{tool}"\n')
-            f.write("```\n\n")
+        # Detailed clusters
+        for idx, cl in enumerate(review_clusters, 1):
+            f.write(f"## Cluster {idx}: {cl['anchor_signal']} | {cl['tool_pattern']}\n\n")
+            f.write(
+                f"**Occurrences:** {cl['count']} across {cl['sessions']} sessions | "
+                f"**Score:** {cl['score']} | "
+                f"**Median peak:** {cl['median_peak']} | "
+                f"**Max peak:** {cl['max_peak']}\n\n"
+            )
 
-            if c["errors"]:
+            if cl["contexts"]:
+                f.write("### User Context (what the user said)\n\n")
+                for ctx in cl["contexts"][:3]:
+                    truncated = ctx[:300] + "..." if len(ctx) > 300 else ctx
+                    f.write(f"> {truncated}\n\n")
+
+            if cl["errors"]:
                 f.write("### Errors\n\n")
                 f.write("```\n")
-                for err in c["errors"][:3]:
+                for err in cl["errors"][:3]:
                     f.write(f"{err}\n")
                 f.write("```\n\n")
 
-            if c["user_context"]:
-                f.write("### User Context\n\n")
-                for msg in c["user_context"][:2]:
-                    f.write(f"> {msg[:200]}...\n\n" if len(msg) > 200 else f"> {msg}\n\n")
+            if cl["top_files"]:
+                f.write("### Files involved\n\n")
+                for fp in cl["top_files"]:
+                    f.write(f"- `{fp}`\n")
+                f.write("\n")
 
-            f.write("### Inhibitory Instruction\n\n")
-            f.write("```\n")
-            f.write("# TODO: Write what the LLM should do differently\n")
-            f.write("# Based on the pattern above, what guidance would prevent this failure?\n")
-            f.write("```\n\n")
+            if cl["top_keywords"]:
+                f.write(f"**Keywords:** {', '.join(cl['top_keywords'])}\n\n")
+
             f.write("---\n\n")
 
     print("Output: .aurora/friction/antigen_review.md\n")

@@ -125,6 +125,16 @@ def _find_symbol_column(file_path: str, line_0indexed: int, workspace: Path) -> 
         if match:
             return match.start(1)
 
+        # Java: public/private/protected class/interface/enum Name
+        match = re.search(r"\b(?:class|interface|enum|record)\s+(\w+)", line)
+        if match:
+            return match.start(1)
+
+        # Java: public/private Type methodName(
+        match = re.search(r"(?:void|int|long|boolean|String|\w+(?:<[^>]+>)?)\s+(\w+)\s*\(", line)
+        if match:
+            return match.start(1)
+
         # Python: variable = ... (at start of line, possibly indented)
         match = re.match(r"^(\s*)(\w+)\s*[=:]", line)
         if match:
@@ -236,6 +246,16 @@ def _get_symbol_name_from_line(file_path: str, line_0indexed: int, workspace: Pa
         if match:
             return match.group(1)
 
+        # Java: class/interface/enum/record Name
+        match = re.search(r"\b(?:class|interface|enum|record)\s+(\w+)", line)
+        if match:
+            return match.group(1)
+
+        # Java: Type methodName(
+        match = re.search(r"(?:void|int|long|boolean|String|\w+(?:<[^>]+>)?)\s+(\w+)\s*\(", line)
+        if match:
+            return match.group(1)
+
         # Python: variable = ...
         match = re.match(r"^\s*(\w+)\s*[=:]", line)
         if match:
@@ -253,6 +273,7 @@ def _ext_to_rg_type(ext: str) -> str:
         ".js": "js", ".jsx": "js", ".mjs": "js",
         ".ts": "ts", ".tsx": "ts",
         ".go": "go",
+        ".java": "java",
     }.get(ext, "py")
 
 

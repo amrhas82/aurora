@@ -277,6 +277,7 @@ def _ext_to_rg_type(ext: str) -> str:
         ".js": "js", ".jsx": "js", ".mjs": "js",
         ".ts": "ts", ".tsx": "ts",
         ".go": "go",
+        ".java": "java",
     }.get(ext, "py")
 
 

@@ -67,6 +67,7 @@ def _ext_to_rg_type(ext: str) -> str:
         ".js": "js", ".jsx": "js", ".mjs": "js",
         ".ts": "ts", ".tsx": "ts",
         ".go": "go",
+        ".java": "java",
     }.get(ext, "py")
 
 
@@ -156,7 +157,7 @@ def _fallback_grep_search(
         file_types = ["py"]
 
     # Map rg types to grep --include patterns
-    _type_to_exts = {"py": ["*.py"], "js": ["*.js", "*.jsx", "*.mjs"], "ts": ["*.ts", "*.tsx"], "go": ["*.go"]}
+    _type_to_exts = {"py": ["*.py"], "js": ["*.js", "*.jsx", "*.mjs"], "ts": ["*.ts", "*.tsx"], "go": ["*.go"], "java": ["*.java"]}
     include_flags = []
     for ft in file_types:
         for ext in _type_to_exts.get(ft, [f"*.{ft}"]):
@@ -192,6 +193,11 @@ def _get_skip_names(language: str) -> set[str]:
         from aurora_lsp.languages.go import GO_SKIP_NAMES
 
         return GO_SKIP_NAMES
+
+    if language == "java":
+        from aurora_lsp.languages.java import JAVA_SKIP_NAMES
+
+        return JAVA_SKIP_NAMES
 
     # Python built-ins and common methods
     return {
@@ -739,10 +745,23 @@ class CodeAnalyzer:
             def find_calls(node):
                 if node.type == call_node_type:
                     # Extract the function name being called
+                    call_name = None
                     func_node = node.child_by_field_name("function")
                     if func_node:
                         call_name = source_text[func_node.start_byte : func_node.end_byte]
+                    else:
+                        # Java method_invocation: object.name(args)
+                        name_node = node.child_by_field_name("name")
+                        if name_node:
+                            method_name = source_text[name_node.start_byte : name_node.end_byte]
+                            obj_node = node.child_by_field_name("object")
+                            if obj_node:
+                                obj_name = source_text[obj_node.start_byte : obj_node.end_byte]
+                                call_name = f"{obj_name}.{method_name}"
+                            else:
+                                call_name = method_name
 
+                    if call_name:
                         # Clean up the name
                         # For "self.method()" / "this.method()", extract "method"
                         # For "obj.method()", extract "obj.method" or just method

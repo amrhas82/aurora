@@ -305,6 +305,9 @@ class AuroraLSP:
         if ext == ".go":
             return self._get_imported_by_go(module_path)
 
+        if ext == ".java":
+            return self._get_imported_by_java(module_path)
+
         # Python module resolution
         # "src/aurora_lsp/analysis.py" -> "aurora_lsp.analysis"
         if module_path.suffix == ".py":
@@ -429,6 +432,84 @@ class AuroraLSP:
         try:
             result = subprocess.run(
                 ["rg", "-l", *type_flags, "-e", combined_pattern, str(self.workspace)],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+
+            importing_files = []
+            if result.returncode == 0 and result.stdout.strip():
+                for line in result.stdout.strip().split("\n"):
+                    file_path = Path(line)
+                    if file_path.resolve() != module_path.resolve():
+                        try:
+                            rel = file_path.relative_to(self.workspace)
+                            importing_files.append(str(rel))
+                        except ValueError:
+                            importing_files.append(str(file_path))
+
+            return {
+                "module": module_name,
+                "imported_by": sorted(importing_files),
+                "import_count": len(importing_files),
+            }
+
+        except subprocess.TimeoutExpired:
+            return {"module": module_name, "imported_by": [], "import_count": 0, "error": "Search timed out"}
+        except FileNotFoundError:
+            return {"module": module_name, "imported_by": [], "import_count": 0, "error": "ripgrep not installed"}
+
+    def _get_imported_by_java(self, module_path: Path) -> dict:
+        """Find Java files that import the class in this file.
+
+        Java imports are fully-qualified class names derived from
+        the package declaration + class name.
+
+        Args:
+            module_path: Absolute path to the Java source file.
+
+        Returns:
+            Dict with module, imported_by, import_count.
+        """
+        import re
+        import subprocess
+
+        # Extract package name from the file's package declaration
+        # e.g., "package com.sopromadze.blogapi.service.impl;" -> com.sopromadze.blogapi.service.impl
+        package_name = ""
+        try:
+            for line in module_path.read_text(errors="replace").splitlines():
+                match = re.match(r"^\s*package\s+([\w.]+)\s*;", line)
+                if match:
+                    package_name = match.group(1)
+                    break
+        except Exception:
+            pass
+
+        # Full class import path = package + filename (without .java)
+        class_name = module_path.stem
+        if package_name:
+            fq_class = f"{package_name}.{class_name}"
+        else:
+            fq_class = class_name
+
+        module_name = fq_class
+
+        # Search for import statements containing this class
+        # Matches: import com.example.MyClass; or import com.example.*;
+        patterns = [
+            rf"^\s*import\s+{re.escape(fq_class)}\s*;",
+            rf"^\s*import\s+static\s+{re.escape(fq_class)}\.",
+        ]
+        # Also match wildcard imports of the package
+        if package_name:
+            patterns.append(rf"^\s*import\s+{re.escape(package_name)}\.\*\s*;")
+
+        combined_pattern = "|".join(f"({p})" for p in patterns)
+
+        try:
+            result = subprocess.run(
+                ["rg", "-l", "--type", "java", "-e", combined_pattern, str(self.workspace)],
                 capture_output=True,
                 text=True,
                 timeout=10,

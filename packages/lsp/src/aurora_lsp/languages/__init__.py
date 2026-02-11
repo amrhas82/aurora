@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING
 
 from aurora_lsp.languages.base import LanguageConfig
 from aurora_lsp.languages.go import GO
+from aurora_lsp.languages.java import JAVA
 from aurora_lsp.languages.javascript import JAVASCRIPT
 from aurora_lsp.languages.python import PYTHON
 from aurora_lsp.languages.typescript import TYPESCRIPT
@@ -38,6 +39,7 @@ LANGUAGES: dict[str, LanguageConfig] = {
     "javascript": JAVASCRIPT,
     "typescript": TYPESCRIPT,
     "go": GO,
+    "java": JAVA,
 }
 
 # Extension to language mapping
@@ -50,6 +52,7 @@ EXTENSION_MAP: dict[str, str] = {
     ".ts": "typescript",
     ".tsx": "typescript",
     ".go": "go",
+    ".java": "java",
 }
 
 

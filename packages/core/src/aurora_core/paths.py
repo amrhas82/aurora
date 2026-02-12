@@ -90,27 +90,3 @@ def get_budget_tracker_path() -> Path:
     return Path.home() / ".aurora" / "budget_tracker.json"
 
 
-def ensure_aurora_dir() -> Path:
-    """Ensure project-local .aurora directory exists and return its path.
-
-    Creates ./.aurora directory if it doesn't exist.
-    Use this for initialization code (like 'aur init').
-
-    Returns:
-        Path to .aurora directory (always project-local ./.aurora)
-
-    """
-    # Always use project-local .aurora (never global)
-    project_aurora = Path.cwd() / ".aurora"
-    project_aurora.mkdir(parents=True, exist_ok=True)
-    return project_aurora
-
-
-def is_project_mode() -> bool:
-    """Check if running in project mode (has ./.aurora directory).
-
-    Returns:
-        True if project-local .aurora exists
-
-    """
-    return (Path.cwd() / ".aurora").exists()

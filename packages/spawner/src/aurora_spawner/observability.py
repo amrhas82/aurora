@@ -642,29 +642,6 @@ class AgentHealthMonitor:
             },
         )
 
-    def get_agent_health(self, agent_id: str) -> HealthMetrics:
-        """Get health metrics for a specific agent.
-
-        Args:
-            agent_id: Agent identifier
-
-        Returns:
-            HealthMetrics for the agent
-
-        """
-        metrics = self._agent_metrics[agent_id]
-        metrics.agent_id = agent_id
-        return metrics
-
-    def get_all_agent_health(self) -> dict[str, HealthMetrics]:
-        """Get health metrics for all agents.
-
-        Returns:
-            Dictionary mapping agent_id to HealthMetrics
-
-        """
-        return dict(self._agent_metrics)
-
     def get_detection_latency_stats(self) -> dict[str, float]:
         """Get failure detection latency statistics.
 
@@ -693,32 +670,6 @@ class AgentHealthMonitor:
             "min": sorted_latencies[0],
             "max": sorted_latencies[-1],
         }
-
-    def get_failure_events(
-        self,
-        agent_id: str | None = None,
-        limit: int | None = None,
-    ) -> list[FailureEvent]:
-        """Get failure events, optionally filtered by agent.
-
-        Args:
-            agent_id: Optional agent filter
-            limit: Optional limit on number of events
-
-        Returns:
-            List of failure events (most recent first)
-
-        """
-        events = self._failure_events
-        if agent_id:
-            events = [e for e in events if e.agent_id == agent_id]
-
-        events = sorted(events, key=lambda e: e.timestamp, reverse=True)
-
-        if limit:
-            events = events[:limit]
-
-        return events
 
     def get_summary(self) -> dict[str, Any]:
         """Get overall health summary across all agents.
@@ -815,111 +766,3 @@ def reset_health_monitor(config: ProactiveHealthConfig | None = None) -> AgentHe
     return _global_health_monitor
 
 
-def configure_structured_logging(
-    level: int = logging.INFO,
-    include_context: bool = True,
-    json_format: bool = False,
-) -> None:
-    """Configure structured logging for agent observability.
-
-    Args:
-        level: Logging level (default: INFO)
-        include_context: Whether to include contextual fields in logs
-        json_format: Whether to output logs in JSON format (default: False for human readability)
-
-    """
-    import json
-
-    class StructuredFormatter(logging.Formatter):
-        """Formatter for structured logs with JSON or human-readable output."""
-
-        def __init__(self, json_format: bool = False):
-            super().__init__()
-            self.json_format = json_format
-
-        def format(self, record: logging.LogRecord) -> str:
-            log_data = {
-                "timestamp": self.formatTime(record),
-                "level": record.levelname,
-                "logger": record.name,
-                "message": record.getMessage(),
-            }
-
-            # Add contextual fields if present
-            extra_fields = {}
-            if include_context and hasattr(record, "agent_id"):
-                log_data["agent_id"] = record.agent_id
-            if include_context and hasattr(record, "task_id"):
-                log_data["task_id"] = record.task_id
-            if include_context and hasattr(record, "event"):
-                log_data["event"] = record.event
-
-            # Add all extra fields
-            for key, value in record.__dict__.items():
-                if key not in [
-                    "name",
-                    "msg",
-                    "args",
-                    "created",
-                    "filename",
-                    "funcName",
-                    "levelname",
-                    "levelno",
-                    "lineno",
-                    "module",
-                    "msecs",
-                    "message",
-                    "pathname",
-                    "process",
-                    "processName",
-                    "relativeCreated",
-                    "thread",
-                    "threadName",
-                    "exc_info",
-                    "exc_text",
-                    "stack_info",
-                ]:
-                    extra_fields[key] = value
-
-            if self.json_format:
-                # JSON output for log aggregation systems
-                log_data.update(extra_fields)
-                return json.dumps(log_data)
-            # Human-readable output for development
-            base_msg = f"[{log_data['timestamp']}] {log_data['level']} {log_data['logger']}: {log_data['message']}"
-
-            # Add key metrics to base message for failure events
-            if extra_fields.get("event") == "execution.failure":
-                metrics = []
-                if "detection_latency_ms" in extra_fields:
-                    metrics.append(f"latency={extra_fields['detection_latency_ms']:.0f}ms")
-                if "reason" in extra_fields:
-                    metrics.append(f"reason={extra_fields['reason']}")
-                if "retry_attempt" in extra_fields:
-                    metrics.append(f"retry={extra_fields['retry_attempt']}")
-                if metrics:
-                    base_msg += f" ({', '.join(metrics)})"
-
-            # Add structured fields as key-value pairs if present
-            if extra_fields:
-                # Filter to most important fields for readability
-                important_fields = ["agent_id", "task_id", "event"]
-                structured = ", ".join(
-                    f"{k}={v}"
-                    for k, v in extra_fields.items()
-                    if k in important_fields and k not in log_data
-                )
-                if structured:
-                    base_msg += f" [{structured}]"
-
-            return base_msg
-
-    # Configure root logger
-    handler = logging.StreamHandler()
-    handler.setFormatter(StructuredFormatter(json_format=json_format))
-
-    root_logger = logging.getLogger("aurora_spawner")
-    root_logger.setLevel(level)
-    # Clear existing handlers to avoid duplicates
-    root_logger.handlers.clear()
-    root_logger.addHandler(handler)

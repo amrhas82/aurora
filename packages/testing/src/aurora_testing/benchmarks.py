@@ -201,15 +201,6 @@ class PerformanceBenchmark:
         """
         self.target_ms = target_ms
 
-    def set_warmup(self, iterations: int) -> None:
-        """Set number of warmup iterations (not measured).
-
-        Args:
-            iterations: Number of warmup iterations.
-
-        """
-        self.warmup_iterations = iterations
-
     def run(
         self,
         func: Callable[[], T],
@@ -309,32 +300,6 @@ class PerformanceBenchmark:
 
         return result
 
-    def compare_to_baseline(
-        self,
-        baseline_ms: float,
-        tolerance_percent: float = 10.0,
-    ) -> bool:
-        """Compare most recent result to baseline.
-
-        Args:
-            baseline_ms: Baseline execution time.
-            tolerance_percent: Acceptable regression percentage.
-
-        Returns:
-            True if within tolerance, False if regressed.
-
-        Raises:
-            ValueError: If no results available.
-
-        """
-        if not self.results_history:
-            raise ValueError("No benchmark results available")
-
-        latest = self.results_history[-1]
-        check_time = latest.mean_ms if latest.iterations > 1 else latest.duration_ms
-
-        max_allowed = baseline_ms * (1 + tolerance_percent / 100)
-        return check_time <= max_allowed
 
 
 # ============================================================================

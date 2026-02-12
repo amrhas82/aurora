@@ -167,45 +167,6 @@ def _suppress_model_loading_output() -> Generator[None, None, None]:
 # =============================================================================
 
 
-def is_model_cached_lightweight(model_name: str = DEFAULT_MODEL) -> bool:
-    """Check if the embedding model is cached WITHOUT importing heavy dependencies.
-
-    This function can be called very early in application startup without
-    triggering the import of torch or sentence-transformers. Use this for
-    quick checks before deciding whether to start background loading.
-
-    Args:
-        model_name: HuggingFace model identifier
-
-    Returns:
-        True if model files appear to be cached, False otherwise
-
-    """
-    # HuggingFace stores models with -- separator instead of /
-    safe_name = model_name.replace("/", "--")
-    cache_path = HF_CACHE_DIR / f"models--{safe_name}"
-
-    if not cache_path.exists():
-        return False
-
-    snapshots_dir = cache_path / "snapshots"
-    if not snapshots_dir.exists():
-        return False
-
-    # Check if at least one snapshot exists with model files
-    try:
-        for snapshot in snapshots_dir.iterdir():
-            if snapshot.is_dir():
-                model_file = snapshot / "model.safetensors"
-                pytorch_file = snapshot / "pytorch_model.bin"
-                if model_file.exists() or pytorch_file.exists():
-                    return True
-    except PermissionError:
-        return False
-
-    return False
-
-
 def get_model_cache_path(model_name: str = DEFAULT_MODEL) -> Path:
     """Get the cache directory path for a model.
 

@@ -120,35 +120,6 @@ class ExamplesLoader:
         # Return first N examples (assumes examples are ordered by quality/relevance)
         return all_examples[:count]
 
-    def get_examples_by_tags(
-        self,
-        filename: str,
-        tags: list[str],
-        max_count: int = 6,
-    ) -> list[dict[str, Any]]:
-        """Get examples filtered by tags.
-
-        Args:
-            filename: Name of JSON file in examples directory
-            tags: List of tags to filter by (examples must have at least one matching tag)
-            max_count: Maximum number of examples to return
-
-        Returns:
-            List of matching examples (up to max_count)
-
-        """
-        all_examples = self.load_examples(filename)
-
-        # Filter examples by tags
-        matching = []
-        for example in all_examples:
-            example_tags = example.get("tags", [])
-            if any(tag in example_tags for tag in tags):
-                matching.append(example)
-                if len(matching) >= max_count:
-                    break
-
-        return matching
 
 
 # Global singleton instance

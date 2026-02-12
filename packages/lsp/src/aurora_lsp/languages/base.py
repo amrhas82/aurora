@@ -48,18 +48,20 @@ class LanguageConfig:
     entry_decorators: set[str] = field(default_factory=set)
     nested_patterns: set[str] = field(default_factory=set)
 
+    # Callback methods - methods that take callbacks (skip in deadcode)
+    callback_methods: set[str] = field(default_factory=set)
+
+    # Framework symbol names to skip in deadcode detection
+    # These are object literal method names consumed by frameworks, not user-callable code
+    # e.g., React Query's queryFn/mutationFn, Express headers, etc.
+    skip_deadcode_names: set[str] = field(default_factory=set)
+
     # Import filtering - regex patterns with {symbol} placeholder
     import_patterns: list[str] = field(default_factory=list)
 
     # Call graph analysis - AST node types
     call_node_type: str = ""  # Node type for function calls (e.g., "call" in Python)
     function_def_types: set[str] = field(default_factory=set)  # Node types for function defs
-
-    def matches_extension(self, file_path: str) -> bool:
-        """Check if file path matches this language's extensions."""
-        from pathlib import Path
-
-        return Path(file_path).suffix in self.extensions
 
     def is_entry_point(self, name: str) -> bool:
         """Check if a symbol name is an entry point (should skip in deadcode)."""

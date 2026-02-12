@@ -129,39 +129,6 @@ class ImportFilter:
 
         return usages, imports
 
-    def filter_references_sync(
-        self,
-        refs: list[dict],
-        file_reader: Callable[[str, int], str],
-    ) -> tuple[list[dict], list[dict]]:
-        """Synchronous version of filter_references.
-
-        Args:
-            refs: List of reference locations from LSP.
-            file_reader: Sync function to read a line from a file.
-
-        Returns:
-            Tuple of (usages, imports).
-        """
-        usages = []
-        imports = []
-
-        for ref in refs:
-            file_path = ref.get("file", "")
-            line_num = ref.get("line", 0)
-
-            try:
-                line_content = file_reader(file_path, line_num)
-                ref_with_context = {**ref, "context": line_content.strip()}
-
-                if self.is_import_line(line_content):
-                    imports.append(ref_with_context)
-                else:
-                    usages.append(ref_with_context)
-            except Exception:
-                usages.append(ref)
-
-        return usages, imports
 
 
 def get_filter_for_file(file_path: str | Path) -> ImportFilter:

@@ -201,11 +201,3 @@ def get_tool_paths(tool_id: str) -> ToolPaths | None:
     return TOOL_PATHS.get(normalized)
 
 
-def get_all_tools() -> list[str]:
-    """Get list of all tool IDs.
-
-    Returns:
-        List of tool identifiers
-
-    """
-    return list(TOOL_PATHS.keys())

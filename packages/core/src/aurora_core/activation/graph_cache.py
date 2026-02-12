@@ -227,19 +227,6 @@ class RelationshipGraphCache:
             self._retrieval_count = 0
             self._build_time = None
 
-    def force_rebuild(self) -> RelationshipGraph:
-        """Force an immediate cache rebuild.
-
-        Returns:
-            Newly built RelationshipGraph
-
-        Thread-safe: Can be called from any thread.
-
-        """
-        with self._lock:
-            self.invalidate()
-            return self.get_graph()
-
     def get_stats(self) -> dict[str, Any]:
         """Get cache statistics.
 
@@ -270,15 +257,6 @@ class RelationshipGraphCache:
                 "chunk_count": self._graph.chunk_count() if self._graph else 0,
             }
 
-    def reset_stats(self) -> None:
-        """Reset cache statistics counters.
-
-        Thread-safe: Can be called from any thread.
-        """
-        with self._lock:
-            self._cache_hits = 0
-            self._cache_misses = 0
-            self._rebuilds = 0
 
 
 class CachedSpreadingActivation:
@@ -373,10 +351,6 @@ class CachedSpreadingActivation:
             bidirectional=bidirectional,
         )
         return result
-
-    def invalidate_cache(self) -> None:
-        """Invalidate the relationship graph cache."""
-        self.cache.invalidate()
 
     def get_cache_stats(self) -> dict[str, Any]:
         """Get cache performance statistics.

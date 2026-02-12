@@ -213,17 +213,6 @@ class AuroraLSP:
         """
         return self._run_async(self.diagnostics.get_all_diagnostics(path, severity_filter))
 
-    def lint_file(self, file_path: str | Path) -> dict:
-        """Get linting diagnostics for a single file.
-
-        Args:
-            file_path: Path to file.
-
-        Returns:
-            Dict with errors, warnings, hints lists.
-        """
-        return self._run_async(self.diagnostics.get_file_diagnostics(file_path))
-
     # =========================================================================
     # OPTIONAL: Call Hierarchy (callers/callees)
     # =========================================================================
@@ -621,45 +610,6 @@ class AuroraLSP:
     # =========================================================================
     # Utility Methods
     # =========================================================================
-
-    def find_symbol(self, name: str, path: str | Path | None = None) -> dict | None:
-        """Find a symbol by name in the workspace.
-
-        Args:
-            name: Symbol name to find.
-            path: Limit search to this path.
-
-        Returns:
-            Dict with file, line, col if found, or None.
-        """
-        # Get all source files
-        target = Path(path) if path else self.workspace
-        if target.is_file():
-            files = [target]
-        else:
-            extensions = {".py", ".js", ".ts", ".jsx", ".tsx", ".go", ".rs", ".java"}
-            files = []
-            for ext in extensions:
-                files.extend(target.rglob(f"*{ext}"))
-
-        # Search for symbol
-        for file_path in files:
-            try:
-                symbols = self._run_async(self.client.request_document_symbols(file_path))
-                for symbol in self._flatten_symbols(symbols or []):
-                    if symbol.get("name") == name:
-                        range_info = symbol.get("range", {})
-                        start = range_info.get("start", {})
-                        return {
-                            "file": str(file_path),
-                            "line": start.get("line", 0),
-                            "col": start.get("character", 0),
-                            "kind": symbol.get("kind"),
-                        }
-            except Exception:
-                continue
-
-        return None
 
     def _flatten_symbols(self, symbols: list) -> list[dict]:
         """Flatten nested symbol tree."""

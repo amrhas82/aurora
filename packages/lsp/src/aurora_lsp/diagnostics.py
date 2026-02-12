@@ -169,39 +169,3 @@ class DiagnosticsFormatter:
             "hints": hints,
         }
 
-    def format_for_display(self, diagnostics: dict, max_items: int = 10) -> str:
-        """Format diagnostics for CLI display.
-
-        Args:
-            diagnostics: Diagnostics dict from get_all_diagnostics.
-            max_items: Maximum items per category to show.
-
-        Returns:
-            Formatted string for display.
-        """
-        lines = []
-
-        total_errors = diagnostics.get("total_errors", len(diagnostics.get("errors", [])))
-        total_warnings = diagnostics.get("total_warnings", len(diagnostics.get("warnings", [])))
-
-        lines.append(f"{total_errors} errors, {total_warnings} warnings")
-        lines.append("")
-
-        errors = diagnostics.get("errors", [])
-        if errors:
-            lines.append("Errors:")
-            for e in errors[:max_items]:
-                lines.append(f"  {e['file']}:{e['line']}  {e['message']}")
-            if len(errors) > max_items:
-                lines.append(f"  ... ({len(errors) - max_items} more)")
-            lines.append("")
-
-        warnings = diagnostics.get("warnings", [])
-        if warnings:
-            lines.append("Warnings:")
-            for w in warnings[:max_items]:
-                lines.append(f"  {w['file']}:{w['line']}  {w['message']}")
-            if len(warnings) > max_items:
-                lines.append(f"  ... ({len(warnings) - max_items} more)")
-
-        return "\n".join(lines)

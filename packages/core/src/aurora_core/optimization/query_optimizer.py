@@ -411,45 +411,6 @@ class QueryOptimizer:
 
         return results, stats
 
-    def retrieve_with_threshold(
-        self,
-        candidates: list[ChunkData],
-        query_keywords: set[str] | None = None,
-        spreading_scores: dict[ChunkID, float] | None = None,
-        threshold: float | None = None,
-        max_results: int | None = None,
-        current_time: datetime | None = None,
-    ) -> list[RetrievalResult]:
-        """Retrieve chunks with explicit threshold filtering.
-
-        This is a lower-level method that applies activation threshold
-        filtering without type pre-filtering.
-
-        Args:
-            candidates: List of candidate chunks
-            query_keywords: Keywords from the query
-            spreading_scores: Pre-calculated spreading scores
-            threshold: Override default activation threshold
-            max_results: Override default max results
-            current_time: Current time for calculations
-
-        Returns:
-            List of RetrievalResult objects above threshold
-
-        """
-        if threshold is None:
-            threshold = self.activation_threshold
-
-        # Use the retriever with explicit threshold
-        return self.retriever.retrieve(
-            candidates=candidates,
-            query_keywords=query_keywords,
-            spreading_scores=spreading_scores,
-            threshold=threshold,
-            max_results=max_results,
-            current_time=current_time,
-        )
-
     def _extract_keywords(self, query: str) -> set[str]:
         """Extract keywords from query string.
 

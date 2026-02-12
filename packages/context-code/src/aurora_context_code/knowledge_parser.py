@@ -166,17 +166,3 @@ class KnowledgeParser:
         self.logger.debug(f"Parsed {len(chunks)} sections from {file_path.name}")
 
         return chunks
-
-
-def parse_knowledge_file(file_path: Path) -> list[KnowledgeChunk]:
-    """Convenience function to parse a knowledge file.
-
-    Args:
-        file_path: Path to the markdown file
-
-    Returns:
-        List of KnowledgeChunk objects
-
-    """
-    parser = KnowledgeParser()
-    return parser.parse_conversation_log(file_path)

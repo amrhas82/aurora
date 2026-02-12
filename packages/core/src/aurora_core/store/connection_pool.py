@@ -109,35 +109,6 @@ class ConnectionPool:
         except sqlite3.Error as e:
             raise StorageError(f"Failed to connect to database: {db_path}", details=str(e))
 
-    def return_connection(self, db_path: str, conn: sqlite3.Connection) -> None:
-        """Return a connection to the pool for reuse.
-
-        Args:
-            db_path: Database file path
-            conn: Connection to return
-
-        """
-        with self._global_lock:
-            if db_path not in self._locks:
-                # Pool was cleared, close connection
-                try:
-                    conn.close()
-                except:
-                    pass
-                return
-            pool_lock = self._locks[db_path]
-
-        with pool_lock:
-            # Only pool if under limit
-            if len(self._pools[db_path]) < self._max_connections:
-                self._pools[db_path].append(conn)
-            else:
-                # Pool full, close connection
-                try:
-                    conn.close()
-                except:
-                    pass
-
     def clear_pool(self, db_path: str | None = None) -> None:
         """Clear connections from pool.
 

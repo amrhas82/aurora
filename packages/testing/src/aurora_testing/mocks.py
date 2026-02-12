@@ -197,17 +197,6 @@ class MockLLM:
         self.response_rules.clear()
         self.clear_error_mode()
 
-    def get_last_prompt(self) -> str | None:
-        """Get the last prompt sent to the LLM.
-
-        Returns:
-            Last prompt string, or None if no calls made.
-
-        """
-        if self.calls:
-            return str(self.calls[-1]["prompt"])
-        return None
-
     def assert_called(self) -> None:
         """Assert that LLM was called at least once.
 
@@ -232,19 +221,6 @@ class MockLLM:
                 return
         raise AssertionError(f"MockLLM was not called with prompt containing '{prompt_substring}'")
 
-    def assert_call_count(self, expected_count: int) -> None:
-        """Assert specific number of calls.
-
-        Args:
-            expected_count: Expected number of calls.
-
-        Raises:
-            AssertionError: If call count doesn't match.
-
-        """
-        assert (
-            self.call_count == expected_count
-        ), f"Expected {expected_count} calls, got {self.call_count}"
 
 
 # ============================================================================
@@ -418,16 +394,6 @@ class MockParser:
         else:
             self.default_result = chunks
 
-    def set_failure_mode(self, exception: Exception) -> None:
-        """Enable failure mode.
-
-        Args:
-            exception: Exception to raise on parse.
-
-        """
-        self.should_fail = True
-        self.failure_exception = exception
-
     def clear_failure_mode(self) -> None:
         """Disable failure mode."""
         self.should_fail = False
@@ -479,26 +445,6 @@ class MockStore:
 
         self.chunks[chunk.id] = chunk
 
-    def retrieve_chunk(self, chunk_id: str) -> Chunk | None:
-        """Retrieve chunk by ID.
-
-        Args:
-            chunk_id: Chunk identifier.
-
-        Returns:
-            Chunk if found, None otherwise.
-
-        Raises:
-            Exception: If failure mode is enabled.
-
-        """
-        self.retrieve_calls.append(chunk_id)
-
-        if self.retrieve_should_fail and self.failure_exception:
-            raise self.failure_exception
-
-        return self.chunks.get(chunk_id)
-
     def list_chunks(self) -> list[str]:
         """List all chunk IDs.
 
@@ -507,41 +453,6 @@ class MockStore:
 
         """
         return list(self.chunks.keys())
-
-    def delete_chunk(self, chunk_id: str) -> bool:
-        """Delete chunk by ID.
-
-        Args:
-            chunk_id: Chunk identifier.
-
-        Returns:
-            True if deleted, False if not found.
-
-        """
-        if chunk_id in self.chunks:
-            del self.chunks[chunk_id]
-            return True
-        return False
-
-    def set_save_failure(self, exception: Exception) -> None:
-        """Enable save failure mode.
-
-        Args:
-            exception: Exception to raise on save.
-
-        """
-        self.save_should_fail = True
-        self.failure_exception = exception
-
-    def set_retrieve_failure(self, exception: Exception) -> None:
-        """Enable retrieve failure mode.
-
-        Args:
-            exception: Exception to raise on retrieve.
-
-        """
-        self.retrieve_should_fail = True
-        self.failure_exception = exception
 
     def clear_failure_modes(self) -> None:
         """Disable all failure modes."""

@@ -438,8 +438,9 @@ but they build on each other — indexing works without LSP, but LSP tools need 
 3. **Update chunk types** in `packages/core/src/aurora_core/chunk_types.py`
    - Add file extensions to `EXTENSION_TYPE_MAP`
 
-4. **Warning filter** uses parent logger `aurora_context_code.languages` — covers all
-   parsers automatically, no extra work needed.
+4. **Warning filter** in `packages/cli/src/aurora_cli/commands/memory.py`
+   - Add the new logger name to `_LANGUAGE_LOGGER_NAMES` (e.g., `"aurora_context_code.languages.rust"`)
+   - Python logging filters do NOT propagate to child loggers — each must be listed explicitly
 
 ### Layer 2: LSP Language Config (required for lsp tools)
 
@@ -451,23 +452,39 @@ but they build on each other — indexing works without LSP, but LSP tools need 
 
 ### Layer 3: LSP Language Server (needed for accurate results)
 
-This is the gap for JS/TS/Go/Rust/Java today. Without this, `impact`, `related`,
-and accurate `deadcode` fall back to ripgrep text search.
+Without this, `impact`, `related`, and accurate `deadcode` fall back to ripgrep text search.
 
 1. **Verify language server binary** is installed and in PATH
    - Python: `pylsp` or `pyright` (multilspy handles this)
    - JS/TS: `typescript-language-server` (needs `npm install -g typescript-language-server typescript`)
    - Go: `gopls`
    - Java: `jdtls`
+   - Rust: `rust-analyzer`
 
 2. **Test that multilspy starts the server** for your language
    - Check logs: `Starting <LANGUAGE> language server for <workspace>`
    - If startup fails, errors are logged at WARNING level
 
+3. **Check if multilspy's `initialize_params.json` is correct** for your language
+   - Located at `site-packages/multilspy/language_servers/<name>/initialize_params.json`
+   - TS had 400 lines of Rust-analyzer config in `initializationOptions` — check for copy-paste errors
+   - If wrong, add a monkey-patch in `packages/lsp/src/aurora_lsp/multilspy_patches.py`
+   - We can't modify multilspy's installed package (pip reinstall would overwrite)
+
+4. **Check if the language server needs workspace file discovery**
+   - Some servers (gopls, rust-analyzer) discover files via `go.mod`/`Cargo.toml` automatically
+   - Others (TS) need explicit `didChangeWatchedFiles` notifications — see `multilspy_patches.py`
+   - Test by running `lsp impact` on a symbol with known cross-file references
+   - If only within-file refs are returned, add file discovery in `multilspy_patches.py`
+
 ### Common Mistakes (learned from JS/TS testing)
 
 | Mistake | What Happens | Fix |
 |---------|-------------|-----|
+| multilspy's `initialize_params.json` has wrong language config | Server starts but returns only within-file refs (TS had Rust-analyzer settings) | Monkey-patch `_get_initialize_params` in `multilspy_patches.py` |
+| Calling `server.open_file(path)` without entering the context manager | `didOpen` never sent, LSP server doesn't know about the file | Must call `ctx = server.open_file(path); ctx.__enter__()` — it's a `@contextmanager` |
+| Language server has no workspace file discovery | Cross-file references return 0 results; only the opened file is analyzed | Send `didChangeWatchedFiles` with discovered project files (see TS patch) |
+| Assuming all language servers need the same fix | Wasted effort patching servers that work fine | Test first: gopls discovers files via `go.mod` automatically, rust-analyzer uses `Cargo.toml` |
 | Only wiring tree-sitter + ripgrep fallback, not the actual LSP server | `impact` returns 1 file instead of 6, `related` returns 0 calls | Install and verify the language server binary |
 | Not adding timer/scheduler callbacks to `JS_CALLBACK_METHODS` | `setInterval(fn, 1000)` callbacks flagged as dead code | Add `setTimeout`, `setInterval`, `setImmediate`, `requestAnimationFrame` |
 | Not adding framework event patterns to `JS_SKIP_DEADCODE_NAMES` | `bot.on('message', handler)` → handler flagged dead | Add framework-specific callback names |
@@ -475,6 +492,9 @@ and accurate `deadcode` fall back to ripgrep text search.
 | BM25 content too sparse for languages without docstrings | Descriptive queries like "DocumentStore search FTS5" return 0 results | Include `dependencies` and `file_path` in BM25 content |
 | Silent LSP failures (debug-level logging) | User sees empty results with no explanation | Log server startup failures at WARNING, empty references at INFO |
 | Not testing with a real project | Unit tests pass but real-world results are wrong | Test with a real project; check `mem_search`, `lsp impact`, `lsp related`, `lsp deadcode` |
+| Stale `.pyc` files after editing aurora_lsp | MCP server loads old bytecode, filters don't apply | Delete `*.cpython-*.pyc`, `touch` source files, kill ALL MCP processes |
+| Multiple MCP server processes across sessions | Killing one doesn't fix it — tool calls may hit another | `ps aux \| grep aurora_mcp` and kill all, or restart Claude Code |
+| `.mcp.json` changes mid-session | Claude Code reads config at startup only | Restart Claude Code for config changes (e.g., adding `-B` flag) |
 
 ### Effort Estimate
 
@@ -483,6 +503,13 @@ and accurate `deadcode` fall back to ripgrep text search.
 | Tree-sitter indexing | 1-2 days | `mem_search` works, basic `lsp check` via ripgrep |
 | LSP language config | 0.5 day | `lsp deadcode` (fast mode), `lsp imports` |
 | LSP language server | 2-3 days | Full `lsp impact`, `lsp related`, accurate `lsp deadcode` |
+
+**Rust-specific notes:** multilspy already has a Rust language server class, and ironically
+the TS `initialize_params.json` already contained rust-analyzer settings (that's the bug we
+fixed for TS). rust-analyzer discovers workspace via `Cargo.toml` like gopls uses `go.mod`,
+so it likely needs no file discovery patches. The main work is Layer 1 (tree-sitter-rust parser)
+and Layer 2 (language config with Rust-specific branch types, skip names). Test cross-file refs
+early — if they work out of the box like Go, skip monkey-patching entirely.
 
 ---
 

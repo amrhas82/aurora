@@ -171,6 +171,30 @@ def get_function_def_types(file_path: str | Path) -> set[str]:
     return set()
 
 
+def get_callback_methods(file_path: str | Path) -> set[str]:
+    """Get callback method names for the file's language.
+
+    These are methods like .map(), .filter(), .then() that take callbacks
+    as arguments - functions passed to them should not be flagged as dead code.
+    """
+    config = get_config(file_path)
+    if config:
+        return config.callback_methods
+    return set()
+
+
+def get_skip_deadcode_names(file_path: str | Path) -> set[str]:
+    """Get framework symbol names to skip in deadcode detection.
+
+    These are object literal method names consumed by frameworks (e.g.,
+    React Query's queryFn, Express headers) that are not user-callable dead code.
+    """
+    config = get_config(file_path)
+    if config:
+        return config.skip_deadcode_names
+    return set()
+
+
 __all__ = [
     "LanguageConfig",
     "LANGUAGES",
@@ -182,4 +206,6 @@ __all__ = [
     "is_entry_point",
     "is_nested_helper",
     "supported_extensions",
+    "get_callback_methods",
+    "get_skip_deadcode_names",
 ]

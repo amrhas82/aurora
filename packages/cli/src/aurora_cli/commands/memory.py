@@ -570,9 +570,21 @@ def run_indexing(
 
     # Suppress parse warnings during indexing for cleaner progress output
     # Warnings are counted via filter and displayed in the final summary
-    parser_logger = logging.getLogger("aurora_context_code.languages.python")
+    # Python logging filters do NOT propagate to child loggers,
+    # so we must add the filter to each language logger individually.
+    # When adding a new language, add its logger name here.
+    _language_logger_names = [
+        "aurora_context_code.languages.python",
+        "aurora_context_code.languages.typescript",
+        "aurora_context_code.languages.javascript",
+        "aurora_context_code.languages.go",
+        "aurora_context_code.languages.java",
+        "aurora_context_code.languages.markdown",
+    ]
     warning_filter = _WarningFilter()
-    parser_logger.addFilter(warning_filter)
+    parser_loggers = [logging.getLogger(name) for name in _language_logger_names]
+    for parser_logger in parser_loggers:
+        parser_logger.addFilter(warning_filter)
 
     try:
         # Use Live display for more control over layout
@@ -639,7 +651,8 @@ def run_indexing(
             )
     finally:
         # Always remove the filter when done
-        parser_logger.removeFilter(warning_filter)
+        for parser_logger in parser_loggers:
+            parser_logger.removeFilter(warning_filter)
 
     # Calculate total warnings
     total_warnings = stats.warnings + warning_filter.warning_count

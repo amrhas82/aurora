@@ -16,8 +16,10 @@ from typing import TYPE_CHECKING
 from aurora_lsp.filters import get_filter_for_file
 from aurora_lsp.languages import (
     get_call_node_type,
+    get_callback_methods,
     get_config,
     get_function_def_types,
+    get_skip_deadcode_names,
     is_entry_point,
     is_nested_helper,
 )
@@ -278,6 +280,19 @@ class CodeAnalyzer:
 
         return False
 
+    @staticmethod
+    def _is_callback_context(line_content: str, callback_methods: set[str]) -> bool:
+        """Check if a symbol is defined inside a callback to a known method.
+
+        Detects patterns like: .map(function name(...)), .then(handler), etc.
+        """
+        if not line_content:
+            return False
+        for method in callback_methods:
+            if f".{method}(" in line_content:
+                return True
+        return False
+
     async def find_usages(
         self,
         file_path: str | Path,
@@ -452,12 +467,30 @@ class CodeAnalyzer:
                     if len(name) < 3:
                         continue
 
+                    # Skip anonymous/synthetic names from LSP
+                    # LSP labels anonymous callbacks as "router.get('/') callback"
+                    # and unnamed arrow functions as "<function>"
+                    if "callback" in name.lower() or name.startswith("<"):
+                        continue
+
+                    # Skip language-specific framework symbol names
+                    # (e.g., queryFn, onSuccess, headers — consumed by frameworks)
+                    skip_names = get_skip_deadcode_names(str(file_path))
+                    if name in skip_names:
+                        continue
+
                     sel_range = symbol.get("selectionRange", symbol.get("range", {}))
                     start = sel_range.get("start", {})
                     sym_line = start.get("line", 0)
 
                     line_content = await self._read_line(str(file_path), sym_line)
                     if import_filter.is_import_line(line_content):
+                        continue
+
+                    # Skip functions defined as callbacks to known methods
+                    # e.g., arr.map(function myMapper(...)) or .then(handler)
+                    cb_methods = get_callback_methods(str(file_path))
+                    if cb_methods and self._is_callback_context(line_content, cb_methods):
                         continue
 
                     # Python-only: skip stdlib type imports (TS handles via `import type`)

@@ -3,7 +3,7 @@
     "aurora": {
       "type": "stdio",
       "command": "python3.12",
-      "args": ["-m", "aurora_mcp.server"]
+      "args": ["-B", "-m", "aurora_mcp.server"]
     }
   }
 }

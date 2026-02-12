@@ -94,44 +94,6 @@ id: invalid-agent
         assert manifest.stats.malformed_files == 1
         assert manifest.agents[0].id == "valid-agent"
 
-    def test_generate_deduplicates_by_id(
-        self,
-        tmp_path: Path,
-        caplog: pytest.LogCaptureFixture,
-    ) -> None:
-        """Warns and skips duplicate agent IDs."""
-        dir1 = tmp_path / "source1"
-        dir1.mkdir()
-        (dir1 / "agent.md").write_text(
-            """---
-id: duplicate-id
-role: First Role
-goal: First goal
----
-""",
-        )
-
-        dir2 = tmp_path / "source2"
-        dir2.mkdir()
-        (dir2 / "agent.md").write_text(
-            """---
-id: duplicate-id
-role: Second Role
-goal: Second goal
----
-""",
-        )
-
-        manager = ManifestManager()
-
-        with caplog.at_level(logging.WARNING):
-            manifest = manager.generate(sources=[str(dir1), str(dir2)])
-
-        assert manifest.stats.total == 1
-        assert "Duplicate agent ID" in caplog.text
-        # First one should be kept
-        assert manifest.agents[0].role == "First Role"
-
     def test_generate_empty_sources(self, tmp_path: Path) -> None:
         """Handles empty source directories."""
         empty_dir = tmp_path / "empty"

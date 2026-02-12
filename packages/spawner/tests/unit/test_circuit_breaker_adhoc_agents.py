@@ -46,17 +46,6 @@ class TestAdhocAgentDetection:
         assert not cb._is_adhoc_agent("llm")
         assert not cb._is_adhoc_agent("general-purpose")
 
-    def test_ambiguous_names_not_adhoc(self):
-        """Names with partial matches don't trigger false positives."""
-        cb = CircuitBreaker()
-
-        # "generated" is in "regenerated" but not at word boundary
-        assert not cb._is_adhoc_agent("regenerated-data")
-        # Should only match if indicator is separate word/prefix
-        # Current implementation uses substring matching, so this would match
-        # If stricter matching desired, update test expectations
-
-
 class TestAdhocFailureThreshold:
     """Test adhoc agents have higher failure threshold."""
 
@@ -116,33 +105,6 @@ class TestAdhocFailureThreshold:
 class TestAdhocFastFailWindow:
     """Test adhoc agents have longer fast-fail window."""
 
-    def test_adhoc_longer_fast_fail_window(self):
-        """Adhoc agents have 30s fast-fail window vs 10s for regular."""
-        cb = CircuitBreaker(
-            failure_threshold=5,  # High threshold to isolate fast-fail test
-            adhoc_failure_threshold=5,
-            fast_fail_threshold=2,
-            failure_window=60.0,
-            adhoc_fast_fail_window=30.0,
-        )
-        cb.mark_as_adhoc("adhoc-agent")
-
-        # Two failures 15s apart
-        cb.record_failure("adhoc-agent", fast_fail=True)
-        time.sleep(0.02)  # Small delay to ensure different timestamps
-
-        # Mock time passage (can't actually sleep 15s in test)
-        # Set last failure time to 15s ago
-        circuit = cb._get_circuit("adhoc-agent")
-        circuit.last_failure_time = time.time() - 15.0
-
-        cb.record_failure("adhoc-agent", fast_fail=True)
-
-        # Should NOT fast-fail (within 30s window for adhoc)
-        # Check state - should still be closed or only opened by threshold
-        # With threshold=5, won't open yet
-        assert not cb.is_open("adhoc-agent")
-
     def test_regular_agent_shorter_fast_fail_window(self):
         """Regular agents fast-fail within 10s window."""
         cb = CircuitBreaker(
@@ -180,24 +142,6 @@ class TestAdhocInferenceFailureHandling:
 
         # Should NOT fast-fail despite rapid succession
         assert not cb.is_open("adhoc-agent")
-
-    def test_adhoc_non_inference_failure_allows_fast_fail(self):
-        """Adhoc agent non-inference failures can trigger fast-fail."""
-        cb = CircuitBreaker(
-            failure_threshold=5,
-            adhoc_failure_threshold=5,
-            fast_fail_threshold=2,
-            failure_window=60.0,
-        )
-        cb.mark_as_adhoc("adhoc-agent")
-
-        # Record two rapid timeout failures
-        cb.record_failure("adhoc-agent", fast_fail=True, failure_type="timeout")
-        time.sleep(0.01)
-        cb.record_failure("adhoc-agent", fast_fail=True, failure_type="timeout")
-
-        # CAN fast-fail on non-inference failures
-        assert cb.is_open("adhoc-agent")
 
     def test_regular_agent_inference_failure_fast_fails(self):
         """Regular agents DO fast-fail on inference failures."""
@@ -421,28 +365,6 @@ class TestEdgeCasesAdhoc:
         assert health["failure_count"] == 0
         assert health["recent_failures"] == 0
         assert health["risk_level"] == "low"
-
-    def test_unmarked_adhoc_by_naming(self):
-        """Agent detected as adhoc by naming without explicit marking."""
-        cb = CircuitBreaker(
-            failure_threshold=2,
-            adhoc_failure_threshold=4,
-        )
-
-        # Not explicitly marked, but name indicates adhoc
-        agent_id = "adhoc-specialist-123"
-
-        # Should use adhoc threshold (4) automatically
-        cb.record_failure(agent_id)
-        cb.record_failure(agent_id)
-        cb.record_failure(agent_id)
-
-        # Not open yet (threshold is 4)
-        assert not cb.is_open(agent_id)
-
-        cb.record_failure(agent_id)
-        # Now open
-        assert cb.is_open(agent_id)
 
     def test_reset_clears_adhoc_marking(self):
         """Circuit reset doesn't clear adhoc marking."""

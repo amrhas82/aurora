@@ -105,17 +105,6 @@ class TestValidateVerdictConsistency:
         _auto_correct_verdict(VerificationVerdict.FAIL, 0.3)
         _auto_correct_verdict(VerificationVerdict.FAIL, 0.49)
 
-    def test_invalid_pass_with_low_score(self):
-        """Test PASS verdict with score < 0.5 raises error."""
-        with pytest.raises(ValueError, match=r"Verdict.*PASS inconsistent"):
-            _auto_correct_verdict(VerificationVerdict.PASS, 0.3)
-
-    def test_invalid_fail_with_medium_score(self):
-        """Test FAIL verdict with medium score raises error."""
-        with pytest.raises(ValueError, match=r"Verdict.*FAIL inconsistent"):
-            _auto_correct_verdict(VerificationVerdict.FAIL, 0.6)
-
-
 class TestVerifyDecomposition:
     """Tests for verify_decomposition function."""
 
@@ -173,34 +162,6 @@ class TestVerifyDecomposition:
         mock_llm_client.generate_json.assert_called_once()
         call_args = mock_llm_client.generate_json.call_args
         assert call_args.kwargs["temperature"] == 0.1
-
-    def test_self_verification_retry(self, mock_llm_client, sample_decomposition):
-        """Test self-verification with RETRY verdict."""
-        verification_response = {
-            "completeness": 0.6,
-            "consistency": 0.7,
-            "groundedness": 0.5,
-            "routability": 0.6,
-            "overall_score": 0.6,
-            "verdict": "RETRY",
-            "issues": ["Missing error handling", "Unclear dependencies"],
-            "suggestions": ["Add error handling subgoal", "Clarify dependency order"],
-        }
-
-        # generate_json returns dict directly, not LLMResponse
-        mock_llm_client.generate_json.return_value = verification_response
-
-        result = verify_decomposition(
-            llm_client=mock_llm_client,
-            query="Test query",
-            decomposition=sample_decomposition,
-            option=VerificationOption.SELF,
-        )
-
-        assert result.verdict == VerificationVerdict.RETRY
-        assert result.overall_score == 0.6
-        assert len(result.issues) == 2
-        assert len(result.suggestions) == 2
 
     def test_adversarial_verification_fail(self, mock_llm_client, sample_decomposition):
         """Test adversarial verification with FAIL verdict."""

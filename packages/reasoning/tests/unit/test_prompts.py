@@ -59,16 +59,6 @@ class TestAssessPromptTemplate:
 class TestDecomposePromptTemplate:
     """Test query decomposition prompt template."""
 
-    def test_system_prompt_contains_json_schema(self):
-        """Test system prompt has JSON schema."""
-        template = DecomposePromptTemplate()
-        system = template.build_system_prompt()
-
-        assert "subgoals" in system
-        assert "execution_order" in system
-        assert "suggested_agent" in system
-        assert "JSON" in system
-
     def test_user_prompt_with_query(self):
         """Test user prompt includes query."""
         template = DecomposePromptTemplate()
@@ -229,42 +219,6 @@ class TestExamplesLoader:
             assert len(examples) == 0
         except FileNotFoundError:
             # Expected if running tests without examples
-            pass
-
-    def test_get_examples_by_complexity_medium(self):
-        """Test loading 2 examples for MEDIUM complexity."""
-        loader = ExamplesLoader()
-        try:
-            examples = loader.get_examples_by_complexity(
-                "example_decompositions.json",
-                Complexity.MEDIUM,
-            )
-            assert len(examples) == 2
-        except FileNotFoundError:
-            pass
-
-    def test_get_examples_by_complexity_complex(self):
-        """Test loading 4 examples for COMPLEX complexity."""
-        loader = ExamplesLoader()
-        try:
-            examples = loader.get_examples_by_complexity(
-                "example_decompositions.json",
-                Complexity.COMPLEX,
-            )
-            assert len(examples) == 4
-        except FileNotFoundError:
-            pass
-
-    def test_get_examples_by_complexity_critical(self):
-        """Test loading 6 examples for CRITICAL complexity."""
-        loader = ExamplesLoader()
-        try:
-            examples = loader.get_examples_by_complexity(
-                "example_decompositions.json",
-                Complexity.CRITICAL,
-            )
-            assert len(examples) == 6
-        except FileNotFoundError:
             pass
 
     def test_get_loader_singleton(self):

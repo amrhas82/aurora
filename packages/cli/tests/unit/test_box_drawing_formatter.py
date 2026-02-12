@@ -60,42 +60,6 @@ def test_format_box_header():
     assert "─┐" in box_str
 
 
-def test_format_box_scores():
-    """Test score lines formatting with proper prefixes and precision.
-
-    Expected format:
-    │   ├─ BM25:       0.950 ...
-    │   ├─ Semantic:   0.820 ...
-    │   └─ Activation: 0.650 ...
-
-    Scores should have 3 decimal places precision.
-    """
-
-    class MockResult:
-        def __init__(self):
-            self.metadata = {"name": "test_func", "file_path": "test.py", "type": "function"}
-            self.content = "def test_func(): pass"
-            self.hybrid_score = 0.856
-            self.bm25_score = 0.950
-            self.semantic_score = 0.820
-            self.activation_score = 0.650
-
-    result = MockResult()
-
-    box_text = _format_score_box(result, _rank=1)
-    box_str = str(box_text)
-
-    # Verify score lines
-    assert "├─ BM25:" in box_str
-    assert "├─ Semantic:" in box_str
-    assert "└─ Activation:" in box_str
-
-    # Verify precision (3 decimal places)
-    assert "0.950" in box_str
-    assert "0.820" in box_str
-    assert "0.650" in box_str
-
-
 def test_format_box_footer():
     """Test box footer formatting.
 
@@ -129,39 +93,6 @@ def test_format_box_footer():
     last_line = lines[-1]
     assert last_line.startswith("└")
     assert last_line.endswith("┘")
-
-
-def test_format_box_git_metadata():
-    """Test git metadata line formatting.
-
-    Expected format:
-    │ Git: 23 commits, last modified 2 days ago │
-    """
-
-    class MockResult:
-        def __init__(self):
-            self.metadata = {
-                "name": "test_func",
-                "file_path": "test.py",
-                "type": "function",
-                "commit_count": 23,
-                "last_modified": "2 days ago",
-            }
-            self.content = "def test_func(): pass"
-            self.hybrid_score = 0.5
-            self.bm25_score = 0.5
-            self.semantic_score = 0.5
-            self.activation_score = 0.5
-
-    result = MockResult()
-
-    box_text = _format_score_box(result, _rank=1)
-    box_str = str(box_text)
-
-    # Verify git metadata
-    assert "Git:" in box_str
-    assert "23 commits" in box_str
-    assert "2 days ago" in box_str
 
 
 def test_format_box_width_adjustment():

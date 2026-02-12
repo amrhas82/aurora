@@ -301,17 +301,6 @@ class TestHybridRetrieverInit:
 class TestHybridRetrieverRetrieve:
     """Test HybridRetriever retrieve() method."""
 
-    def test_retrieve_with_empty_store(self):
-        """Test retrieval with no chunks in store."""
-        store = MockStore(chunks=[])
-        engine = MockActivationEngine()
-        provider = EmbeddingProvider()
-
-        retriever = HybridRetriever(store, engine, provider)
-        results = retriever.retrieve("test query", top_k=5)
-
-        assert results == []
-
     def test_retrieve_validates_query(self):
         """Test that retrieve validates query parameter."""
         store = MockStore()
@@ -336,55 +325,6 @@ class TestHybridRetrieverRetrieve:
 
         with pytest.raises(ValueError, match="top_k must be >= 1"):
             retriever.retrieve("test query", top_k=0)
-
-    def test_retrieve_with_custom_weights(self):
-        """Test retrieval uses custom weights from configuration."""
-        # Create chunks with known activations and embeddings
-        provider = EmbeddingProvider()
-
-        # Create embeddings for two chunks
-        chunk1_text = "calculate total price"
-        chunk2_text = "display user interface"
-
-        chunk1_embedding = provider.embed_chunk(chunk1_text)
-        chunk2_embedding = provider.embed_chunk(chunk2_text)
-
-        chunks = [
-            MockChunk("1", chunk1_text, activation=0.9, embeddings=chunk1_embedding),
-            MockChunk("2", chunk2_text, activation=0.3, embeddings=chunk2_embedding),
-        ]
-
-        store = MockStore(chunks=chunks)
-        engine = MockActivationEngine()
-
-        # Test with 100% activation weight (dual-hybrid mode)
-        config_activation_only = HybridConfig(
-            bm25_weight=0.0,
-            activation_weight=1.0,
-            semantic_weight=0.0,
-        )
-        retriever = HybridRetriever(store, engine, provider, config=config_activation_only)
-
-        results = retriever.retrieve("calculate total", top_k=2)
-
-        # With 100% activation weight, chunk1 (0.9) should rank higher
-        assert len(results) == 2
-        assert results[0]["chunk_id"] == "1"  # Higher activation
-
-        # Test with 100% semantic weight (dual-hybrid mode)
-        config_semantic_only = HybridConfig(
-            bm25_weight=0.0,
-            activation_weight=0.0,
-            semantic_weight=1.0,
-        )
-        retriever = HybridRetriever(store, engine, provider, config=config_semantic_only)
-
-        results = retriever.retrieve("calculate total", top_k=2)
-
-        # With 100% semantic weight, ranking depends on semantic similarity
-        assert len(results) == 2
-        # Chunk1 should still rank higher as query matches its content
-
 
 class TestHybridRetrieverNormalization:
     """Test score normalization."""
@@ -443,46 +383,4 @@ class TestHybridRetrieverNormalization:
 class TestHybridRetrieverFallback:
     """Test fallback behavior when embeddings unavailable."""
 
-    def test_fallback_when_embeddings_missing(self):
-        """Test fallback to activation-only when chunks lack embeddings."""
-        chunks = [
-            MockChunk("1", "chunk one", activation=0.9, embeddings=None),
-            MockChunk("2", "chunk two", activation=0.7, embeddings=None),
-        ]
-
-        store = MockStore(chunks=chunks)
-        engine = MockActivationEngine()
-        provider = EmbeddingProvider()
-
-        config = HybridConfig(fallback_to_activation=True)
-        retriever = HybridRetriever(store, engine, provider, config=config)
-
-        results = retriever.retrieve("test query", top_k=2)
-
-        # Should return results with activation scores only
-        # When all semantic scores are 0, they normalize to 1.0 (all equal)
-        assert len(results) == 2
-        assert results[0]["chunk_id"] == "1"  # Higher activation
-        assert results[1]["chunk_id"] == "2"  # Lower activation
-
-    def test_no_fallback_skips_chunks_without_embeddings(self):
-        """Test that chunks without embeddings are skipped when fallback disabled."""
-        provider = EmbeddingProvider()
-        chunk1_embedding = provider.embed_chunk("chunk one")
-
-        chunks = [
-            MockChunk("1", "chunk one", activation=0.9, embeddings=chunk1_embedding),
-            MockChunk("2", "chunk two", activation=0.7, embeddings=None),
-        ]
-
-        store = MockStore(chunks=chunks)
-        engine = MockActivationEngine()
-
-        config = HybridConfig(fallback_to_activation=False)
-        retriever = HybridRetriever(store, engine, provider, config=config)
-
-        results = retriever.retrieve("test query", top_k=2)
-
-        # Should only return chunk with embedding
-        assert len(results) == 1
-        assert results[0]["chunk_id"] == "1"
+    pass

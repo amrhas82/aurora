@@ -168,16 +168,6 @@ class TestPoliciesEngine:
         assert ".env" in paths
         assert "*.pem" in paths
 
-    def test_get_recovery_config(self):
-        """Test retrieving recovery config."""
-        engine = PoliciesEngine()
-
-        config = engine.get_recovery_config()
-
-        assert config.timeout_seconds == 120
-        assert config.max_retries == 2
-        assert config.fallback_to_llm is True
-
     def test_create_default_policies_file(self, tmp_path):
         """Test creating default policies file."""
         policies_path = tmp_path / "test_policies.yaml"

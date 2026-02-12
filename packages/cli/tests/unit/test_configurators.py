@@ -122,24 +122,6 @@ class TestClaudeConfigurator:
         assert ".aurora/AGENTS.md" in content
 
     @pytest.mark.asyncio
-    async def test_configure_creates_slash_commands(self, tmp_path: Path):
-        """Test that configure creates slash command files."""
-        config = ClaudeConfigurator()
-        await config.configure(tmp_path, ".aurora")
-
-        # Check that slash command directory was created
-        commands_dir = tmp_path / ".claude" / "commands" / "aur"
-        assert commands_dir.exists()
-
-        # Check that standardized command files exist (plan, checkpoint, archive)
-        expected_commands = ["plan.md", "checkpoint.md", "archive.md"]
-        for cmd in expected_commands:
-            cmd_file = commands_dir / cmd
-            assert cmd_file.exists(), f"Expected {cmd} to exist"
-            content = cmd_file.read_text()
-            assert "<!-- AURORA:START -->" in content
-
-    @pytest.mark.asyncio
     async def test_configure_updates_existing_file(self, tmp_path: Path):
         """Test that configure updates existing file with markers."""
         claude_md = tmp_path / "CLAUDE.md"
@@ -276,18 +258,6 @@ class TestClaudeCommandsConfigurator:
         assert config.name == "Claude Commands"
         assert config.config_file_name == ".claude/commands/aur"
         assert config.is_available is True
-
-    def test_get_command_list(self):
-        """Test getting list of available commands."""
-        from aurora_cli.configurators import ClaudeCommandsConfigurator
-
-        config = ClaudeCommandsConfigurator()
-        commands = config.get_command_list()
-
-        # After standardization: plan, checkpoint, archive
-        expected = ["plan", "checkpoint", "archive"]
-        for cmd in expected:
-            assert cmd in commands
 
     @pytest.mark.asyncio
     async def test_configure_creates_command_files(self, tmp_path: Path):

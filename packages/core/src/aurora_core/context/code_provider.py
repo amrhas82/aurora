@@ -233,20 +233,11 @@ class CodeContextProvider(ContextProvider):
     def update(self, chunk_id: ChunkID, activation_delta: float) -> None:
         """Update activation score for a chunk.
 
-        Currently stub - full implementation in subtask 5.7.
-
         Args:
             chunk_id: Chunk to update
             activation_delta: Amount to adjust activation
 
-        Raises:
-            ChunkNotFoundError: If chunk does not exist
-
         """
-        logger.debug(f"Updating activation for {chunk_id}: delta={activation_delta}")
-
-        # TODO: Implement activation tracking (subtask 5.7)
-        # For now, just update the store
         self._store.update_activation(chunk_id, activation_delta)
 
     def refresh(self) -> None:

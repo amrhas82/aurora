@@ -7,11 +7,11 @@ These tests verify in-memory storage functionality including:
 """
 
 import pytest
+from test_store_base import SimpleChunk, StoreContractTests
 
 from aurora_core.exceptions import StorageError
 from aurora_core.store.memory import MemoryStore
 from aurora_core.types import ChunkID
-from test_store_base import SimpleChunk, StoreContractTests
 
 
 class TestMemoryStore(StoreContractTests):

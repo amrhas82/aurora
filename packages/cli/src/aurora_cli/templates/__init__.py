@@ -6,8 +6,8 @@ and Claude Code slash command files. Templates are rebranded from OpenSpec to Au
 
 from .agents import AGENTS_TEMPLATE, get_agents_template
 from .claude import CLAUDE_TEMPLATE, get_claude_template
-from .commands import COMMAND_TEMPLATES, get_all_command_templates, get_command_template
-from .project import PROJECT_TEMPLATE, get_project_template
+from .commands import COMMAND_TEMPLATES, get_all_command_templates
+from .project import PROJECT_TEMPLATE
 
 
 __all__ = [
@@ -18,6 +18,4 @@ __all__ = [
     "get_agents_template",
     "get_all_command_templates",
     "get_claude_template",
-    "get_command_template",
-    "get_project_template",
 ]

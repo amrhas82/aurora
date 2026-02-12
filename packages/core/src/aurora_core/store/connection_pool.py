@@ -161,15 +161,4 @@ def get_connection_pool() -> ConnectionPool:
     return _global_pool
 
 
-def clear_connection_pool(db_path: str | None = None) -> None:
-    """Clear the global connection pool.
-
-    Args:
-        db_path: Database to clear, or None to clear all
-
-    """
-    pool = get_connection_pool()
-    pool.clear_pool(db_path)
-
-
-__all__ = ["ConnectionPool", "get_connection_pool", "clear_connection_pool"]
+__all__ = ["ConnectionPool", "get_connection_pool"]

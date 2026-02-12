@@ -8,9 +8,9 @@ Tests validate:
 """
 
 import pytest
+from evaluate_assess import evaluate_corpus
 
 from aurora_soar.phases.assess import ComplexityAssessor, assess_complexity
-from evaluate_assess import evaluate_corpus
 
 
 class TestComplexityAssessor:

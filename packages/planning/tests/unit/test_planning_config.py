@@ -11,7 +11,6 @@ from unittest.mock import patch
 
 import pytest
 
-
 sys.path.insert(0, str(Path(__file__).parents[3] / "packages" / "planning" / "src"))
 
 from aurora_planning.planning_config import (

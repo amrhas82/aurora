@@ -149,26 +149,6 @@ class TestHeartbeatEmitter:
         assert event.metadata["line_count"] == 10
         assert event.metadata["custom_field"] == "value"
 
-    def test_event_to_dict(self):
-        """Test event serialization."""
-        emitter = HeartbeatEmitter(task_id="test-010")
-
-        emitter.emit(
-            HeartbeatEventType.STARTED,
-            agent_id="test-agent",
-            message="Starting",
-            key="value",
-        )
-
-        event = emitter.get_latest_event()
-        data = event.to_dict()
-
-        assert data["event_type"] == "started"
-        assert data["task_id"] == "test-010"
-        assert data["agent_id"] == "test-agent"
-        assert data["message"] == "Starting"
-        assert data["metadata"]["key"] == "value"
-
 
 class TestHeartbeatMonitor:
     """Test heartbeat monitor functionality."""

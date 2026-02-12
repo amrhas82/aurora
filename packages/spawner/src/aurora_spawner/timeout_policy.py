@@ -10,7 +10,7 @@ Provides configurable policies for:
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable
+from typing import Callable
 
 
 logger = logging.getLogger(__name__)
@@ -479,29 +479,3 @@ class SpawnPolicy:
 
         return presets[name]()
 
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary representation."""
-        return {
-            "name": self.name,
-            "timeout": {
-                "mode": self.timeout_policy.mode.value,
-                "timeout": self.timeout_policy.timeout,
-                "initial_timeout": self.timeout_policy.initial_timeout,
-                "max_timeout": self.timeout_policy.max_timeout,
-                "extension_threshold": self.timeout_policy.extension_threshold,
-                "no_activity_timeout": self.timeout_policy.no_activity_timeout,
-            },
-            "retry": {
-                "max_attempts": self.retry_policy.max_attempts,
-                "strategy": self.retry_policy.strategy.value,
-                "base_delay": self.retry_policy.base_delay,
-                "max_delay": self.retry_policy.max_delay,
-                "backoff_factor": self.retry_policy.backoff_factor,
-                "jitter": self.retry_policy.jitter,
-            },
-            "termination": {
-                "enabled": self.termination_policy.enabled,
-                "kill_on_error_patterns": self.termination_policy.kill_on_error_patterns,
-                "kill_on_no_activity": self.termination_policy.kill_on_no_activity,
-            },
-        }

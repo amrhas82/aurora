@@ -44,7 +44,6 @@ Reference:
 
 import math
 from datetime import datetime, timezone
-from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -201,98 +200,6 @@ class DecayCalculator:
         # Clamp to minimum penalty
         return max(penalty, self.config.min_penalty)
 
-    def calculate_with_metadata(
-        self,
-        last_access: datetime,
-        chunk_type: str | None = None,
-        commit_count: int = 0,
-        current_time: datetime | None = None,
-        decay_by_type: dict[str, float] | None = None,
-    ) -> float:
-        """Calculate decay penalty with type-specific rates and churn factor.
-
-        This method extends the base decay calculation with:
-        1. Type-specific decay rates (KB decays slower than code)
-        2. Churn factor (high-commit code decays faster)
-
-        The effective decay formula is:
-            effective_d = base_d(type) + 0.1 × log10(commit_count + 1)
-            penalty = -effective_d × log10(days_since_access)
-
-        Args:
-            last_access: Timestamp of last access
-            chunk_type: Chunk type ('kb', 'code', 'function', 'class', 'soar')
-            commit_count: Number of git commits touching this chunk (0 = no churn penalty)
-            current_time: Current time for calculation (defaults to now)
-            decay_by_type: Optional custom decay rates (overrides module defaults)
-
-        Returns:
-            Decay penalty (non-positive value, 0.0 to min_penalty)
-
-        Examples:
-            >>> from datetime import datetime, timedelta, timezone
-            >>> decay = DecayCalculator()
-            >>>
-            >>> # KB chunks decay slowly (sticky)
-            >>> last_access = datetime.now(timezone.utc) - timedelta(days=30)
-            >>> kb_penalty = decay.calculate_with_metadata(last_access, chunk_type='kb')
-            >>> code_penalty = decay.calculate_with_metadata(last_access, chunk_type='function')
-            >>> print(f"KB: {kb_penalty:.3f}, Code: {code_penalty:.3f}")
-            KB: -0.074, Code: -0.590
-            >>>
-            >>> # High-churn code decays even faster
-            >>> churn_penalty = decay.calculate_with_metadata(
-            ...     last_access, chunk_type='function', commit_count=100
-            ... )
-            >>> print(f"High churn: {churn_penalty:.3f}")
-            High churn: -0.885
-
-        """
-        if current_time is None:
-            current_time = datetime.now(timezone.utc)
-        elif current_time.tzinfo is None:
-            current_time = current_time.replace(tzinfo=timezone.utc)
-
-        # Ensure last_access is timezone-aware
-        if last_access.tzinfo is None:
-            last_access = last_access.replace(tzinfo=timezone.utc)
-
-        # Calculate time since access
-        time_delta = current_time - last_access
-        hours_since_access = time_delta.total_seconds() / 3600.0
-
-        # Apply grace period (no decay for very recent accesses)
-        if hours_since_access <= self.config.grace_period_hours:
-            return 0.0
-
-        # Convert to days
-        days_since_access = hours_since_access / 24.0
-
-        # Cap at maximum days
-        days_since_access = min(days_since_access, self.config.max_days)
-
-        # Get type-specific decay rate (fall back to config default)
-        type_decay_map = decay_by_type or DECAY_BY_TYPE
-        base_decay = type_decay_map.get(
-            chunk_type.lower() if chunk_type else "",
-            self.config.decay_factor,  # Fall back to global default
-        )
-
-        # Add churn factor: high-commit code decays faster
-        # Formula: churn_penalty = 0.1 × log10(commit_count + 1)
-        # This gives:
-        #   - 5 commits: +0.078
-        #   - 50 commits: +0.170
-        #   - 100 commits: +0.200
-        churn_penalty = CHURN_COEFFICIENT * math.log10(max(1, commit_count + 1))
-        effective_decay = base_decay + churn_penalty
-
-        # Calculate decay penalty: -effective_decay × log10(days)
-        penalty = -effective_decay * math.log10(max(1.0, days_since_access))
-
-        # Clamp to minimum penalty
-        return max(penalty, self.config.min_penalty)
-
     def calculate_from_hours(self, hours_since_access: float) -> float:
         """Calculate decay penalty from hours since access.
 
@@ -334,89 +241,6 @@ class DecayCalculator:
         """
         # Convert to hours and use standard calculation
         return self.calculate_from_hours(days_since_access * 24.0)
-
-    def get_decay_curve(
-        self,
-        max_days: int | None = None,
-        num_points: int = 50,
-    ) -> list[tuple[float, float]]:
-        """Get decay curve data points for visualization.
-
-        Args:
-            max_days: Maximum days to plot (defaults to config.max_days)
-            num_points: Number of data points to generate
-
-        Returns:
-            List of (days, penalty) tuples for plotting
-
-        Example:
-            >>> decay = DecayCalculator()
-            >>> curve = decay.get_decay_curve(max_days=30, num_points=10)
-            >>> for days, penalty in curve:
-            ...     print(f"Day {days:.1f}: {penalty:.3f}")
-
-        """
-        if max_days is None:
-            max_days = int(self.config.max_days)
-
-        points = []
-        for i in range(num_points):
-            days = (max_days / (num_points - 1)) * i if num_points > 1 else 0
-            penalty = self.calculate_from_days(days)
-            points.append((days, penalty))
-
-        return points
-
-    def explain_decay(
-        self,
-        last_access: datetime,
-        current_time: datetime | None = None,
-    ) -> dict[str, Any]:
-        """Explain how decay was calculated.
-
-        Args:
-            last_access: Timestamp of last access
-            current_time: Current time for calculation (defaults to now)
-
-        Returns:
-            Dictionary with explanation:
-                - penalty: Final decay penalty value
-                - days_since_access: Days since last access
-                - hours_since_access: Hours since last access
-                - grace_period_applied: Whether grace period was applied
-                - capped_at_max: Whether capped at max_days
-                - formula: Formula used for calculation
-
-        """
-        if current_time is None:
-            current_time = datetime.now(timezone.utc)
-        elif current_time.tzinfo is None:
-            current_time = current_time.replace(tzinfo=timezone.utc)
-
-        if last_access.tzinfo is None:
-            last_access = last_access.replace(tzinfo=timezone.utc)
-
-        time_delta = current_time - last_access
-        hours_since_access = time_delta.total_seconds() / 3600.0
-        days_since_access = hours_since_access / 24.0
-
-        grace_period_applied = hours_since_access <= self.config.grace_period_hours
-        capped_at_max = days_since_access > self.config.max_days
-
-        penalty = self.calculate(last_access, current_time)
-
-        return {
-            "penalty": penalty,
-            "days_since_access": days_since_access,
-            "hours_since_access": hours_since_access,
-            "grace_period_applied": grace_period_applied,
-            "grace_period_hours": self.config.grace_period_hours,
-            "capped_at_max": capped_at_max,
-            "max_days": self.config.max_days,
-            "decay_factor": self.config.decay_factor,
-            "formula": f"-{self.config.decay_factor} × log10({min(days_since_access, self.config.max_days):.2f})",
-        }
-
 
 def calculate_decay(
     last_access: datetime,

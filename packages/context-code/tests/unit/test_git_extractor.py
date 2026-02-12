@@ -310,67 +310,6 @@ def rarely_edited():
         assert isinstance(bla, float)
         assert -10 <= bla <= 10
 
-    def test_parse_blame_output(self):
-        """Test parsing of git blame --line-porcelain output."""
-        extractor = GitSignalExtractor()
-
-        # Sample output from git blame --line-porcelain
-        # Note: SHA must be exactly 40 characters at start of line followed by space
-        sample_output = """abc123def456789012345678901234567890abcd 1 1 1
-author Test User
-author-mail <test@example.com>
-author-time 1703001600
-committer Test User
-committer-mail <test@example.com>
-committer-time 1703001600
-summary Initial commit
-filename test.py
-\tdef test():
-abc123def456789012345678901234567890abcd 2 2
-\t    pass
-def456789abc012345678901234567890abcdef1 3 3 1
-author Another User
-author-mail <another@example.com>
-author-time 1703005200
-committer Another User
-committer-mail <another@example.com>
-committer-time 1703005200
-summary Second commit
-filename test.py
-\t    return 42
-"""
-
-        shas = extractor._parse_blame_output(sample_output)
-
-        # Should extract 2 unique SHAs (abc123... and def456...)
-        assert len(shas) == 2
-        assert "abc123def456789012345678901234567890abcd" in shas
-        assert "def456789abc012345678901234567890abcdef1" in shas
-
-        # Should preserve order of first appearance
-        assert shas[0] == "abc123def456789012345678901234567890abcd"
-        assert shas[1] == "def456789abc012345678901234567890abcdef1"
-
-    def test_parse_blame_output_deduplicates(self):
-        """Test that repeated SHAs in blame output are deduplicated."""
-        extractor = GitSignalExtractor()
-
-        # Output with same SHA appearing multiple times
-        sample_output = """
-abc123def456789012345678901234567890abcd 1 1 1
-\tline 1
-abc123def456789012345678901234567890abcd 2 2
-\tline 2
-abc123def456789012345678901234567890abcd 3 3
-\tline 3
-"""
-
-        shas = extractor._parse_blame_output(sample_output)
-
-        # Should only have 1 unique SHA
-        assert len(shas) == 1
-        assert shas[0] == "abc123def456789012345678901234567890abcd"
-
     def test_bla_decay_parameter(self):
         """Test that decay parameter affects BLA calculation."""
         extractor = GitSignalExtractor()

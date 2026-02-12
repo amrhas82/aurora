@@ -594,10 +594,6 @@ async def spawn_parallel_with_recovery(
         ...     recovery_policy=policy,
         ... )
 
-    Example - Per-agent overrides:
-        >>> policy = RecoveryPolicy.default().with_override("slow-agent", max_retries=5)
-        >>> results = await spawn_parallel_with_recovery(tasks=tasks, recovery_policy=policy)
-
     """
     if not tasks:
         return []

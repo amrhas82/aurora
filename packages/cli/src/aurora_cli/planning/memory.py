@@ -266,37 +266,6 @@ class FilePathResolver:
         """
         return self.retriever.has_indexed_memory()
 
-    def format_path_with_confidence(self, resolution: FileResolution) -> str:
-        """Format file path with confidence annotation for display.
-
-        Formatting rules:
-        - High confidence (>= 0.8): No annotation
-        - Medium confidence (0.6-0.8): "(suggested)"
-        - Low confidence (< 0.6): "(low confidence)"
-
-        Args:
-            resolution: FileResolution to format
-
-        Returns:
-            Formatted string for display
-
-        """
-        # Build base path string
-        if resolution.line_start is not None and resolution.line_end is not None:
-            path_str = f"{resolution.path} lines {resolution.line_start}-{resolution.line_end}"
-        else:
-            path_str = resolution.path
-
-        # Add confidence annotation based on thresholds
-        if resolution.confidence >= 0.8:
-            # High confidence - no annotation needed
-            return path_str
-        if resolution.confidence >= 0.6:
-            # Medium confidence - suggest it's a suggestion
-            return f"{path_str} (suggested)"
-        # Low confidence - warn user
-        return f"{path_str} (low confidence)"
-
     def _generate_generic_paths(self, subgoal: Subgoal) -> list[FileResolution]:
         """Generate generic file paths when memory not indexed.
 

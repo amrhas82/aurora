@@ -285,37 +285,6 @@ class MigrationManager:
         except Exception as e:
             raise StorageError(f"Failed to backup database: {db_path}", details=str(e))
 
-    def migrate_with_backup(
-        self,
-        conn: sqlite3.Connection,
-        db_path: str | None = None,
-    ) -> str | None:
-        """Migrate database with automatic backup.
-
-        Args:
-            conn: SQLite database connection
-            db_path: Path to database file (for backup)
-
-        Returns:
-            Path to backup file if backup was created, None otherwise
-
-        Raises:
-            StorageError: If migration fails
-
-        """
-        backup_path = None
-
-        if db_path and self.needs_migration(conn):
-            backup_path = self.backup_database(db_path)
-            print(f"Database backed up to: {backup_path}")
-
-        try:
-            self.migrate(conn)
-            return backup_path
-        except Exception:
-            if backup_path and backup_path != ":memory:":
-                print(f"Migration failed. Restore from backup: {backup_path}")
-            raise
 
 
 # Global migration manager instance

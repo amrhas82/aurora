@@ -375,33 +375,3 @@ class ConversationLogger:
 
         return "\n".join(lines)
 
-    def rotate_logs(self, max_files_per_month: int = 100) -> None:
-        """Rotate logs by archiving old files.
-
-        Args:
-            max_files_per_month: Maximum log files to keep per month
-
-        """
-        if not self.enabled:
-            return
-
-        try:
-            # Get current month directory
-            log_dir = self._get_log_directory()
-            if not log_dir.exists():
-                return
-
-            # Get all log files in current month sorted by modification time
-            log_files = sorted(log_dir.glob("*.md"), key=lambda p: p.stat().st_mtime, reverse=True)
-
-            # Archive files beyond limit
-            if len(log_files) > max_files_per_month:
-                archive_dir = self.base_path / "archive"
-                archive_dir.mkdir(parents=True, exist_ok=True)
-
-                for log_file in log_files[max_files_per_month:]:
-                    archive_path = archive_dir / log_file.name
-                    log_file.rename(archive_path)
-
-        except Exception as e:
-            print(f"Warning: Failed to rotate logs: {e}", file=sys.stderr)

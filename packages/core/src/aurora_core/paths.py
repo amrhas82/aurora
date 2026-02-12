@@ -76,17 +76,3 @@ def get_conversations_dir() -> Path:
     return get_logs_dir() / "conversations"
 
 
-def get_budget_tracker_path() -> Path:
-    """Get the path to budget_tracker.json (ALWAYS global - never project-local).
-
-    Budget tracking is intentionally global because:
-    - Users have one budget across all projects
-    - Prevents accidental overspend by project isolation
-
-    Returns:
-        Path to global budget_tracker.json
-
-    """
-    return Path.home() / ".aurora" / "budget_tracker.json"
-
-

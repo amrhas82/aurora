@@ -119,11 +119,3 @@ class ClaudeCommandsConfigurator:
         # The template already includes markers, so write as-is
         file_path.write_text(new_content, encoding="utf-8")
 
-    def get_command_list(self) -> list[str]:
-        """Get list of available command names.
-
-        Returns:
-            List of command names that will be created
-
-        """
-        return list(get_all_command_templates().keys())

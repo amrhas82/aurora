@@ -18,7 +18,6 @@ import json
 import logging
 import re
 from dataclasses import dataclass, field
-from enum import IntEnum
 from typing import TYPE_CHECKING, Any, Literal
 
 
@@ -26,22 +25,13 @@ if TYPE_CHECKING:
     from aurora_reasoning.llm_client import LLMClient
 
 
-__all__ = ["assess_complexity", "ComplexityAssessor", "AssessmentResult", "ComplexityLevel"]
+__all__ = ["assess_complexity", "ComplexityAssessor", "AssessmentResult"]
 
 
 logger = logging.getLogger(__name__)
 
 
-# ========== NEW IMPLEMENTATION: ComplexityLevel and AssessmentResult ==========
-
-
-class ComplexityLevel(IntEnum):
-    """Complexity levels with score thresholds."""
-
-    SIMPLE = 1  # Score <= 11
-    MEDIUM = 2  # Score 12-28
-    COMPLEX = 3  # Score >= 29
-    CRITICAL = 4  # High-stakes, overrides score-based classification
+# ========== NEW IMPLEMENTATION: AssessmentResult ==========
 
 
 @dataclass

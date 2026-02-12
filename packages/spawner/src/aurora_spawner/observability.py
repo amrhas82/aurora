@@ -671,62 +671,6 @@ class AgentHealthMonitor:
             "max": sorted_latencies[-1],
         }
 
-    def get_summary(self) -> dict[str, Any]:
-        """Get overall health summary across all agents.
-
-        Returns:
-            Dictionary with aggregate health metrics and failure categorization
-
-        """
-        all_metrics = list(self._agent_metrics.values())
-
-        if not all_metrics:
-            return {
-                "total_agents": 0,
-                "total_executions": 0,
-                "total_failures": 0,
-                "avg_failure_rate": 0.0,
-                "avg_detection_latency": 0.0,
-                "avg_detection_latency_ms": 0.0,
-                "avg_recovery_rate": 0.0,
-                "failure_by_reason": {},
-                "circuit_breaker_status": {
-                    "total_opens": 0,
-                    "agents_with_open_circuits": [],
-                },
-            }
-
-        total_executions = sum(m.total_executions for m in all_metrics)
-        total_failures = sum(m.failed_executions for m in all_metrics)
-        total_circuit_opens = sum(m.circuit_open_count for m in all_metrics)
-
-        # Categorize failures by reason
-        failure_by_reason: dict[str, int] = {}
-        for event in self._failure_events:
-            reason = event.reason.value
-            failure_by_reason[reason] = failure_by_reason.get(reason, 0) + 1
-
-        # Identify agents with recent circuit opens
-        agents_with_circuits = [m.agent_id for m in all_metrics if m.circuit_open_count > 0]
-
-        detection_stats = self.get_detection_latency_stats()
-
-        return {
-            "total_agents": len(all_metrics),
-            "total_executions": total_executions,
-            "total_failures": total_failures,
-            "avg_failure_rate": total_failures / total_executions if total_executions > 0 else 0.0,
-            "avg_detection_latency": detection_stats["avg"],
-            "avg_detection_latency_ms": detection_stats["avg"] * 1000,
-            "avg_recovery_rate": sum(m.recovery_rate for m in all_metrics) / len(all_metrics),
-            "detection_latency_stats": detection_stats,
-            "failure_by_reason": failure_by_reason,
-            "circuit_breaker_status": {
-                "total_opens": total_circuit_opens,
-                "agents_with_open_circuits": agents_with_circuits,
-                "affected_agent_count": len(agents_with_circuits),
-            },
-        }
 
 
 # Global singleton instance

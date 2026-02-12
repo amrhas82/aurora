@@ -5,19 +5,6 @@ These commands provide convenient Claude Code slash command integrations.
 """
 
 
-def get_command_template(command_name: str) -> str | None:
-    """Get the template for a specific command.
-
-    Args:
-        command_name: Name of the command (e.g., "init", "query")
-
-    Returns:
-        Template content or None if command not found
-
-    """
-    return COMMAND_TEMPLATES.get(command_name)
-
-
 def get_all_command_templates() -> dict[str, str]:
     """Get all available command templates.
 

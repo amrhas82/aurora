@@ -943,20 +943,6 @@ async def configure_mcp_servers(
     return created, updated, skipped, validation_warnings
 
 
-def get_mcp_capable_from_selection(tool_ids: list[str]) -> list[str]:
-    """Filter tool IDs to only those that support MCP.
-
-    Args:
-        tool_ids: List of all selected tool IDs
-
-    Returns:
-        List of tool IDs that have MCP support
-
-    """
-    from aurora_cli.configurators.mcp import MCPConfigRegistry
-
-    return [tid for tid in tool_ids if MCPConfigRegistry.supports_mcp(tid)]
-
 
 def detect_claude_hooks(project_path: Path) -> dict[str, bool]:
     """Detect if Claude Code hooks are configured.

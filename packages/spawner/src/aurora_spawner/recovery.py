@@ -311,18 +311,6 @@ class RecoveryStateMachine:
         self._task_states[task_id] = state
         return state
 
-    def get_task_state(self, task_id: str) -> TaskRecoveryState | None:
-        """Get recovery state for a task.
-
-        Args:
-            task_id: Task identifier
-
-        Returns:
-            TaskRecoveryState or None if not found
-
-        """
-        return self._task_states.get(task_id)
-
     def check_circuit_breaker(self, _task_id: str, agent_id: str) -> tuple[bool, str | None]:
         """Check if circuit breaker allows execution.
 
@@ -382,9 +370,6 @@ class RecoveryStateMachine:
             "tasks": {task_id: state.to_dict() for task_id, state in self._task_states.items()},
         }
 
-    def clear(self) -> None:
-        """Clear all task states."""
-        self._task_states.clear()
 
 
 class ErrorCategory(Enum):
@@ -491,17 +476,6 @@ class ErrorClassifier:
             ErrorCategory.UNKNOWN,
         )
 
-    def add_pattern(self, category: ErrorCategory, pattern: str) -> None:
-        """Add a custom error pattern.
-
-        Args:
-            category: Category to add pattern to
-            pattern: Regex pattern to match
-
-        """
-        if category not in self.patterns:
-            self.patterns[category] = []
-        self.patterns[category].append(pattern)
 
 
 @dataclass
@@ -510,9 +484,8 @@ class RecoveryMetrics:
 
     Example:
         >>> metrics = RecoveryMetrics()
-        >>> metrics.record_attempt("agent-1", success=True, retries=2)
         >>> metrics.success_rate("agent-1")
-        100.0
+        0.0
 
     """
 
@@ -526,48 +499,6 @@ class RecoveryMetrics:
 
     # Error category tracking
     _errors_by_category: dict[str, dict[ErrorCategory, int]] = field(default_factory=dict)
-
-    def record_attempt(
-        self,
-        agent_id: str,
-        success: bool,
-        retries: int = 0,
-        used_fallback: bool = False,
-        recovery_time: float = 0.0,
-        error_category: ErrorCategory | None = None,
-    ) -> None:
-        """Record a recovery attempt.
-
-        Args:
-            agent_id: Agent identifier
-            success: Whether task ultimately succeeded
-            retries: Number of retry attempts
-            used_fallback: Whether fallback was used
-            recovery_time: Total recovery time in seconds
-            error_category: Category of error if failed
-
-        """
-        self._attempts[agent_id] = self._attempts.get(agent_id, 0) + 1
-        self._retries[agent_id] = self._retries.get(agent_id, 0) + retries
-
-        if success:
-            self._successes[agent_id] = self._successes.get(agent_id, 0) + 1
-        else:
-            self._failures[agent_id] = self._failures.get(agent_id, 0) + 1
-            if error_category:
-                if agent_id not in self._errors_by_category:
-                    self._errors_by_category[agent_id] = {}
-                self._errors_by_category[agent_id][error_category] = (
-                    self._errors_by_category[agent_id].get(error_category, 0) + 1
-                )
-
-        if used_fallback:
-            self._fallbacks[agent_id] = self._fallbacks.get(agent_id, 0) + 1
-
-        if recovery_time > 0:
-            if agent_id not in self._recovery_times:
-                self._recovery_times[agent_id] = []
-            self._recovery_times[agent_id].append(recovery_time)
 
     def success_rate(self, agent_id: str | None = None) -> float:
         """Get success rate percentage.
@@ -767,50 +698,6 @@ class RecoveryPolicy:
         """
         return self.agent_overrides.get(agent_id, self)
 
-    def with_override(self, agent_id: str, **kwargs: Any) -> "RecoveryPolicy":
-        """Create new policy with agent-specific override.
-
-        Args:
-            agent_id: Agent to override
-            **kwargs: Override values
-
-        Returns:
-            New RecoveryPolicy with override applied
-
-        """
-        # Create override policy
-        override_dict = {
-            "strategy": self.strategy,
-            "max_retries": self.max_retries,
-            "fallback_to_llm": self.fallback_to_llm,
-            "base_delay": self.base_delay,
-            "max_delay": self.max_delay,
-            "backoff_factor": self.backoff_factor,
-            "jitter": self.jitter,
-            "circuit_breaker_enabled": self.circuit_breaker_enabled,
-        }
-        override_dict.update(kwargs)
-        override = RecoveryPolicy(**override_dict)
-
-        # Copy current policy with new override
-        new_overrides = dict(self.agent_overrides)
-        new_overrides[agent_id] = override
-
-        return RecoveryPolicy(
-            strategy=self.strategy,
-            max_retries=self.max_retries,
-            fallback_to_llm=self.fallback_to_llm,
-            base_delay=self.base_delay,
-            max_delay=self.max_delay,
-            backoff_factor=self.backoff_factor,
-            jitter=self.jitter,
-            circuit_breaker_enabled=self.circuit_breaker_enabled,
-            on_retry=self.on_retry,
-            on_fallback=self.on_fallback,
-            on_recovery_failed=self.on_recovery_failed,
-            agent_overrides=new_overrides,
-        )
-
     def get_delay(self, attempt: int) -> float:
         """Calculate delay before retry attempt.
 
@@ -917,31 +804,6 @@ class RecoveryPolicy:
             )
 
         return presets[name]()
-
-    def should_retry_error(self, error_text: str) -> bool:
-        """Check if error is worth retrying based on classification.
-
-        Args:
-            error_text: Error message to evaluate
-
-        Returns:
-            True if error is retriable
-
-        """
-        category = self.error_classifier.classify(error_text)
-        return self.error_classifier.should_retry(category)
-
-    def classify_error(self, error_text: str) -> ErrorCategory:
-        """Classify an error message.
-
-        Args:
-            error_text: Error message to classify
-
-        Returns:
-            ErrorCategory
-
-        """
-        return self.error_classifier.classify(error_text)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation."""

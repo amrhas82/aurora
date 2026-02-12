@@ -81,11 +81,6 @@ __all__ = [
     "AGGRESSIVE_DECAY",
     "MODERATE_DECAY",
     "GENTLE_DECAY",
-    # Graph caching
-    "RelationshipProvider",
-    "GraphCacheConfig",
-    "RelationshipGraphCache",
-    "CachedSpreadingActivation",
     # Configuration
     "ActivationConfig",
 ]
@@ -115,12 +110,6 @@ from .engine import (
     ActivationComponents,
     ActivationConfig,
     ActivationEngine,
-)
-from .graph_cache import (
-    CachedSpreadingActivation,
-    GraphCacheConfig,
-    RelationshipGraphCache,
-    RelationshipProvider,
 )
 from .retrieval import (
     ActivationRetriever,

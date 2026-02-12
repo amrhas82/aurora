@@ -203,7 +203,7 @@ class TestSpawnSequential:
         async def mock_spawn(task, **kwargs):
             execution_order.append(task.prompt)
             return SpawnResult(
-                success=True, output=f"result", error=None, exit_code=0
+                success=True, output="result", error=None, exit_code=0
             )
 
         with patch("aurora_spawner.spawner.spawn", side_effect=mock_spawn):

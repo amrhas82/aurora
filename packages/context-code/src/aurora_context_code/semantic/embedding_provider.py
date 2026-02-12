@@ -296,15 +296,6 @@ class EmbeddingProvider:
         assert self._model is not None
         return self._model
 
-    def is_model_loaded(self) -> bool:
-        """Check if the model has been loaded.
-
-        Returns:
-            True if model is loaded, False if still lazy (not yet loaded)
-
-        """
-        return self._model is not None
-
     def preload_model(self) -> None:
         """Explicitly load the model (for pre-warming in background threads).
 

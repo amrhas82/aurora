@@ -39,60 +39,6 @@ RETRIEVAL_BUDGETS = {
     "CRITICAL": 20,
 }
 
-# Activation threshold for high-quality chunks
-# Chunks with activation >= this threshold are considered high-quality
-ACTIVATION_THRESHOLD = 0.3
-
-
-def filter_by_activation(chunks: list[Any], store: Store | None = None) -> tuple[list[Any], int]:
-    """Filter chunks by activation threshold and count high-quality chunks.
-
-    Args:
-        chunks: List of chunks to filter (CodeChunk or ReasoningChunk objects)
-        store: Optional Store instance to query activation scores
-
-    Returns:
-        Tuple of (all_chunks, high_quality_count) where:
-            - all_chunks: All chunks (unchanged, for backward compatibility)
-            - high_quality_count: Count of chunks with activation >= ACTIVATION_THRESHOLD
-
-    """
-    high_quality_count = 0
-
-    if not chunks:
-        return chunks, 0
-
-    # If we have a store, query activation scores from the database
-    if store is not None:
-        for chunk in chunks:
-            try:
-                # Query the activations table for this chunk's base_level
-                # SQLiteStore has a _get_connection method but it's internal
-                # We'll use get_activation if available, or fall back to attribute check
-                if hasattr(store, "get_activation"):
-                    activation = store.get_activation(chunk.id)
-                else:
-                    # Fallback: check if chunk has activation attribute
-                    activation = getattr(chunk, "activation", 0.0)
-            except Exception:
-                # If we can't get activation, assume 0.0
-                activation = 0.0
-
-            if activation is not None and activation >= ACTIVATION_THRESHOLD:
-                high_quality_count += 1
-    else:
-        # Fallback: try to get activation from chunk attributes
-        for chunk in chunks:
-            activation = getattr(chunk, "activation", 0.0)
-            if activation is None:
-                activation = 0.0
-
-            if activation >= ACTIVATION_THRESHOLD:
-                high_quality_count += 1
-
-    return chunks, high_quality_count
-
-
 def retrieve_context(query: str, complexity: str, store: Store) -> dict[str, Any]:
     """Retrieve relevant context from memory using hybrid retrieval.
 

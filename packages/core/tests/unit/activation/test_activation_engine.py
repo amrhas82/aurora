@@ -377,7 +377,7 @@ class TestActivationEngineExplain:
         assert explanation["context_details"]["matching_keywords"] == ["database", "optimize"]
         assert explanation["context_details"]["overlap_fraction"] == pytest.approx(1.0, abs=0.01)
 
-        assert "days_since_access" in explanation["decay_details"]
+        assert "penalty" in explanation["decay_details"]
 
     def test_explain_activation_partial_components(self):
         """Test explaining activation with only some components enabled."""

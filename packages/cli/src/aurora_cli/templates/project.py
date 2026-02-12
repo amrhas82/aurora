@@ -37,11 +37,3 @@ PROJECT_TEMPLATE = """# Project Context
 """
 
 
-def get_project_template() -> str:
-    """Get the project.md template.
-
-    Returns:
-        project.md template string
-
-    """
-    return PROJECT_TEMPLATE

@@ -351,8 +351,8 @@ class ActivationEngine:
 
         if self.config.enable_decay and last_access:
             enabled_components.append("decay")
-            decay_explanation = self.decay_calculator.explain_decay(last_access, current_time)
-            explanation["decay_details"] = decay_explanation
+            decay_value = self.decay_calculator.calculate(last_access, current_time)
+            explanation["decay_details"] = {"penalty": decay_value}
 
         return explanation
 

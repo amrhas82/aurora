@@ -9,8 +9,9 @@ import sys
 from collections import defaultdict
 from dataclasses import dataclass
 
-from aurora_soar.phases.assess import ComplexityAssessor
 from test_corpus_assess import TEST_CORPUS
+
+from aurora_soar.phases.assess import ComplexityAssessor
 
 
 @dataclass

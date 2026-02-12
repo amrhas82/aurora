@@ -411,17 +411,6 @@ class CircuitBreaker:
             or circuit.state == CircuitState.HALF_OPEN,
         }
 
-    def get_status(self) -> dict[str, dict]:
-        """Get status of all circuits with enhanced metrics.
-
-        Returns:
-            Dict mapping agent_id to circuit status
-
-        """
-        return {
-            agent_id: self.get_health_status(agent_id)
-            for agent_id, circuit in self._circuits.items()
-        }
 
 
 # Module-level singleton

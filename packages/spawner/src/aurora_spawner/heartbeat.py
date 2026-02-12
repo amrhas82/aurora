@@ -37,20 +37,6 @@ class HeartbeatEvent:
     message: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
-    def elapsed_since(self, start_time: float) -> float:
-        """Get elapsed time since start in seconds."""
-        return self.timestamp - start_time
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary representation."""
-        return {
-            "event_type": self.event_type.value,
-            "timestamp": self.timestamp,
-            "task_id": self.task_id,
-            "agent_id": self.agent_id,
-            "message": self.message,
-            "metadata": self.metadata,
-        }
 
 
 class HeartbeatEmitter:

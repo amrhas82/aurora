@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 
 from aurora_core.chunks import CodeChunk
-from aurora_core.store.connection_pool import clear_connection_pool
+from aurora_core.store.connection_pool import get_connection_pool
 from aurora_core.store.sqlite import SQLiteStore
 
 
@@ -50,12 +50,12 @@ def benchmark_store_creation(iterations=10):
         max_with_pool = max(times_with_pool)
 
         # Clear pool to test without caching
-        clear_connection_pool()
+        get_connection_pool().clear_pool()
 
         # Benchmark without connection pool (fresh each time)
         times_without_pool = []
         for i in range(iterations):
-            clear_connection_pool(str(db_path))  # Clear before each
+            get_connection_pool().clear_pool(str(db_path))  # Clear before each
             start = time.perf_counter()
             s = SQLiteStore(str(db_path))
             _ = s.get_chunk("chunk-0")  # Force connection
@@ -113,12 +113,12 @@ def benchmark_deferred_init():
         )
         store.save_chunk(chunk)
         store.close()
-        clear_connection_pool()
+        get_connection_pool().clear_pool()
 
         # Measure __init__ time only (before deferred init optimization)
         init_times = []
         for _ in range(iterations):
-            clear_connection_pool(str(db_path))
+            get_connection_pool().clear_pool(str(db_path))
             start = time.perf_counter()
             s = SQLiteStore(str(db_path))
             init_time = (time.perf_counter() - start) * 1000
@@ -134,7 +134,7 @@ def benchmark_deferred_init():
         # Measure first DB access time
         access_times = []
         for _ in range(iterations):
-            clear_connection_pool(str(db_path))
+            get_connection_pool().clear_pool(str(db_path))
             s = SQLiteStore(str(db_path))
             start = time.perf_counter()
             _ = s.get_chunk("test")  # First DB access triggers schema init

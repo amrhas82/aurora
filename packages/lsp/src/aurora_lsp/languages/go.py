@@ -48,6 +48,45 @@ GO_NESTED_PATTERNS = {
     "_*",
 }
 
+GO_CALLBACK_METHODS = {
+    # goroutine/defer patterns
+    "Go", "AfterFunc",
+    # HTTP handlers
+    "HandleFunc", "Handle", "HandlerFunc",
+    "Get", "Post", "Put", "Delete", "Patch",  # router methods (gin, chi, echo)
+    "Use",  # middleware
+    "Group",
+    # sync primitives
+    "Once",  # sync.Once.Do
+    "Do",
+    # testing
+    "Run",  # t.Run subtests
+    "Cleanup",  # t.Cleanup
+    # channel/goroutine patterns
+    "WithCancel", "WithTimeout", "WithDeadline", "WithValue",
+    # common callback-taking functions
+    "Walk", "WalkDir",  # filepath.Walk
+    "Sort",  # sort.Slice
+    "Map",
+}
+
+# Interface method names and framework patterns that are not dead code
+GO_SKIP_DEADCODE_NAMES = {
+    # Common interface implementations
+    "ServeHTTP", "String", "Error", "Unwrap",
+    "MarshalJSON", "UnmarshalJSON",
+    "MarshalText", "UnmarshalText",
+    "MarshalBinary", "UnmarshalBinary",
+    "Scan", "Value",  # sql.Scanner / driver.Valuer
+    "Close", "Read", "Write", "Flush",
+    "Len", "Less", "Swap",  # sort.Interface
+    # Lifecycle hooks
+    "Setup", "Teardown",
+    "BeforeEach", "AfterEach",
+    # gRPC
+    "Register", "RegisterServer",
+}
+
 GO_IMPORT_PATTERNS = [
     r"^\s*import\s+",
     r"^\s*import\s*\(",
@@ -87,6 +126,8 @@ GO = LanguageConfig(
     entry_patterns=GO_ENTRY_PATTERNS,
     entry_decorators=GO_ENTRY_DECORATORS,
     nested_patterns=GO_NESTED_PATTERNS,
+    callback_methods=GO_CALLBACK_METHODS,
+    skip_deadcode_names=GO_SKIP_DEADCODE_NAMES,
     import_patterns=GO_IMPORT_PATTERNS,
     call_node_type="call_expression",
     function_def_types=GO_FUNCTION_DEF_TYPES,

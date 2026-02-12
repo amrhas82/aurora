@@ -1002,10 +1002,10 @@ class HybridRetriever:
             chunk: Chunk object
 
         Returns:
-            Content string (signature + docstring + name for CodeChunk)
+            Content string combining all available text fields for richer matching.
 
         """
-        # For CodeChunk: combine signature, docstring, and name
+        # For CodeChunk: combine all available text fields
         if hasattr(chunk, "signature"):
             parts = []
             if getattr(chunk, "name", None):
@@ -1014,6 +1014,14 @@ class HybridRetriever:
                 parts.append(chunk.signature)
             if getattr(chunk, "docstring", None):
                 parts.append(chunk.docstring)
+            # Include dependencies as keywords (e.g. "getDocument", "FTS5")
+            deps = getattr(chunk, "dependencies", None)
+            if deps and isinstance(deps, list):
+                parts.extend(deps)
+            # Include file path for context (e.g. "store.js" → "store")
+            file_path = getattr(chunk, "file_path", None)
+            if file_path:
+                parts.append(file_path)
             return " ".join(parts) if parts else ""
         # For other chunk types, use to_json() content
         chunk_json = chunk.to_json() if hasattr(chunk, "to_json") else {}
@@ -1451,19 +1459,3 @@ class HybridRetriever:
             logger.warning(f"Failed to load chunks for BM25 index: {e}")
         return documents
 
-    def invalidate_bm25_index(self) -> None:
-        """Invalidate the current BM25 index (call after reindexing).
-
-        This clears the in-memory index and removes the persistent file,
-        forcing a rebuild on next search or explicit build_and_save_bm25_index call.
-        """
-        self.bm25_scorer = None
-        self._bm25_index_loaded = False
-
-        index_path = self._get_bm25_index_path()
-        if index_path and index_path.exists():
-            try:
-                index_path.unlink()
-                logger.debug(f"Removed stale BM25 index at {index_path}")
-            except OSError as e:
-                logger.warning(f"Failed to remove BM25 index: {e}")

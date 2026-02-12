@@ -417,8 +417,78 @@ Final Score = BM25 × 0.3 + Semantic × 0.4 + Activation × 0.3
 
 ---
 
+## Adding a New Language
+
+When adding support for a new language, follow this checklist. Each layer is independent
+but they build on each other — indexing works without LSP, but LSP tools need indexing first.
+
+### Layer 1: Tree-sitter Indexing (required)
+
+1. **Add parser** in `packages/context-code/src/aurora_context_code/languages/`
+   - Implement `CodeParser` with `can_parse()` and `parse()`
+   - Install tree-sitter grammar: `pip install tree-sitter-<language>`
+   - Extract functions, classes, methods with signatures and docstrings
+   - Register parser in `__init__.py`
+
+2. **Add language config** in `packages/lsp/src/aurora_lsp/languages/`
+   - Define branch types (for complexity), entry points, callback methods
+   - Define `skip_deadcode_names` for framework-specific patterns
+   - Define `function_def_types` and `call_node_type` for tree-sitter queries
+
+3. **Update chunk types** in `packages/core/src/aurora_core/chunk_types.py`
+   - Add file extensions to `EXTENSION_TYPE_MAP`
+
+4. **Warning filter** uses parent logger `aurora_context_code.languages` — covers all
+   parsers automatically, no extra work needed.
+
+### Layer 2: LSP Language Config (required for lsp tools)
+
+1. **Add language mapping** in `packages/lsp/src/aurora_lsp/client.py`
+   - Map file extensions to `Language.*` enum in `LANGUAGE_MAP`
+
+2. **Add import filter patterns** in `packages/lsp/src/aurora_lsp/filters.py`
+   - Define regex patterns to filter import lines from reference results
+
+### Layer 3: LSP Language Server (needed for accurate results)
+
+This is the gap for JS/TS/Go/Rust/Java today. Without this, `impact`, `related`,
+and accurate `deadcode` fall back to ripgrep text search.
+
+1. **Verify language server binary** is installed and in PATH
+   - Python: `pylsp` or `pyright` (multilspy handles this)
+   - JS/TS: `typescript-language-server` (needs `npm install -g typescript-language-server typescript`)
+   - Go: `gopls`
+   - Java: `jdtls`
+
+2. **Test that multilspy starts the server** for your language
+   - Check logs: `Starting <LANGUAGE> language server for <workspace>`
+   - If startup fails, errors are logged at WARNING level
+
+### Common Mistakes (learned from JS/TS testing)
+
+| Mistake | What Happens | Fix |
+|---------|-------------|-----|
+| Only wiring tree-sitter + ripgrep fallback, not the actual LSP server | `impact` returns 1 file instead of 6, `related` returns 0 calls | Install and verify the language server binary |
+| Not adding timer/scheduler callbacks to `JS_CALLBACK_METHODS` | `setInterval(fn, 1000)` callbacks flagged as dead code | Add `setTimeout`, `setInterval`, `setImmediate`, `requestAnimationFrame` |
+| Not adding framework event patterns to `JS_SKIP_DEADCODE_NAMES` | `bot.on('message', handler)` → handler flagged dead | Add framework-specific callback names |
+| Missing `skip_names` for built-in methods | Callee analysis (`related`) returns noisy results with `console.log`, `Array.push` | Add language built-ins to `JS_SKIP_NAMES` |
+| BM25 content too sparse for languages without docstrings | Descriptive queries like "DocumentStore search FTS5" return 0 results | Include `dependencies` and `file_path` in BM25 content |
+| Silent LSP failures (debug-level logging) | User sees empty results with no explanation | Log server startup failures at WARNING, empty references at INFO |
+| Not testing with a real project | Unit tests pass but real-world results are wrong | Test with a real project; check `mem_search`, `lsp impact`, `lsp related`, `lsp deadcode` |
+
+### Effort Estimate
+
+| Layer | Effort | Result |
+|-------|--------|--------|
+| Tree-sitter indexing | 1-2 days | `mem_search` works, basic `lsp check` via ripgrep |
+| LSP language config | 0.5 day | `lsp deadcode` (fast mode), `lsp imports` |
+| LSP language server | 2-3 days | Full `lsp impact`, `lsp related`, accurate `lsp deadcode` |
+
+---
+
 ## See Also
 
 - [ACTR_ACTIVATION.md](ACTR_ACTIVATION.md) - Activation scoring details
 - [ML_MODELS.md](ML_MODELS.md) - Embedding model configuration
 - [CACHING_GUIDE.md](CACHING_GUIDE.md) - Query caching strategies
+- [/docs/lsp/JS_IMPROVEMENTS.md](/docs/lsp/JS_IMPROVEMENTS.md) - JS-specific LSP improvements plan

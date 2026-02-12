@@ -56,6 +56,38 @@ JS_NESTED_PATTERNS = {
     "_*",
 }
 
+JS_CALLBACK_METHODS = {
+    "map", "filter", "sort", "reduce", "forEach", "find", "findIndex",
+    "some", "every", "flatMap", "then", "catch", "finally",
+    "transaction", "on", "once", "addEventListener",
+    "removeEventListener", "subscribe", "pipe",
+    # Timer/scheduler callbacks
+    "setTimeout", "setInterval", "setImmediate",
+    "requestAnimationFrame", "requestIdleCallback",
+    # Node.js process events
+    "nextTick",
+}
+
+# Object literal method names consumed by frameworks (not user-callable dead code)
+# React Query, Express, fetch API, testing libs, etc.
+JS_SKIP_DEADCODE_NAMES = {
+    # React Query / TanStack Query
+    "queryFn", "mutationFn", "onSuccess", "onError", "onSettled", "onMutate",
+    "retry", "retryDelay", "enabled", "refetchInterval", "refetchOnWindowFocus",
+    "select", "initialData", "placeholderData", "staleTime",
+    # Fetch / HTTP config
+    "headers", "body", "params", "data", "transformResponse", "transformRequest",
+    "validateStatus",
+    # Testing (Jest, Vitest)
+    "beforeAll", "beforeEach", "afterAll", "afterEach",
+    # Event handlers commonly defined as object methods
+    "onSubmit", "onChange", "onClick", "onBlur", "onFocus",
+    "onKeyDown", "onKeyUp", "onKeyPress", "onInput",
+    # Common config patterns
+    "render", "setup", "cleanup", "validate", "format",
+    "compareFn", "sortFn", "filterFn",
+}
+
 JS_IMPORT_PATTERNS = [
     r"^\s*import\s+",
     r"^\s*import\s*\{",
@@ -150,6 +182,8 @@ JAVASCRIPT = LanguageConfig(
     entry_patterns=JS_ENTRY_PATTERNS,
     entry_decorators=JS_ENTRY_DECORATORS,
     nested_patterns=JS_NESTED_PATTERNS,
+    callback_methods=JS_CALLBACK_METHODS,
+    skip_deadcode_names=JS_SKIP_DEADCODE_NAMES,
     import_patterns=JS_IMPORT_PATTERNS,
     call_node_type="call_expression",
     function_def_types=JS_FUNCTION_DEF_TYPES,

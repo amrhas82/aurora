@@ -81,6 +81,45 @@ JAVA_NESTED_PATTERNS = {
     "lambda$*",
 }
 
+JAVA_CALLBACK_METHODS = {
+    # Collections/Streams
+    "map", "filter", "flatMap", "forEach", "reduce",
+    "collect", "sorted", "peek", "anyMatch", "allMatch", "noneMatch",
+    "findFirst", "findAny",
+    # CompletableFuture
+    "thenApply", "thenAccept", "thenRun", "thenCompose",
+    "whenComplete", "handle", "exceptionally",
+    "thenApplyAsync", "thenAcceptAsync", "thenRunAsync",
+    # Optional
+    "ifPresent", "orElseGet", "orElseThrow",
+    # Threading
+    "submit", "execute", "schedule", "scheduleAtFixedRate",
+    "scheduleWithFixedDelay",
+    # Event listeners
+    "addListener", "addEventListener", "addObserver",
+    "setOnClickListener", "setOnAction",
+    # Common callback patterns
+    "registerCallback", "setCallback", "addCallback",
+    "subscribe", "on",
+}
+
+# Framework/interface methods that are not dead code
+JAVA_SKIP_DEADCODE_NAMES = {
+    # Spring lifecycle
+    "afterPropertiesSet", "destroy", "onApplicationEvent",
+    # Serialization
+    "readObject", "writeObject", "readResolve", "writeReplace",
+    # JPA/Hibernate lifecycle
+    "prePersist", "postPersist", "preUpdate", "postUpdate",
+    "preRemove", "postRemove", "postLoad",
+    # Common interface implementations
+    "compareTo", "compare", "accept", "apply", "test", "get", "supply",
+    "onSuccess", "onFailure", "onError", "onComplete",
+    # Android lifecycle
+    "onCreate", "onStart", "onResume", "onPause", "onStop", "onDestroy",
+    "onCreateView", "onViewCreated",
+}
+
 JAVA_IMPORT_PATTERNS = [
     r"^\s*import\s+",
     r"^\s*import\s+static\s+",
@@ -132,6 +171,8 @@ JAVA = LanguageConfig(
     entry_patterns=JAVA_ENTRY_PATTERNS,
     entry_decorators=JAVA_ENTRY_DECORATORS,
     nested_patterns=JAVA_NESTED_PATTERNS,
+    callback_methods=JAVA_CALLBACK_METHODS,
+    skip_deadcode_names=JAVA_SKIP_DEADCODE_NAMES,
     import_patterns=JAVA_IMPORT_PATTERNS,
     call_node_type="method_invocation",
     function_def_types=JAVA_FUNCTION_DEF_TYPES,

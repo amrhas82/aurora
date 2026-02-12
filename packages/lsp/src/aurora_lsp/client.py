@@ -112,17 +112,25 @@ class AuroraLSPClient:
                 # Create config
                 config = MultilspyConfig(code_language=lang)
 
-                logger.debug(f"Starting {lang_key} language server for {self.workspace}")
+                logger.info(f"Starting {lang_key} language server for {self.workspace}")
 
-                # Create server (sync)
-                server = LanguageServer.create(config, self._logger, str(self.workspace))
+                try:
+                    # Create server (sync)
+                    server = LanguageServer.create(config, self._logger, str(self.workspace))
 
-                # Start server (async context manager)
-                ctx = server.start_server()
-                await ctx.__aenter__()
+                    # Start server (async context manager)
+                    ctx = server.start_server()
+                    await ctx.__aenter__()
 
-                self._servers[lang_key] = server
-                self._contexts[lang_key] = ctx
+                    self._servers[lang_key] = server
+                    self._contexts[lang_key] = ctx
+                    logger.info(f"Started {lang_key} language server successfully")
+                except Exception as e:
+                    logger.warning(
+                        f"Failed to start {lang_key} language server: {e}. "
+                        f"LSP features (impact, related, deadcode) will fall back to ripgrep."
+                    )
+                    raise
 
             return self._servers[lang_key]
 
@@ -155,10 +163,15 @@ class AuroraLSPClient:
 
         try:
             refs = await server.request_references(rel_path, line, col)
-            return self._normalize_locations(refs)
+            normalized = self._normalize_locations(refs)
+            if not normalized:
+                logger.info(
+                    f"LSP returned 0 references for {rel_path}:{line}:{col} "
+                    f"(language server may not fully support this file type)"
+                )
+            return normalized
         except Exception as e:
-            # Debug level - this is expected for some symbols (bad positions, non-referenceable)
-            logger.debug(f"request_references failed: {e}")
+            logger.warning(f"request_references failed for {rel_path}:{line}:{col}: {e}")
             return []
 
     async def request_definition(

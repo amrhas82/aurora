@@ -22,7 +22,7 @@
 - Core systems: Schemas, Validation, Parsers, Commands (archive/update/list/view/init)
 - Templates: AGENTS.md, project.md
 - Slash commands: `/openspec:*` for Claude Code
-- **Repository**: `https://github.com/amrhas82/OpenSpec` branch `refactored`
+- **Repository**: `https://github.com/hamr0/OpenSpec` branch `refactored`
 
 ### ❌ Missing (Critical Gaps)
 1. **Slash commands for aur**: No `/aur:query`, `/aur:plan`, `/aur:implement`

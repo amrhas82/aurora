@@ -3,7 +3,7 @@
 **PRD Reference**: `/home/hamr/PycharmProjects/aurora/tasks/0017-prd-aurora-planning-system.md` Section 11
 **Phase**: 0.5 (Pre-requisite for revised Phase 1-3)
 **Status**: ✅ COMPLETE
-**Fork**: https://github.com/amrhas82/OpenSpec
+**Fork**: https://github.com/hamr0/OpenSpec
 **Branch**: `refactored`
 **Working Directory**: `/tmp/openspec-source/`
 **Detailed Report**: `/tmp/openspec-source/PORT_REPORT.md`
@@ -46,8 +46,8 @@ Port OpenSpec TypeScript to Python (Aurora), keeping detailed documentation of w
 
 ### Phase 0: Setup ✅ COMPLETE
 
-- [x] 0.1 Fork OpenSpec repo to https://github.com/amrhas82/OpenSpec
-- [x] 0.2 Clone forked repo: `git clone https://github.com/amrhas82/OpenSpec /tmp/openspec-source`
+- [x] 0.1 Fork OpenSpec repo to https://github.com/hamr0/OpenSpec
+- [x] 0.2 Clone forked repo: `git clone https://github.com/hamr0/OpenSpec /tmp/openspec-source`
 - [x] 0.3 Create `refactored` branch: `git checkout -b refactored`
 - [x] 0.4 Create PORT_REPORT.md with detailed tracking
 - [x] 0.5 Create Python package structure (`aurora/`)
@@ -360,7 +360,7 @@ Port OpenSpec TypeScript to Python (Aurora), keeping detailed documentation of w
 - [x] 14.3 Create `API_REFERENCE.md` - All public APIs and their usage ✅
 - [x] 14.4 Commit: `445a8d4 feat: complete OpenSpec → Aurora port (Phase 14 - Final)` ✅
 - [x] 14.5 Push: `git push origin refactored` - already up-to-date ✅
-- [x] 14.6 Verify on GitHub - branch at https://github.com/amrhas82/OpenSpec/tree/refactored ✅
+- [x] 14.6 Verify on GitHub - branch at https://github.com/hamr0/OpenSpec/tree/refactored ✅
 
 ---
 

@@ -83,7 +83,7 @@ This distinction is **not available** from grep or basic text search.
 
 ### JavaScript Testing (liteagents)
 
-Tested against https://github.com/amrhas82/liteagents (10 files):
+Tested against https://github.com/hamr0/liteagents (10 files):
 
 | Metric | Value |
 |--------|-------|
@@ -101,7 +101,7 @@ Sample results:
 
 ### TypeScript Testing (OpenSpec)
 
-Tested against https://github.com/amrhas82/OpenSpec (10 files):
+Tested against https://github.com/hamr0/OpenSpec (10 files):
 
 | Metric | Value |
 |--------|-------|
@@ -334,8 +334,8 @@ python test_accuracy.py
 python test_references_accuracy.py
 
 # JavaScript/TypeScript testing (requires cloning repos)
-git clone https://github.com/amrhas82/liteagents /tmp/liteagents
-git clone https://github.com/amrhas82/OpenSpec /tmp/OpenSpec
+git clone https://github.com/hamr0/liteagents /tmp/liteagents
+git clone https://github.com/hamr0/OpenSpec /tmp/OpenSpec
 python test_js_ts_repos.py
 
 # Before/After comparison (grep vs LSP)

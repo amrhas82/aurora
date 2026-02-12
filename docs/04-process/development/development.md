@@ -4,7 +4,7 @@
 
 ### Quick Install (Editable)
 ```bash
-git clone https://github.com/amrhas82/aurora.git
+git clone https://github.com/hamr0/aurora.git
 cd aurora
 ./install.sh
 ```

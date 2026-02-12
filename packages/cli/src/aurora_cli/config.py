@@ -187,7 +187,9 @@ def save_config(config: dict[str, Any], path: str | Path | None = None) -> None:
 
 
 def validate_config(config: dict[str, Any]) -> list[str]:
-    """Validate configuration values.
+    """Validate configuration values against the schema.
+
+    Checks types, ranges, and enum constraints for all config sections.
 
     Args:
         config: Config dict to validate
@@ -198,26 +200,229 @@ def validate_config(config: dict[str, Any]) -> list[str]:
     """
     errors = []
 
-    # Escalation threshold
-    threshold = config.get("escalation", {}).get("threshold", 0.7)
-    if not 0.0 <= threshold <= 1.0:
-        errors.append(f"escalation.threshold must be 0.0-1.0, got {threshold}")
+    # -- Top-level keys --
+    known_sections = {
+        "version", "mode", "storage", "llm", "context", "activation",
+        "search", "escalation", "memory", "mcp", "budget", "agents",
+        "logging", "planning", "soar", "spawner", "proactive_health_checks",
+        "early_detection",
+    }
+    unknown = set(config.keys()) - known_sections
+    if unknown:
+        errors.append(f"Unknown top-level config sections: {sorted(unknown)}")
 
-    # LLM temperature
-    temp = config.get("llm", {}).get("temperature", 0.7)
-    if not 0.0 <= temp <= 2.0:
-        errors.append(f"llm.temperature must be 0.0-2.0, got {temp}")
+    # -- storage --
+    storage = config.get("storage", {})
+    if not isinstance(storage, dict):
+        errors.append("storage must be a dict")
+    else:
+        if "type" in storage and storage["type"] not in ("sqlite",):
+            errors.append(f"storage.type must be 'sqlite', got '{storage['type']}'")
+        if "max_connections" in storage:
+            val = storage["max_connections"]
+            if not isinstance(val, int) or val < 1:
+                errors.append(f"storage.max_connections must be a positive integer, got {val}")
+        if "timeout_seconds" in storage:
+            val = storage["timeout_seconds"]
+            if not isinstance(val, (int, float)) or val <= 0:
+                errors.append(f"storage.timeout_seconds must be positive, got {val}")
 
-    # Logging level
-    level = config.get("logging", {}).get("level", "INFO")
-    valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
-    if level not in valid_levels:
-        errors.append(f"logging.level must be one of {valid_levels}, got '{level}'")
+    # -- llm --
+    llm = config.get("llm", {})
+    if not isinstance(llm, dict):
+        errors.append("llm must be a dict")
+    else:
+        if "provider" in llm and llm["provider"] != "anthropic":
+            errors.append(f"llm.provider must be 'anthropic', got '{llm['provider']}'")
+        temp = llm.get("temperature", 0.7)
+        if not isinstance(temp, (int, float)) or not 0.0 <= temp <= 2.0:
+            errors.append(f"llm.temperature must be 0.0-2.0, got {temp}")
+        if "max_tokens" in llm:
+            val = llm["max_tokens"]
+            if not isinstance(val, int) or val < 1:
+                errors.append(f"llm.max_tokens must be a positive integer, got {val}")
+        if "timeout_seconds" in llm:
+            val = llm["timeout_seconds"]
+            if not isinstance(val, (int, float)) or val <= 0:
+                errors.append(f"llm.timeout_seconds must be positive, got {val}")
 
-    # Search score
-    score = config.get("search", {}).get("min_semantic_score", 0.7)
-    if not 0.0 <= score <= 1.0:
-        errors.append(f"search.min_semantic_score must be 0.0-1.0, got {score}")
+    # -- escalation --
+    escalation = config.get("escalation", {})
+    if not isinstance(escalation, dict):
+        errors.append("escalation must be a dict")
+    else:
+        threshold = escalation.get("threshold", 0.7)
+        if not isinstance(threshold, (int, float)) or not 0.0 <= threshold <= 1.0:
+            errors.append(f"escalation.threshold must be 0.0-1.0, got {threshold}")
+        if "force_mode" in escalation and escalation["force_mode"] is not None:
+            if escalation["force_mode"] not in ("direct", "aurora"):
+                errors.append(
+                    f"escalation.force_mode must be 'direct', 'aurora', or null, "
+                    f"got '{escalation['force_mode']}'"
+                )
+
+    # -- logging --
+    log = config.get("logging", {})
+    if not isinstance(log, dict):
+        errors.append("logging must be a dict")
+    else:
+        level = log.get("level", "INFO")
+        valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+        if level not in valid_levels:
+            errors.append(f"logging.level must be one of {valid_levels}, got '{level}'")
+        if "max_size_mb" in log:
+            val = log["max_size_mb"]
+            if not isinstance(val, (int, float)) or val <= 0:
+                errors.append(f"logging.max_size_mb must be positive, got {val}")
+        if "max_files" in log:
+            val = log["max_files"]
+            if not isinstance(val, int) or val < 1:
+                errors.append(f"logging.max_files must be a positive integer, got {val}")
+
+    # -- search --
+    search = config.get("search", {})
+    if not isinstance(search, dict):
+        errors.append("search must be a dict")
+    else:
+        score = search.get("min_semantic_score", 0.7)
+        if not isinstance(score, (int, float)) or not 0.0 <= score <= 1.0:
+            errors.append(f"search.min_semantic_score must be 0.0-1.0, got {score}")
+
+    # -- budget --
+    budget = config.get("budget", {})
+    if not isinstance(budget, dict):
+        errors.append("budget must be a dict")
+    else:
+        if "limit" in budget:
+            val = budget["limit"]
+            if not isinstance(val, (int, float)) or val < 0:
+                errors.append(f"budget.limit must be non-negative, got {val}")
+
+    # -- soar --
+    soar = config.get("soar", {})
+    if not isinstance(soar, dict):
+        errors.append("soar must be a dict")
+    else:
+        if "default_model" in soar:
+            if soar["default_model"] not in ("sonnet", "opus"):
+                errors.append(
+                    f"soar.default_model must be 'sonnet' or 'opus', got '{soar['default_model']}'"
+                )
+
+    # -- spawner --
+    spawner = config.get("spawner", {})
+    if not isinstance(spawner, dict):
+        errors.append("spawner must be a dict")
+    else:
+        if "max_concurrent" in spawner:
+            val = spawner["max_concurrent"]
+            if not isinstance(val, int) or val < 1:
+                errors.append(f"spawner.max_concurrent must be a positive integer, got {val}")
+        if "stagger_delay" in spawner:
+            val = spawner["stagger_delay"]
+            if not isinstance(val, (int, float)) or val < 0:
+                errors.append(f"spawner.stagger_delay must be non-negative, got {val}")
+
+    # -- memory --
+    memory = config.get("memory", {})
+    if not isinstance(memory, dict):
+        errors.append("memory must be a dict")
+    else:
+        if "chunk_size" in memory:
+            val = memory["chunk_size"]
+            if not isinstance(val, int) or val < 100:
+                errors.append(f"memory.chunk_size must be >= 100, got {val}")
+        if "overlap" in memory:
+            val = memory["overlap"]
+            if not isinstance(val, int) or val < 0:
+                errors.append(f"memory.overlap must be >= 0, got {val}")
+
+    # -- mcp --
+    mcp = config.get("mcp", {})
+    if not isinstance(mcp, dict):
+        errors.append("mcp must be a dict")
+    else:
+        if "max_results" in mcp:
+            val = mcp["max_results"]
+            if not isinstance(val, int) or val < 1:
+                errors.append(f"mcp.max_results must be a positive integer, got {val}")
+
+    # -- agents --
+    agents = config.get("agents", {})
+    if not isinstance(agents, dict):
+        errors.append("agents must be a dict")
+    else:
+        if "refresh_interval_days" in agents:
+            val = agents["refresh_interval_days"]
+            if not isinstance(val, int) or val < 1:
+                errors.append(f"agents.refresh_interval_days must be a positive integer, got {val}")
+        if "fallback_mode" in agents:
+            if agents["fallback_mode"] not in ("llm_only", "tool_only", "hybrid"):
+                errors.append(
+                    f"agents.fallback_mode must be 'llm_only', 'tool_only', or 'hybrid', "
+                    f"got '{agents['fallback_mode']}'"
+                )
+
+    # -- context.code.hybrid_weights --
+    context = config.get("context", {})
+    if isinstance(context, dict):
+        code = context.get("code", {})
+        if isinstance(code, dict):
+            weights = code.get("hybrid_weights", {})
+            if isinstance(weights, dict):
+                for wkey in ("activation", "semantic"):
+                    if wkey in weights:
+                        val = weights[wkey]
+                        if not isinstance(val, (int, float)) or not 0.0 <= val <= 1.0:
+                            errors.append(
+                                f"context.code.hybrid_weights.{wkey} must be 0.0-1.0, got {val}"
+                            )
+                if "top_k" in weights:
+                    val = weights["top_k"]
+                    if not isinstance(val, int) or val < 1:
+                        errors.append(
+                            f"context.code.hybrid_weights.top_k must be a positive integer, got {val}"
+                        )
+            if "max_file_size_kb" in code:
+                val = code["max_file_size_kb"]
+                if not isinstance(val, (int, float)) or val <= 0:
+                    errors.append(f"context.code.max_file_size_kb must be positive, got {val}")
+
+    # -- proactive_health_checks --
+    phc = config.get("proactive_health_checks", {})
+    if not isinstance(phc, dict):
+        errors.append("proactive_health_checks must be a dict")
+    else:
+        for key in ("check_interval", "no_output_threshold"):
+            if key in phc:
+                val = phc[key]
+                if not isinstance(val, (int, float)) or val <= 0:
+                    errors.append(f"proactive_health_checks.{key} must be positive, got {val}")
+        if "failure_threshold" in phc:
+            val = phc["failure_threshold"]
+            if not isinstance(val, int) or val < 1:
+                errors.append(
+                    f"proactive_health_checks.failure_threshold must be a positive integer, got {val}"
+                )
+
+    # -- early_detection --
+    ed = config.get("early_detection", {})
+    if not isinstance(ed, dict):
+        errors.append("early_detection must be a dict")
+    else:
+        for key in ("check_interval", "stall_threshold"):
+            if key in ed:
+                val = ed[key]
+                if not isinstance(val, (int, float)) or val <= 0:
+                    errors.append(f"early_detection.{key} must be positive, got {val}")
+        if "min_output_bytes" in ed:
+            val = ed["min_output_bytes"]
+            if not isinstance(val, int) or val < 0:
+                errors.append(f"early_detection.min_output_bytes must be non-negative, got {val}")
+        if "memory_limit_mb" in ed and ed["memory_limit_mb"] is not None:
+            val = ed["memory_limit_mb"]
+            if not isinstance(val, (int, float)) or val <= 0:
+                errors.append(f"early_detection.memory_limit_mb must be positive, got {val}")
 
     return errors
 

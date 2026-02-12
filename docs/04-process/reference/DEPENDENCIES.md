@@ -172,7 +172,7 @@ pip install -e .
 
 ```bash
 # Clone and install with dev dependencies
-git clone https://github.com/hamr/aurora.git
+git clone https://github.com/hamr0/aurora.git
 cd aurora
 pip install -e ".[dev]"
 

@@ -66,11 +66,11 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/hamr/aurora"
-Documentation = "https://github.com/hamr/aurora/blob/main/README.md"
-Repository = "https://github.com/hamr/aurora"
-Issues = "https://github.com/hamr/aurora/issues"
-Changelog = "https://github.com/hamr/aurora/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/hamr0/aurora"
+Documentation = "https://github.com/hamr0/aurora/blob/main/README.md"
+Repository = "https://github.com/hamr0/aurora"
+Issues = "https://github.com/hamr0/aurora/issues"
+Changelog = "https://github.com/hamr0/aurora/blob/main/CHANGELOG.md"
 
 [project.scripts]
 aur = "aurora_cli.main:cli"

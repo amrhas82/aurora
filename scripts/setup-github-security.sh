@@ -4,7 +4,7 @@
 
 set -e
 
-REPO="amrhas82/aurora"
+REPO="hamr0/aurora"
 BRANCH="main"
 
 echo "🔒 Configuring GitHub Security for $REPO"

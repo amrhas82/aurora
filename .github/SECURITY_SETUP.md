@@ -46,7 +46,7 @@ Configure these settings for the `main` branch via GitHub Settings → Branches 
 6. **Restrict who can push to matching branches**
    - ✅ Restrict pushes that create matching branches
    - Allowed actors:
-     - Repository owner (amrhas82)
+     - Repository owner (hamr0)
      - GitHub Actions (for automated releases)
 
 7. **Force push and deletions**
@@ -83,7 +83,7 @@ Configure via GitHub Settings → Security:
 ### 2. Access Control
 
 **Collaborators and Teams** (Settings → Collaborators):
-- Owner: `amrhas82` (admin access)
+- Owner: `hamr0` (admin access)
 - For CI/CD: Use GitHub Actions tokens (automatic)
 - For Claude Code: Use personal access tokens (PATs) with minimal scope
 
@@ -172,19 +172,19 @@ Create `.github/CODEOWNERS` to require specific reviewers:
 
 ```
 # Default owner for everything
-* @amrhas82
+* @hamr0
 
 # Critical configuration
-/.github/ @amrhas82
-/pyproject.toml @amrhas82
-/setup.py @amrhas82
+/.github/ @hamr0
+/pyproject.toml @hamr0
+/setup.py @hamr0
 
 # Security-sensitive code
-/packages/core/src/aurora_core/resilience/ @amrhas82
-/packages/cli/src/aurora_cli/ @amrhas82
+/packages/core/src/aurora_core/resilience/ @hamr0
+/packages/cli/src/aurora_cli/ @hamr0
 
 # MCP integration
-/src/aurora/mcp/ @amrhas82
+/src/aurora/mcp/ @hamr0
 ```
 
 ## Migration to Public Repository
@@ -231,7 +231,7 @@ Before making the repository public:
 
 ```bash
 # 1. Enable branch protection (via GitHub CLI)
-gh api repos/amrhas82/aurora/branches/main/protection \
+gh api repos/hamr0/aurora/branches/main/protection \
   --method PUT \
   --field required_status_checks[strict]=true \
   --field required_status_checks[contexts][]=quality-check \
@@ -244,20 +244,20 @@ gh api repos/amrhas82/aurora/branches/main/protection \
   --field allow_deletions=false
 
 # 2. Enable Dependabot
-gh api repos/amrhas82/aurora/automated-security-fixes \
+gh api repos/hamr0/aurora/automated-security-fixes \
   --method PUT
 
 # 3. Enable secret scanning
-gh api repos/amrhas82/aurora/secret-scanning \
+gh api repos/hamr0/aurora/secret-scanning \
   --method PUT \
   --field enabled=true
 
 # 4. Create CODEOWNERS file
 mkdir -p .github
 cat > .github/CODEOWNERS << 'EOF'
-* @amrhas82
-/.github/ @amrhas82
-/pyproject.toml @amrhas82
+* @hamr0
+/.github/ @hamr0
+/pyproject.toml @hamr0
 EOF
 
 # 5. Commit security configuration
@@ -315,13 +315,13 @@ Regular security checks:
 
 ```bash
 # Weekly: Review security alerts
-gh api repos/amrhas82/aurora/dependabot/alerts
+gh api repos/hamr0/aurora/dependabot/alerts
 
 # Monthly: Audit access
-gh api repos/amrhas82/aurora/collaborators
+gh api repos/hamr0/aurora/collaborators
 
 # Quarterly: Review branch protection
-gh api repos/amrhas82/aurora/branches/main/protection
+gh api repos/hamr0/aurora/branches/main/protection
 ```
 
 ## References

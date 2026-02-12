@@ -1,6 +1,6 @@
 # OpenSpec → Aurora Port Mapping
 
-**Source**: https://github.com/amrhas82/OpenSpec (v0.17.2)
+**Source**: https://github.com/hamr0/OpenSpec (v0.17.2)
 **Target**: Aurora Planning System (Python)
 **Created**: 2026-01-02
 

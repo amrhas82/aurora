@@ -38,7 +38,7 @@ git config --global commit.gpgsign true
 
 ### Step 3: Verify GitHub Settings
 
-Visit https://github.com/amrhas82/aurora/settings and check:
+Visit https://github.com/hamr0/aurora/settings and check:
 
 1. **Branches** → Add rule for `main`:
    - ✅ Require pull request (1 approval)
@@ -98,7 +98,7 @@ grep -r "api_key\|password\|token" . --include="*.py" --include="*.json" --inclu
 ```
 
 If all clear:
-1. Go to https://github.com/amrhas82/aurora/settings
+1. Go to https://github.com/hamr0/aurora/settings
 2. Scroll to "Danger Zone"
 3. Click "Change repository visibility"
 4. Select "Public"
@@ -123,7 +123,7 @@ If you need to bypass protection (emergency only):
 
 ```bash
 # 1. Temporarily disable admin enforcement
-gh api repos/amrhas82/aurora/branches/main/protection \
+gh api repos/hamr0/aurora/branches/main/protection \
   --method PUT \
   --field enforce_admins=false
 
@@ -131,7 +131,7 @@ gh api repos/amrhas82/aurora/branches/main/protection \
 git push origin main
 
 # 3. Re-enable immediately
-gh api repos/amrhas82/aurora/branches/main/protection \
+gh api repos/hamr0/aurora/branches/main/protection \
   --method PUT \
   --field enforce_admins=true
 
@@ -142,17 +142,17 @@ gh api repos/amrhas82/aurora/branches/main/protection \
 
 **Weekly**: Check security alerts
 ```bash
-gh api repos/amrhas82/aurora/dependabot/alerts
+gh api repos/hamr0/aurora/dependabot/alerts
 ```
 
 **Monthly**: Review access
 ```bash
-gh api repos/amrhas82/aurora/collaborators
+gh api repos/hamr0/aurora/collaborators
 ```
 
 **Quarterly**: Audit protection
 ```bash
-gh api repos/amrhas82/aurora/branches/main/protection
+gh api repos/hamr0/aurora/branches/main/protection
 ```
 
 ## 🆘 Troubleshooting
@@ -180,7 +180,7 @@ git config --global commit.gpgsign true
 ```
 
 ### "Cannot merge: code owner review required"
-You (amrhas82) must approve the PR through GitHub UI.
+You (hamr0) must approve the PR through GitHub UI.
 
 ## 📚 More Information
 

@@ -45,7 +45,7 @@ aur --version  # Should show 0.13.2
 pip uninstall aurora-actr
 
 # From source (development)
-git clone https://github.com/amrhas82/aurora.git
+git clone https://github.com/hamr0/aurora.git
 cd aurora && ./install.sh
 ```
 

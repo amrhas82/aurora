@@ -2,25 +2,25 @@
 # These owners will be automatically requested for review when someone opens a pull request
 
 # Default owner for everything
-* @amrhas82
+* @hamr0
 
 # Critical configuration files
-/.github/ @amrhas82
-/pyproject.toml @amrhas82
-/setup.py @amrhas82
-/Makefile @amrhas82
+/.github/ @hamr0
+/pyproject.toml @hamr0
+/setup.py @hamr0
+/Makefile @hamr0
 
 # Security-sensitive code
-/packages/core/src/aurora_core/resilience/ @amrhas82
-/packages/cli/src/aurora_cli/ @amrhas82
+/packages/core/src/aurora_core/resilience/ @hamr0
+/packages/cli/src/aurora_cli/ @hamr0
 
 # MCP integration (critical for external access)
-/src/aurora/mcp/ @amrhas82
+/src/aurora/mcp/ @hamr0
 
 # Documentation (maintain quality)
-/docs/ @amrhas82
-/README.md @amrhas82
-/CLAUDE.md @amrhas82
+/docs/ @hamr0
+/README.md @hamr0
+/CLAUDE.md @hamr0
 
 # Tests (ensure quality standards)
-/tests/ @amrhas82
+/tests/ @hamr0

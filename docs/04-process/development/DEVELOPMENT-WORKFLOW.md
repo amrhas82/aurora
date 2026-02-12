@@ -56,7 +56,7 @@ git commit --amend --no-edit
 git push origin main
 
 # CI will run automatically (~5-10 minutes)
-# Check status: https://github.com/amrhas82/aurora/actions
+# Check status: https://github.com/hamr0/aurora/actions
 ```
 
 ### 6. If CI Fails

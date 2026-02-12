@@ -326,7 +326,7 @@
   - [x] 10.3 Create Phase 2A PR with detailed description and benchmark results
     - tdd: no
     - verify: `git log --oneline feature/phase2a-type-errors-complexity | head -5`
-    - result: ✅ PR #4 created: https://github.com/amrhas82/aurora/pull/4 - Comprehensive PR with type fixes (23+), complexity reduction (5 functions), 89 new tests, quality metrics, and commit history
+    - result: ✅ PR #4 created: https://github.com/hamr0/aurora/pull/4 - Comprehensive PR with type fixes (23+), complexity reduction (5 functions), 89 new tests, quality metrics, and commit history
   - [x] 10.4 Update CODE_QUALITY_REPORT.md with Phase 2A results
     - tdd: no
     - verify: `grep "Phase 2A" /home/hamr/PycharmProjects/aurora/docs/CODE_QUALITY_REPORT.md`
@@ -466,7 +466,7 @@
   - [x] 15.3 Create Phase 2B PR with detailed description
     - tdd: no
     - verify: PR created
-    - result: ✅ PR #5 created: https://github.com/amrhas82/aurora/pull/5
+    - result: ✅ PR #5 created: https://github.com/hamr0/aurora/pull/5
   - [x] 15.4 Update CODE_QUALITY_REPORT.md with Phase 2B results
     - tdd: no
     - verify: `grep "Phase 2B" /home/hamr/PycharmProjects/aurora/docs/CODE_QUALITY_REPORT.md`

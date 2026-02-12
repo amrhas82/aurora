@@ -20,6 +20,11 @@ try:
     from multilspy.multilspy_logger import MultilspyLogger
 
     MULTILSPY_AVAILABLE = True
+
+    # Apply monkey-patches for TS cross-file references before any server starts
+    from aurora_lsp.multilspy_patches import apply_patches
+
+    apply_patches()
 except ImportError:
     MULTILSPY_AVAILABLE = False
     Language = None  # type: ignore
@@ -52,6 +57,7 @@ class AuroraLSPClient:
         self._servers: dict[str, Any] = {}  # Language -> server
         self._contexts: dict[str, Any] = {}  # Language -> context manager
         self._open_files: set[str] = set()  # Tracks opened files
+        self._file_contexts: dict[str, Any] = {}  # rel_path -> entered context manager
         self._lock = asyncio.Lock()
         self._logger: Any = None
         self._started = False
@@ -135,10 +141,16 @@ class AuroraLSPClient:
             return self._servers[lang_key]
 
     def _ensure_file_open(self, server: Any, file_path: str) -> None:
-        """Ensure file is opened in the server."""
+        """Ensure file is opened in the server.
+
+        open_file() is a @contextmanager — we must __enter__ it to actually
+        send didOpen.  We store the context so close() can __exit__ them.
+        """
         rel_path = self._to_relative(file_path)
         if rel_path not in self._open_files:
-            server.open_file(rel_path)
+            ctx = server.open_file(rel_path)
+            ctx.__enter__()
+            self._file_contexts[rel_path] = ctx
             self._open_files.add(rel_path)
 
     async def request_references(
@@ -265,7 +277,15 @@ class AuroraLSPClient:
     async def close(self) -> None:
         """Close all language server connections."""
         async with self._lock:
-            # Exit context managers
+            # Exit file contexts first (sends didClose for each open file)
+            for rel_path, ctx in self._file_contexts.items():
+                try:
+                    ctx.__exit__(None, None, None)
+                except Exception as e:
+                    logger.debug(f"Error closing file {rel_path}: {e}")
+            self._file_contexts.clear()
+
+            # Exit server context managers
             for lang_key, ctx in self._contexts.items():
                 try:
                     logger.info(f"Stopping {lang_key} language server")

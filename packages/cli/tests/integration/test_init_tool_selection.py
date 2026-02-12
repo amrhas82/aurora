@@ -126,7 +126,7 @@ class TestToolSelectionFullFlow:
         claude_dir = temp_project / ".claude" / "commands" / "aur"
         assert claude_dir.exists(), "Claude commands directory not created"
 
-        expected_commands = ["plan", "query", "search", "index", "init", "doctor", "agents"]
+        expected_commands = ["archive", "implement", "plan", "tasks"]
         for cmd in expected_commands:
             cmd_file = claude_dir / f"{cmd}.md"
             assert cmd_file.exists(), f"Claude command file {cmd}.md not created"
@@ -154,7 +154,7 @@ class TestToolSelectionFullFlow:
         cursor_dir = temp_project / ".cursor" / "commands"
         assert cursor_dir.exists(), "Cursor commands directory not created"
 
-        expected_commands = ["plan", "query", "search", "index", "init", "doctor", "agents"]
+        expected_commands = ["archive", "implement", "plan", "tasks"]
         for cmd in expected_commands:
             cmd_file = cursor_dir / f"aurora-{cmd}.md"
             assert cmd_file.exists(), f"Cursor command file aurora-{cmd}.md not created"
@@ -249,9 +249,9 @@ class TestToolSelectionFullFlow:
         if codex_prompts.exists():
             total_files += len(list(codex_prompts.glob("aurora-*.md")))
 
-        # Expect approximately 140 files (20 tools x 7 commands)
+        # Expect approximately 80 files (20 tools x 4 commands)
         # Note: Some tools may have slightly different numbers
-        assert total_files >= 100, f"Expected at least 100 files, got {total_files}"
+        assert total_files >= 60, f"Expected at least 60 files, got {total_files}"
 
     def test_init_tools_none_creates_no_tool_files(self, temp_project, runner):
         """aur init --tools=none creates no slash command files."""

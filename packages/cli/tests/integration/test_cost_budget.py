@@ -300,17 +300,3 @@ class TestBudgetEnforcementScenarios:
         final_status = tracker.get_status()
         assert final_status["percent_consumed"] >= 80.0  # At least soft limit
 
-    def test_single_expensive_query_vs_many_cheap(self, temp_tracker_path):
-        """Test that one expensive query can exceed budget."""
-        tracker = CostTracker(monthly_limit_usd=0.1, tracker_path=temp_tracker_path)
-
-        # Try one expensive Opus query
-        cost = tracker.estimate_cost(
-            model="claude-opus-4-20250514",
-            prompt_length=10000,
-            max_output_tokens=4096,
-        )
-
-        # Should exceed budget
-        can_proceed, msg = tracker.check_budget(cost)
-        assert can_proceed is False

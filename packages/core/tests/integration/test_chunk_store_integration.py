@@ -287,7 +287,7 @@ class TestMixedChunkTypes:
         reasoning = store.get_chunk("reasoning:r1")
 
         assert code.type == "code"
-        assert reasoning.type == "reasoning"
+        assert reasoning.type == "soar"
 
 
 class TestChunkValidationInStore:

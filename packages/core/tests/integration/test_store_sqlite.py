@@ -7,6 +7,7 @@ These tests verify SQLite-specific functionality including:
 - Schema creation
 """
 
+import sys
 from pathlib import Path
 
 import pytest
@@ -15,8 +16,7 @@ from aurora_core.chunks.code_chunk import CodeChunk
 from aurora_core.exceptions import ValidationError
 from aurora_core.store.sqlite import SQLiteStore
 from aurora_core.types import ChunkID
-import sys
-from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "unit"))
 from test_store_base import StoreContractTests
@@ -94,13 +94,14 @@ class TestSQLiteStore(StoreContractTests):
             ),
         ]
 
-    def test_initialize_with_file_path(self, tmp_path):
+    def test_initialize_with_file_path(self, tmp_path, sample_chunks):
         """Test initializing SQLiteStore with file path."""
         db_path = tmp_path / "aurora.db"
         store = SQLiteStore(db_path=str(db_path))
 
-        # Database file should be created
-        assert db_path.exists(), "Database file should be created"
+        # Database file created lazily on first use
+        store.save_chunk(sample_chunks[0])
+        assert db_path.exists(), "Database file should be created after first use"
 
         store.close()
 

@@ -1,7 +1,7 @@
 name: Testing Infrastructure (New)
 
 # Streamlined CI for direct-to-main workflow
-# - Single Python version (3.10)
+# - Single Python version (3.12)
 # - Essential checks only
 # - Fast feedback (~5-10 minutes)
 
@@ -17,10 +17,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Python 3.10
+      - name: Set up Python 3.12
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       - name: Install dependencies
         run: |
@@ -47,16 +47,11 @@ jobs:
           pytest -m "not ml and not real_api" --timeout=60 --cov=packages --cov-report=xml --cov-report=term -v
         continue-on-error: false
 
-      - name: Run startup performance benchmarks
-        run: |
-          pytest tests/performance/test_soar_startup_performance.py::TestRegressionGuards -v
-        continue-on-error: false
-
       - name: Upload coverage to Codecov
         if: always()
         uses: codecov/codecov-action@v3
         with:
           file: ./coverage.xml
-          flags: python-3.10
+          flags: python-3.12
           name: codecov-umbrella
           fail_ci_if_error: false

@@ -179,7 +179,7 @@ class TestSoarParallelResearch:
         trivial_query = "What is 2 + 2?"
 
         # This should assess as low complexity
-        assessment = assess_complexity(trivial_query, llm_client=None)
+        assessment = assess_complexity(trivial_query, _llm_client=None)
 
         # Verify it's assessed as simple/trivial (score should be low)
         assert "complexity" in assessment

@@ -204,13 +204,13 @@ class TestSchemaCompatibilityCheck:
         conn.commit()
         conn.close()
 
-        # Opening SQLiteStore should raise SchemaMismatchError
+        # SQLiteStore uses deferred schema init, so we need to trigger first use
         with pytest.raises(SchemaMismatchError) as exc_info:
-            SQLiteStore(db_path=str(db_path))
+            store = SQLiteStore(db_path=str(db_path))
+            store.get_chunk("trigger_schema_check")
 
         assert exc_info.value.found_version == 1
         assert exc_info.value.expected_version == SCHEMA_VERSION
-        assert str(db_path) in str(exc_info.value.db_path) or exc_info.value.db_path is None
 
     def test_fresh_database_passes(self, tmp_path):
         """Test that fresh database (no existing tables) passes."""

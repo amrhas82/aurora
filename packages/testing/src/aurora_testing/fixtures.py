@@ -703,7 +703,7 @@ def fixtures_dir() -> Path:
         Path: Path to tests/fixtures directory.
 
     """
-    return Path("/home/hamr/PycharmProjects/aurora/tests/fixtures")
+    return Path(__file__).resolve().parent.parent.parent / "fixtures"
 
 
 @pytest.fixture

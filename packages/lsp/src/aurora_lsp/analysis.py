@@ -5,6 +5,7 @@ Built on top of LSP client and import filtering.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import subprocess
@@ -607,30 +608,31 @@ class CodeAnalyzer:
         dead = []
 
         if accurate:
-            # Phase 2 (accurate): LSP references for each symbol (95%+ accuracy, slower)
+            # Phase 2 (accurate): LSP references for each symbol (95%+ accuracy)
+            # Parallelized with semaphore to avoid overwhelming the language server
             logger.info(f"Accurate mode: checking {len(all_symbols)} symbols via LSP references")
-            for sym in all_symbols:
-                try:
-                    # Get usages via LSP (excludes imports automatically)
-                    result = await self.find_usages(
-                        sym["file"], sym["line"], sym.get("col", 10), include_imports=False
-                    )
-                    usage_count = result.get("total_usages", 0)
+            semaphore = asyncio.Semaphore(15)
 
-                    # Dead if 0 usages (definition itself is not counted as usage)
-                    if usage_count == 0:
-                        dead.append(
-                            {
+            async def _check_symbol(sym: dict) -> dict | None:
+                async with semaphore:
+                    try:
+                        result = await self.find_usages(
+                            sym["file"], sym["line"], sym.get("col", 10), include_imports=False
+                        )
+                        if result.get("total_usages", 0) == 0:
+                            return {
                                 "file": sym["file"],
                                 "line": sym["line"],
                                 "name": sym["name"],
                                 "kind": SymbolKind(sym["kind"]).name.lower(),
                                 "imports": result.get("total_imports", 0),
                             }
-                        )
-                except Exception as e:
-                    logger.debug(f"LSP reference check failed for {sym['name']}: {e}")
-                    continue
+                    except Exception as e:
+                        logger.debug(f"LSP reference check failed for {sym['name']}: {e}")
+                    return None
+
+            results = await asyncio.gather(*[_check_symbol(sym) for sym in all_symbols])
+            dead = [r for r in results if r is not None]
         else:
             # Phase 2 (fast): ONE batched ripgrep call for ALL symbols (80-85% accuracy)
             symbol_names = list(set(s["name"] for s in all_symbols))

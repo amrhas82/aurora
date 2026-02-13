@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from pathlib import Path
 from typing import Any
 
@@ -60,6 +61,9 @@ class AuroraLSPClient:
         self._lock = asyncio.Lock()
         self._logger: Any = None
         self._started = False
+        # Reference cache: (rel_path, line, col) -> (timestamp, results)
+        self._ref_cache: dict[tuple[str, int, int], tuple[float, list[dict]]] = {}
+        self._ref_cache_ttl: float = 300.0  # 5 minutes
 
         # Initialize language map if multilspy is available
         if MULTILSPY_AVAILABLE and Language is not None:
@@ -160,6 +164,9 @@ class AuroraLSPClient:
     ) -> list[dict]:
         """Find all references to a symbol.
 
+        Results are cached by (file_path, line, col) with a 5-minute TTL so
+        repeated deadcode runs or overlapping symbol checks reuse prior results.
+
         Args:
             file_path: Path to file containing the symbol.
             line: Line number (0-indexed).
@@ -168,8 +175,20 @@ class AuroraLSPClient:
         Returns:
             List of reference locations, each with 'file', 'line', 'col' keys.
         """
-        server = await self._ensure_server(file_path)
         rel_path = self._to_relative(file_path)
+        cache_key = (rel_path, line, col)
+
+        # Check cache
+        cached = self._ref_cache.get(cache_key)
+        if cached is not None:
+            ts, results = cached
+            if (time.monotonic() - ts) < self._ref_cache_ttl:
+                logger.debug(f"Reference cache hit for {rel_path}:{line}:{col}")
+                return results
+            # Expired — remove stale entry
+            del self._ref_cache[cache_key]
+
+        server = await self._ensure_server(file_path)
         self._ensure_file_open(server, file_path)
 
         try:
@@ -180,6 +199,8 @@ class AuroraLSPClient:
                     f"LSP returned 0 references for {rel_path}:{line}:{col} "
                     f"(language server may not fully support this file type)"
                 )
+            # Cache the result (including empty results to avoid re-querying)
+            self._ref_cache[cache_key] = (time.monotonic(), normalized)
             return normalized
         except Exception as e:
             logger.warning(f"request_references failed for {rel_path}:{line}:{col}: {e}")
@@ -273,6 +294,10 @@ class AuroraLSPClient:
             logger.warning(f"request_diagnostics failed: {e}")
             return []
 
+    def clear_ref_cache(self) -> None:
+        """Clear the reference cache (e.g. after file modifications)."""
+        self._ref_cache.clear()
+
     async def close(self) -> None:
         """Close all language server connections."""
         async with self._lock:
@@ -295,6 +320,7 @@ class AuroraLSPClient:
             self._servers.clear()
             self._contexts.clear()
             self._open_files.clear()
+            self._ref_cache.clear()
 
     def _to_relative(self, file_path: str | Path) -> str:
         """Convert absolute path to workspace-relative path."""

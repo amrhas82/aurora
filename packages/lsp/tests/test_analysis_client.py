@@ -323,3 +323,109 @@ class TestClientNormalization:
         client = self._make_client(tmp_path)
         result = client._to_relative("/completely/different/path.py")
         assert result == "/completely/different/path.py"
+
+
+# ---------------------------------------------------------------------------
+# Reference cache
+# ---------------------------------------------------------------------------
+
+
+class TestReferenceCache:
+    """Tests for in-memory reference cache on AuroraLSPClient."""
+
+    def _make_client(self, tmp_path):
+        client = AuroraLSPClient(workspace=tmp_path)
+        return client
+
+    @pytest.mark.asyncio
+    async def test_cache_hit_avoids_server_call(self, tmp_path):
+        """Second call with same args returns cached result without querying LSP."""
+        import time
+
+        client = self._make_client(tmp_path)
+
+        fake_server = AsyncMock()
+        fake_server.request_references = AsyncMock(
+            return_value=[
+                {
+                    "absolutePath": "/proj/foo.py",
+                    "range": {"start": {"line": 10, "character": 0}},
+                }
+            ]
+        )
+        fake_server.open_file = MagicMock(return_value=MagicMock())
+
+        with patch.object(client, "_ensure_server", return_value=fake_server):
+            result1 = await client.request_references("src/foo.py", 5, 0)
+            result2 = await client.request_references("src/foo.py", 5, 0)
+
+        # Server queried only once — second call served from cache
+        assert fake_server.request_references.call_count == 1
+        assert result1 == result2
+        assert len(result1) == 1
+
+    @pytest.mark.asyncio
+    async def test_cache_miss_different_location(self, tmp_path):
+        """Different (file, line, col) triggers a fresh LSP query."""
+        client = self._make_client(tmp_path)
+
+        fake_server = AsyncMock()
+        fake_server.request_references = AsyncMock(return_value=[])
+        fake_server.open_file = MagicMock(return_value=MagicMock())
+
+        with patch.object(client, "_ensure_server", return_value=fake_server):
+            await client.request_references("src/a.py", 1, 0)
+            await client.request_references("src/a.py", 2, 0)
+
+        assert fake_server.request_references.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_cache_expiry(self, tmp_path, monkeypatch):
+        """Expired entries are evicted and LSP is re-queried."""
+        import time as time_mod
+
+        client = self._make_client(tmp_path)
+        client._ref_cache_ttl = 0.0  # expire immediately
+
+        fake_server = AsyncMock()
+        fake_server.request_references = AsyncMock(return_value=[])
+        fake_server.open_file = MagicMock(return_value=MagicMock())
+
+        with patch.object(client, "_ensure_server", return_value=fake_server):
+            await client.request_references("src/a.py", 1, 0)
+            # TTL=0 means next call should miss cache
+            await client.request_references("src/a.py", 1, 0)
+
+        assert fake_server.request_references.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_cache_empty_results(self, tmp_path):
+        """Empty results are cached too (avoids re-querying dead symbols)."""
+        client = self._make_client(tmp_path)
+
+        fake_server = AsyncMock()
+        fake_server.request_references = AsyncMock(return_value=[])
+        fake_server.open_file = MagicMock(return_value=MagicMock())
+
+        with patch.object(client, "_ensure_server", return_value=fake_server):
+            r1 = await client.request_references("src/a.py", 1, 0)
+            r2 = await client.request_references("src/a.py", 1, 0)
+
+        assert r1 == r2 == []
+        assert fake_server.request_references.call_count == 1
+
+    def test_clear_ref_cache(self, tmp_path):
+        """clear_ref_cache() empties the cache dict."""
+        client = self._make_client(tmp_path)
+        client._ref_cache[("src/a.py", 1, 0)] = (0.0, [])
+        assert len(client._ref_cache) == 1
+        client.clear_ref_cache()
+        assert len(client._ref_cache) == 0
+
+    @pytest.mark.asyncio
+    async def test_close_clears_cache(self, tmp_path):
+        """close() clears reference cache along with other state."""
+        client = self._make_client(tmp_path)
+        client._ref_cache[("src/a.py", 1, 0)] = (0.0, [{"file": "x", "line": 0, "col": 0}])
+        await client.close()
+        assert len(client._ref_cache) == 0

@@ -168,11 +168,15 @@ class TestPoliciesEngine:
         assert ".env" in paths
         assert "*.pem" in paths
 
-    def test_create_default_policies_file(self, tmp_path):
+    def test_create_default_policies_file(self, tmp_path, monkeypatch):
         """Test creating default policies file."""
-        policies_path = tmp_path / "test_policies.yaml"
-        engine = PoliciesEngine(policies_path)
+        aurora_dir = tmp_path / ".aurora"
+        aurora_dir.mkdir()
+        monkeypatch.setattr(
+            "aurora_cli.policies.engine.get_aurora_dir", lambda: aurora_dir
+        )
 
+        engine = PoliciesEngine()
         created_path = engine.create_default_policies_file()
 
         assert created_path.exists()

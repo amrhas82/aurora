@@ -51,6 +51,22 @@ Keep this managed block so 'aur init --config' can refresh the instructions.
 
 ---
 
+## Dev Rules
+
+**POC first.** Always validate logic with a ~15min proof-of-concept before building. Cover happy path + common edges. POC works → design properly → build with tests. Never ship the POC.
+
+**Build incrementally.** Break work into small independent modules. One piece at a time, each must work on its own before integrating.
+
+**Dependency hierarchy — follow strictly:** vanilla language → standard library → external (only when stdlib can't do it in <100 lines). External deps must be maintained, lightweight, and widely adopted. Exception: always use vetted libraries for security-critical code (crypto, auth, sanitization).
+
+**Lightweight over complex.** Fewer moving parts, fewer deps, less config. Express over NestJS, Flask over Django, unless the project genuinely needs the framework. Simple > clever. Readable > elegant.
+
+**Open-source only.** No vendor lock-in. Every line of code must have a purpose — no speculative code, no premature abstractions.
+
+For full development and testing standards, see `.claude/memory/AGENT_RULES.md`.
+
+---
+
 ## Commands
 
 | Task | Command |
@@ -101,3 +117,18 @@ Commit format: `type: description` (feat, fix, docs, refactor, perf, test, chore
 ## Docs
 
 See `docs/KNOWLEDGE_BASE.md` for detailed documentation.
+
+<!-- MEMORY:START -->
+## Project Memory
+
+Key facts extracted from session stashes (full details in `.claude/memory/MEMORY.md`):
+
+- Tests must be self-sufficient, no `.aurora/` dependency in CI — use `tmp_path` or `monkeypatch` for `get_aurora_dir`
+- All tests in `packages/*/tests/`, CI workflow at `.github/workflows/ci.yml` (2,608 tests, 0 failures)
+- LSP supports 5 languages (Python, JS, TS, Go, Java); MCP uses `python3.12` (3.14 has anyio issues)
+- `aur headless` and API key functionality removed entirely
+- `_identify_dependencies()` returns empty list (imports extracted but discarded)
+- CLI `aur mem search` lacks LSP enrichment (separate implementation from MCP `mem_search`)
+- MCP registration: use `claude mcp add-json`, not file writes
+- Don't use `git stash` with unstaged subagent changes
+<!-- MEMORY:END -->

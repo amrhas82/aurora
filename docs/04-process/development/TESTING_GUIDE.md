@@ -11,9 +11,9 @@ After the February 2026 test cleanup, all tests live in `packages/*/tests/` and 
 
 | Metric | Value |
 |--------|-------|
-| **Total Tests** | 2,508 |
-| **Test Files** | 140 |
-| **Test Lines** | ~47,000 |
+| **Total Tests** | 2,608 |
+| **Test Files** | 143 |
+| **Test Lines** | ~48,000 |
 | **Pass Rate** | 100% (0 failures, 3 skipped) |
 | **Coverage** | 57% |
 | **CI Python** | 3.12 |
@@ -23,14 +23,14 @@ After the February 2026 test cleanup, all tests live in `packages/*/tests/` and 
 | Package | Tests | Coverage |
 |---------|-------|----------|
 | **core** | 885 | 78% |
-| **cli** | 542 | 55% |
+| **cli** | 568 | 55% |
 | **planning** | 290 | 70% |
 | **context-code** | 276 | 48% |
 | **soar** | 167 | 46% |
-| **spawner** | 158 | 45% |
+| **spawner** | 201 | 45% |
 | **reasoning** | 121 | 94% |
 | **implement** | 35 | 91% |
-| **lsp** | 37 | 34% |
+| **lsp** | 68 | 34% |
 
 ---
 
@@ -122,14 +122,15 @@ Three essential markers only:
 | `spawner/` — recovery, observability, early detection | 29 | 45% (package) |
 | `lsp/` — languages registry, diagnostics | 30 | 34% (package) |
 | `cli/` — escalation, health checks, ignore patterns | 28 | 55% (package) |
+| `spawner/` — circuit breaker, timeout/retry/termination policies, heartbeat | 43 | 45% (package) |
+| `lsp/` — analysis helpers, ripgrep search, client normalization | 31 | 34% (package) |
+| `cli/` — agent search/similarity, doctor helpers | 26 | 55% (package) |
 
 ### Remaining Gaps
 
 | Priority | Area | Coverage | Blocker |
 |----------|------|----------|---------|
 | **P1** | `spawner/spawner.py` | 3% | No LLM needed — orchestration logic is testable |
-| **P1** | `lsp/analysis.py`, `lsp/client.py` | 14-17% | No LLM needed — ripgrep paths, LSP client logic |
-| **P1** | `cli/commands/` (agents, budget) | 55% | No LLM needed — CLI arg parsing, config, friction |
 | **P2** | `soar/orchestrator.py` | 6% | Needs LLM calls — mark `@pytest.mark.real_api`, skip in CI |
 | **P2** | `soar/phases/` (assess, collect, decompose, verify, respond) | 5-13% | Needs LLM calls — mark `@pytest.mark.real_api`, skip in CI |
 | **P2** | `reasoning/llm_client.py` | 23% | Needs LLM calls — mark `@pytest.mark.real_api`, skip in CI |
@@ -188,4 +189,5 @@ These tests are for local verification only — they require API keys, cost mone
 **Before**: 5,500 tests, 314 files, 126k lines, unknown pass rate
 **After cleanup**: 2,359 tests, 137 files, 45.5k lines, 100% pass rate, ~21% coverage
 **After P0 integration tests**: 2,451 tests, 56% coverage — 92 real integration tests added across 5 areas
-**After P1 integration tests**: 2,508 tests, 57% coverage — 87 more tests (spawner recovery/observability, LSP languages/diagnostics, CLI escalation/health) + fix escalation.py bug
+**After P1 batch 1 integration tests**: 2,508 tests, 57% coverage — 87 more tests (spawner recovery/observability, LSP languages/diagnostics, CLI escalation/health) + fix escalation.py bug
+**After P1 batch 2 integration tests**: 2,608 tests, 57% coverage — 100 more tests (spawner circuit breaker/policies/heartbeat, LSP analysis helpers/client normalization, CLI agent search/doctor helpers)

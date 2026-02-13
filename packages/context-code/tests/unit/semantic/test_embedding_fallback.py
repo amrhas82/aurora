@@ -28,7 +28,6 @@ from aurora_context_code.semantic.embedding_provider import (
 )
 from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
 
-
 # Mark all tests as requiring ML dependencies
 pytestmark = [
     pytest.mark.ml,
@@ -71,7 +70,9 @@ class MockStore:
 
     def fetch_embeddings_for_chunks(self, chunk_ids):
         """Fetch embeddings for specific chunks (two-phase optimization)."""
-        return {chunk.id: chunk.embeddings for chunk in self.chunks if chunk.id in chunk_ids}
+        return {
+            chunk.id: chunk.embeddings for chunk in self.chunks if chunk.id in chunk_ids
+        }
 
 
 class MockActivationEngine:
@@ -280,8 +281,12 @@ class TestChunksMissingEmbeddings:
 
         chunks = [
             MockChunk("1", "chunk one", activation=0.9, embeddings=chunk1_embedding),
-            MockChunk("2", "chunk two", activation=0.8, embeddings=None),  # No embedding
-            MockChunk("3", "chunk three", activation=0.6, embeddings=None),  # No embedding
+            MockChunk(
+                "2", "chunk two", activation=0.8, embeddings=None
+            ),  # No embedding
+            MockChunk(
+                "3", "chunk three", activation=0.6, embeddings=None
+            ),  # No embedding
         ]
 
         store = MockStore(chunks=chunks)
@@ -289,7 +294,9 @@ class TestChunksMissingEmbeddings:
 
         # Test with fallback enabled
         config_fallback = HybridConfig(fallback_to_activation=True)
-        retriever_fallback = HybridRetriever(store, engine, provider, config=config_fallback)
+        retriever_fallback = HybridRetriever(
+            store, engine, provider, config=config_fallback
+        )
 
         results_fallback = retriever_fallback.retrieve("test query", top_k=3)
 
@@ -306,7 +313,9 @@ class TestChunksMissingEmbeddings:
 
         # Test with fallback disabled
         config_no_fallback = HybridConfig(fallback_to_activation=False)
-        retriever_no_fallback = HybridRetriever(store, engine, provider, config=config_no_fallback)
+        retriever_no_fallback = HybridRetriever(
+            store, engine, provider, config=config_no_fallback
+        )
 
         results_no_fallback = retriever_no_fallback.retrieve("test query", top_k=3)
 
@@ -323,14 +332,18 @@ class TestChunksMissingEmbeddings:
         chunk3_embedding = provider.embed_chunk("network request handling")
 
         chunks = [
-            MockChunk("1", "database query", activation=0.5, embeddings=chunk1_embedding),
+            MockChunk(
+                "1", "database query", activation=0.5, embeddings=chunk1_embedding
+            ),
             MockChunk(
                 "2",
                 "file operations",
                 activation=0.9,
                 embeddings=None,
             ),  # High activation, no embedding
-            MockChunk("3", "network request", activation=0.4, embeddings=chunk3_embedding),
+            MockChunk(
+                "3", "network request", activation=0.4, embeddings=chunk3_embedding
+            ),
         ]
 
         store = MockStore(chunks=chunks)
@@ -485,7 +498,10 @@ class TestFallbackConfiguration:
 
     def test_config_fallback_disabled(self):
         """Test fallback disabled via explicit config."""
-        from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
+        from aurora_context_code.semantic.hybrid_retriever import (
+            HybridConfig,
+            HybridRetriever,
+        )
 
         chunks = [MockChunk("1", "chunk", activation=0.5, embeddings=None)]
         store = MockStore(chunks=chunks)

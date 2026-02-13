@@ -33,7 +33,6 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -52,7 +51,9 @@ _retriever_cache_stats = {"hits": 0, "misses": 0}
 
 # Cache configuration from environment variables
 _RETRIEVER_CACHE_SIZE = int(os.environ.get("AURORA_RETRIEVER_CACHE_SIZE", "10"))
-_RETRIEVER_CACHE_TTL = int(os.environ.get("AURORA_RETRIEVER_CACHE_TTL", "1800"))  # 30 minutes
+_RETRIEVER_CACHE_TTL = int(
+    os.environ.get("AURORA_RETRIEVER_CACHE_TTL", "1800")
+)  # 30 minutes
 
 
 @dataclass
@@ -111,9 +112,13 @@ class HybridConfig:
         if not (0.0 <= self.bm25_weight <= 1.0):
             raise ValueError(f"bm25_weight must be in [0, 1], got {self.bm25_weight}")
         if not (0.0 <= self.activation_weight <= 1.0):
-            raise ValueError(f"activation_weight must be in [0, 1], got {self.activation_weight}")
+            raise ValueError(
+                f"activation_weight must be in [0, 1], got {self.activation_weight}"
+            )
         if not (0.0 <= self.semantic_weight <= 1.0):
-            raise ValueError(f"semantic_weight must be in [0, 1], got {self.semantic_weight}")
+            raise ValueError(
+                f"semantic_weight must be in [0, 1], got {self.semantic_weight}"
+            )
 
         total_weight = self.bm25_weight + self.activation_weight + self.semantic_weight
         if abs(total_weight - 1.0) > 1e-6:
@@ -123,11 +128,15 @@ class HybridConfig:
             )
 
         if self.activation_top_k < 1:
-            raise ValueError(f"activation_top_k must be >= 1, got {self.activation_top_k}")
+            raise ValueError(
+                f"activation_top_k must be >= 1, got {self.activation_top_k}"
+            )
         if self.stage1_top_k < 1:
             raise ValueError(f"stage1_top_k must be >= 1, got {self.stage1_top_k}")
         if self.query_cache_size < 1:
-            raise ValueError(f"query_cache_size must be >= 1, got {self.query_cache_size}")
+            raise ValueError(
+                f"query_cache_size must be >= 1, got {self.query_cache_size}"
+            )
         if self.query_cache_ttl_seconds < 0:
             raise ValueError(
                 f"query_cache_ttl_seconds must be >= 0, got {self.query_cache_ttl_seconds}",
@@ -176,7 +185,9 @@ class QueryEmbeddingCache:
         """
         self.capacity = capacity
         self.ttl_seconds = ttl_seconds
-        self._cache: OrderedDict[str, tuple[npt.NDArray[np.float32], float]] = OrderedDict()
+        self._cache: OrderedDict[str, tuple[npt.NDArray[np.float32], float]] = (
+            OrderedDict()
+        )
         self.stats = CacheStats()
 
     def _normalize_query(self, query: str) -> str:
@@ -268,7 +279,9 @@ _shared_query_cache: QueryEmbeddingCache | None = None
 _shared_query_cache_lock = threading.Lock()
 
 
-def get_shared_query_cache(capacity: int = 100, ttl_seconds: int = 1800) -> QueryEmbeddingCache:
+def get_shared_query_cache(
+    capacity: int = 100, ttl_seconds: int = 1800
+) -> QueryEmbeddingCache:
     """Get or create shared QueryEmbeddingCache instance.
 
     Returns a singleton QueryEmbeddingCache that is shared across all
@@ -294,7 +307,9 @@ def get_shared_query_cache(capacity: int = 100, ttl_seconds: int = 1800) -> Quer
             logger.debug(
                 f"Creating shared QueryEmbeddingCache (capacity={capacity}, ttl={ttl_seconds}s)"
             )
-            _shared_query_cache = QueryEmbeddingCache(capacity=capacity, ttl_seconds=ttl_seconds)
+            _shared_query_cache = QueryEmbeddingCache(
+                capacity=capacity, ttl_seconds=ttl_seconds
+            )
         elif (
             _shared_query_cache.capacity != capacity
             or _shared_query_cache.ttl_seconds != ttl_seconds
@@ -536,7 +551,9 @@ class HybridRetriever:
         self.config = config or HybridConfig()
 
         # BM25 scorer (lazy-initialized in retrieve() or loaded from persistent index)
-        self.bm25_scorer: Any = None  # BM25Scorer from aurora_context_code.semantic.bm25_scorer
+        self.bm25_scorer: Any = (
+            None  # BM25Scorer from aurora_context_code.semantic.bm25_scorer
+        )
         self._bm25_index_loaded = False  # Track if we've loaded the persistent index
         self._bm25_lock = threading.Lock()  # Thread-safety for lazy loading
 
@@ -644,7 +661,9 @@ class HybridRetriever:
             # If no embedding provider, fall back to BM25+Activation dual-hybrid
             if self.embedding_provider is None:
                 logger.debug("No embedding provider - using BM25+Activation fallback")
-                return self._fallback_to_dual_hybrid(activation_candidates, query, top_k)
+                return self._fallback_to_dual_hybrid(
+                    activation_candidates, query, top_k
+                )
 
             try:
                 query_embedding = self.embedding_provider.embed_query(query)
@@ -655,7 +674,9 @@ class HybridRetriever:
             except Exception as e:
                 # If embedding fails and fallback is enabled, use BM25+Activation dual-hybrid
                 if self.config.fallback_to_activation:
-                    return self._fallback_to_dual_hybrid(activation_candidates, query, top_k)
+                    return self._fallback_to_dual_hybrid(
+                        activation_candidates, query, top_k
+                    )
                 raise ValueError(f"Failed to generate query embedding: {e}") from e
 
         # ========== STAGE 1: BM25 FILTERING ==========
@@ -689,7 +710,9 @@ class HybridRetriever:
             # Calculate semantic similarity
             chunk_embedding = getattr(chunk, "embeddings", None)
             if chunk_embedding is not None:
-                from aurora_context_code.semantic.embedding_provider import cosine_similarity
+                from aurora_context_code.semantic.embedding_provider import (
+                    cosine_similarity,
+                )
 
                 # Convert embedding bytes to numpy array if needed
                 if isinstance(chunk_embedding, bytes):
@@ -739,8 +762,12 @@ class HybridRetriever:
         activation_scores_normalized = self._normalize_scores(
             [r["raw_activation"] for r in results],
         )
-        semantic_scores_normalized = self._normalize_scores([r["raw_semantic"] for r in results])
-        bm25_scores_normalized = self._normalize_scores([r["raw_bm25"] for r in results])
+        semantic_scores_normalized = self._normalize_scores(
+            [r["raw_semantic"] for r in results]
+        )
+        bm25_scores_normalized = self._normalize_scores(
+            [r["raw_bm25"] for r in results]
+        )
 
         # ========== BATCH FETCH ACCESS STATS (N+1 QUERY OPTIMIZATION) ==========
         # Pre-fetch access stats for all result chunks in a single query
@@ -749,9 +776,13 @@ class HybridRetriever:
         if hasattr(self.store, "get_access_stats_batch"):
             try:
                 access_stats_cache = self.store.get_access_stats_batch(chunk_ids)
-                logger.debug(f"Batch fetched access stats for {len(access_stats_cache)} chunks")
+                logger.debug(
+                    f"Batch fetched access stats for {len(access_stats_cache)} chunks"
+                )
             except Exception as e:
-                logger.debug(f"Batch access stats failed, falling back to per-chunk: {e}")
+                logger.debug(
+                    f"Batch access stats failed, falling back to per-chunk: {e}"
+                )
 
         # Calculate tri-hybrid scores and prepare output
         final_results = []
@@ -763,9 +794,13 @@ class HybridRetriever:
 
             # Chunk-type-aware scoring: code chunks favor BM25, KB chunks favor semantic
             chunk_type = getattr(chunk, "type", "unknown")
-            bm25_w, act_w, sem_w = _CODE_WEIGHTS if chunk_type == "code" else _KB_WEIGHTS
+            bm25_w, act_w, sem_w = (
+                _CODE_WEIGHTS if chunk_type == "code" else _KB_WEIGHTS
+            )
 
-            hybrid_score = bm25_w * bm25_norm + act_w * activation_norm + sem_w * semantic_norm
+            hybrid_score = (
+                bm25_w * bm25_norm + act_w * activation_norm + sem_w * semantic_norm
+            )
 
             # Extract content and metadata from chunk (using cached access stats)
             content, metadata = self._extract_chunk_content_metadata(
@@ -790,7 +825,9 @@ class HybridRetriever:
 
         # Apply MMR reranking for diversity if requested
         if diverse and len(final_results) > 1:
-            lambda_val = mmr_lambda if mmr_lambda is not None else self.config.mmr_lambda
+            lambda_val = (
+                mmr_lambda if mmr_lambda is not None else self.config.mmr_lambda
+            )
             final_results = self._apply_mmr_reranking(
                 results=final_results,
                 stage1_candidates=stage1_candidates,
@@ -867,7 +904,9 @@ class HybridRetriever:
                 else:
                     max_similarity = 0.0
                     for selected_result in selected:
-                        selected_embedding = embedding_map.get(selected_result["chunk_id"])
+                        selected_embedding = embedding_map.get(
+                            selected_result["chunk_id"]
+                        )
                         if selected_embedding is not None:
                             # Cosine similarity between candidate and selected
                             similarity = self._cosine_similarity(
@@ -968,7 +1007,9 @@ class HybridRetriever:
 
         # Sort by BM25 score (descending) and take top stage1_top_k
         scored_candidates.sort(key=lambda x: x[0], reverse=True)
-        top_candidates = [chunk for _, chunk in scored_candidates[: self.config.stage1_top_k]]
+        top_candidates = [
+            chunk for _, chunk in scored_candidates[: self.config.stage1_top_k]
+        ]
 
         return top_candidates
 
@@ -1038,7 +1079,9 @@ class HybridRetriever:
 
             # Include access count from activation stats (use cache if available)
             if access_stats_cache and chunk.id in access_stats_cache:
-                metadata["access_count"] = access_stats_cache[chunk.id].get("access_count", 0)
+                metadata["access_count"] = access_stats_cache[chunk.id].get(
+                    "access_count", 0
+                )
             else:
                 try:
                     access_stats = self.store.get_access_stats(chunk.id)
@@ -1067,7 +1110,9 @@ class HybridRetriever:
 
             # Include access count from activation stats (use cache if available)
             if access_stats_cache and chunk.id in access_stats_cache:
-                metadata["access_count"] = access_stats_cache[chunk.id].get("access_count", 0)
+                metadata["access_count"] = access_stats_cache[chunk.id].get(
+                    "access_count", 0
+                )
             else:
                 try:
                     access_stats = self.store.get_access_stats(chunk.id)
@@ -1122,7 +1167,9 @@ class HybridRetriever:
         total_weight = self.config.bm25_weight + self.config.activation_weight
         if total_weight < 1e-6:
             # Edge case: both weights are 0, fall back to activation-only
-            logger.warning("Both BM25 and activation weights are 0 - using activation-only")
+            logger.warning(
+                "Both BM25 and activation weights are 0 - using activation-only"
+            )
             bm25_dual = 0.0
             activation_dual = 1.0
         else:
@@ -1154,7 +1201,9 @@ class HybridRetriever:
         activation_scores_normalized = self._normalize_scores(
             [r["raw_activation"] for r in results]
         )
-        bm25_scores_normalized = self._normalize_scores([r["raw_bm25"] for r in results])
+        bm25_scores_normalized = self._normalize_scores(
+            [r["raw_bm25"] for r in results]
+        )
 
         # Batch fetch access stats (N+1 query optimization)
         chunk_ids = [r["chunk"].id for r in results]
@@ -1316,19 +1365,25 @@ class HybridRetriever:
         except (pickle.UnpicklingError, ModuleNotFoundError, EOFError) as e:
             # Improved error handling for pickle format mismatches (Task 3.8)
             error_type = type(e).__name__
-            logger.warning(f"✗ Failed to load BM25 index from {index_path} ({error_type}): {e}")
+            logger.warning(
+                f"✗ Failed to load BM25 index from {index_path} ({error_type}): {e}"
+            )
             self.bm25_scorer = None
             self._bm25_index_loaded = False
             return False
         except Exception as e:
             # Catch-all for other errors
             error_type = type(e).__name__
-            logger.warning(f"✗ Failed to load BM25 index from {index_path} ({error_type}): {e}")
+            logger.warning(
+                f"✗ Failed to load BM25 index from {index_path} ({error_type}): {e}"
+            )
             self.bm25_scorer = None
             self._bm25_index_loaded = False
             return False
 
-    def build_and_save_bm25_index(self, documents: list[tuple[str, str]] | None = None) -> bool:
+    def build_and_save_bm25_index(
+        self, documents: list[tuple[str, str]] | None = None
+    ) -> bool:
         """Build BM25 index from documents and save to disk.
 
         This method is called during indexing to build the persistent BM25 index.
@@ -1392,4 +1447,3 @@ class HybridRetriever:
         except Exception as e:
             logger.warning(f"Failed to load chunks for BM25 index: {e}")
         return documents
-

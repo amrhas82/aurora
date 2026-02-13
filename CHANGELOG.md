@@ -7,6 +7,115 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.2] - 2026-02-14
+
+### Fixed
+
+- Suppress `aurora_lsp.client` warnings in `aur mem search` output (request_references failed noise)
+
+### Changed
+
+- Updated MEM_INDEXING.md with FTS5 pipeline architecture and chunk-type-aware weights
+- Updated TESTING_GUIDE.md with current counts (2,666 tests, 148 files)
+
+### Performance
+
+- Parallelize LSP deadcode analysis with concurrent futures (~3x faster on large codebases)
+- Add reference cache to LSP client to avoid redundant lookups
+
+## [0.17.1] - 2026-02-12
+
+### Added
+
+- **FTS5 full-text search gate** replacing activation gate in retrieval pipeline
+  - SQLite FTS5 virtual table for keyword filtering (Stage 1)
+  - Ensures rare but keyword-relevant chunks surface (activation gate starved infrequent content)
+  - Fallback to activation-based retrieval for old databases without FTS5
+- FTS5 store integration tests (246 tests) and FTS5 retrieval integration tests (149 tests)
+- LSP analysis/client tests (106 tests), verify lite tests (196 tests), early detection monitor tests (143 tests)
+
+### Fixed
+
+- Verify phase: reject empty descriptions, validate goals embed_chunk type
+- Python 3.14 async compatibility (anyio/asyncio event loop handling)
+
+### Changed
+
+- Updated black 24.1.1 → 26.1.0 and reformatted codebase
+- Removed stale BM25 persistence and lazy loading tests (479 tests replaced by FTS5 tests)
+
+## [0.17.0] - 2026-02-10
+
+### Added
+
+- **Chunk-type-aware hybrid retrieval weights**
+  - Code chunks: BM25 50% / ACT-R 30% / Semantic 20% (identifiers are exact tokens)
+  - KB chunks: BM25 30% / ACT-R 30% / Semantic 40% (prose benefits from embeddings)
+  - Hardcoded as `_CODE_WEIGHTS` and `_KB_WEIGHTS` in `hybrid_retriever.py`
+  - Replaces single global weight configuration
+
+## [0.16.0] - 2026-02-05
+
+### Removed
+
+- **`aur headless` command** — complete removal of headless mode and all related code
+- **API key functionality** — removed `ANTHROPIC_API_KEY` references and configuration
+
+### Changed
+
+- **Major test cleanup** (February 2026):
+  - Before: 5,500 tests, 314 files, 126k lines, unknown pass rate
+  - After: 2,608 tests, 144 files, ~48k lines, 100% pass rate, 57% coverage
+  - Removed: mock-heavy tests (~36k lines), failing/stale tests (~17k lines), import smoke tests (~12k lines)
+  - Consolidated all tests into `packages/*/tests/` (removed root `tests/` directory)
+  - Dead production code removed (~2,800 lines, LSP-confirmed 0 usages)
+- CI made self-sufficient — no `.aurora/` dependency, use `tmp_path` or `monkeypatch`
+- Added P0 integration tests (92 tests across 5 areas, 21% → 56% coverage)
+- Added P1 batch 1 integration tests (87 tests: spawner recovery/observability, LSP languages/diagnostics, CLI escalation/health)
+- Added P1 batch 2 integration tests (100 tests: spawner circuit breaker/policies/heartbeat, LSP analysis/client, CLI agent search/doctor)
+
+## [0.15.0] - 2026-02-05
+
+### Added
+
+- **Multi-language LSP support** — expanded from Python-only to 5 languages:
+  - JavaScript/TypeScript: cross-file references via multilspy patches, `didChangeWatchedFiles` support
+  - Go: `gopls` integration (auto-discovers via `go.mod`)
+  - Java: `jdtls` integration
+- Go and Java tree-sitter indexing with language-specific parsers
+- LSP language configs with branch types, skip patterns, callback methods
+- Fixed TypeScript cross-file references in multilspy (wrong `initialize_params.json`)
+- Improved deadcode false positive handling for JS/Go/Java
+
+### Changed
+
+- Updated MEM_INDEXING.md with Go and Java language support
+- Updated GitHub username from amrhas82 to hamr0
+
+## [0.14.2] - 2026-02-05
+
+### Fixed
+
+- Aligned PlanStatus enum and template docs with actual usage
+
+## [0.14.1] - 2026-02-05
+
+### Added
+
+- Consolidated learned rules from friction pattern analysis into docs
+
+## [0.14.0] - 2026-02-04
+
+### Added
+
+- **Pre-edit LSP check hook** for Claude Code
+  - `.claude/hooks/pre-edit-lsp-check.py` — runs `lsp check` before every file edit
+  - Shows usage count and risk level (LOW/MED/HIGH) inline
+  - Text search fallback when LSP returns 0 refs
+  - Template at `packages/cli/src/aurora_cli/templates/hooks/pre_edit_lsp_check.py`
+  - Installed via `aur init --tools=claude`
+- Comprehensive memory indexing documentation (`MEM_INDEXING.md`)
+
 ## [0.13.6] - 2026-02-04
 
 ### Added
@@ -1388,4 +1497,4 @@ pip install aurora[all]  # Single command
 
 ---
 
-**Last Updated:** 2025-01-24
+**Last Updated:** 2026-02-14

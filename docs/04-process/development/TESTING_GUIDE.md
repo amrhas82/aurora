@@ -1,6 +1,6 @@
 # Aurora Testing Guide
 
-**Last Updated**: 2026-02-13
+**Last Updated**: 2026-02-14
 **Status**: Active
 
 ---
@@ -11,9 +11,9 @@ After the February 2026 test cleanup, all tests live in `packages/*/tests/` and 
 
 | Metric | Value |
 |--------|-------|
-| **Total Tests** | 2,619 |
-| **Test Files** | 144 |
-| **Test Lines** | ~48,200 |
+| **Total Tests** | 2,666 |
+| **Test Files** | 148 |
+| **Test Lines** | ~49,000 |
 | **Pass Rate** | 100% (0 failures, 3 skipped) |
 | **Coverage** | 57% |
 | **CI Python** | 3.12 |
@@ -194,3 +194,4 @@ These tests are for local verification only — they require API keys, cost mone
 **After P1 batch 1 integration tests**: 2,508 tests, 57% coverage — 87 more tests (spawner recovery/observability, LSP languages/diagnostics, CLI escalation/health) + fix escalation.py bug
 **After P1 batch 2 integration tests**: 2,608 tests, 57% coverage — 100 more tests (spawner circuit breaker/policies/heartbeat, LSP analysis helpers/client normalization, CLI agent search/doctor helpers)
 **After bugfix tests**: 2,619 tests — 9 tests for verify floor/empty-description + early detection async lifecycle (Py3.14 compat), 2 new files
+**After FTS5 + LSP parallelization**: 2,666 tests — FTS5 store integration (246), FTS5 retrieval integration (149), LSP analysis/client (106), verify lite (196), early detection monitor (143); removed stale BM25 persistence + lazy loading tests (479)

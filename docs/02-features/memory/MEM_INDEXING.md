@@ -208,11 +208,20 @@ Uses `sentence-transformers/all-MiniLM-L6-v2`:
 
 **Fallback**: If ML dependencies unavailable, uses BM25-only retrieval (~85% quality).
 
-### 7. BM25 Keyword Indexing
+### 7. FTS5 Full-Text Indexing
 
-**File:** `packages/context-code/src/aurora_context_code/semantic/bm25_scorer.py`
+**Primary:** SQLite FTS5 virtual table (built during indexing, used as Stage 1 gate at search time)
 
-Code-aware tokenization splits identifiers:
+```sql
+-- FTS5 index (created in SQLite store)
+CREATE VIRTUAL TABLE chunks_fts USING fts5(content, tokenize='porter ascii');
+```
+
+FTS5 provides keyword search with BM25 ranking natively in SQLite — no external index file needed.
+
+**Fallback:** `packages/context-code/src/aurora_context_code/semantic/bm25_scorer.py`
+
+For old databases without FTS5, a standalone BM25 scorer with code-aware tokenization is used:
 
 ```python
 # Input
@@ -226,7 +235,7 @@ Code-aware tokenization splits identifiers:
 - `k1 = 1.5` (term frequency saturation)
 - `b = 0.75` (length normalization)
 
-**Persistence:** `.aurora/indexes/bm25_index.pkl`
+**Legacy persistence:** `.aurora/indexes/bm25_index.pkl` (unused when FTS5 available)
 
 ### 8. SQLite Storage
 
@@ -346,9 +355,11 @@ FILES
                │
                ▼
 ┌─────────────────────────────┐
-│ [8] BM25 INDEX              │
-│     - Build inverted index  │
-│     - Persist to disk       │
+│ [8] FTS5 INDEX              │
+│     - SQLite FTS5 table     │
+│     - Keyword search gate   │
+│     (BM25 index fallback    │
+│      for old DBs)           │
 └─────────────────────────────┘
                │
                ▼
@@ -361,22 +372,35 @@ FILES
 
 **File:** `packages/context-code/src/aurora_context_code/semantic/hybrid_retriever.py`
 
-Search combines three signals:
+### Two-Stage Pipeline
 
 ```
-Final Score = BM25 × 0.3 + Semantic × 0.4 + Activation × 0.3
+Stage 1: FTS5 keyword gate → top 100 candidates (keyword-relevant)
+Stage 2: Tri-hybrid re-rank with chunk-type-aware weights → top k results
 ```
 
-| Component | Weight | Description |
-|-----------|--------|-------------|
-| BM25 | 30% | Keyword exact match |
-| Semantic | 40% | Embedding cosine similarity |
-| Activation | 30% | Recency + frequency from git/access |
+**Stage 1 — FTS5 Full-Text Search Gate** (replaced activation gate in v0.17.1):
+- Uses SQLite FTS5 for keyword filtering (`retrieve_by_fts()`)
+- Returns top 100 candidates ranked by keyword relevance
+- Ensures rare but relevant code surfaces (activation gate starved infrequent chunks)
+- Fallback: activation-based retrieval for old DBs without FTS5
 
-**Search flow:**
-1. BM25 filters to top 100 candidates
-2. Tri-hybrid re-ranks with all three scores
-3. Returns top k results
+**Stage 2 — Chunk-Type-Aware Tri-Hybrid Re-Ranking** (added in v0.17.0):
+
+| Chunk Type | BM25 | ACT-R | Semantic | Rationale |
+|------------|------|-------|----------|-----------|
+| **Code** | 50% | 30% | 20% | Identifiers are exact tokens — keyword match is strongest signal |
+| **KB/Docs** | 30% | 30% | 40% | Prose benefits from embedding similarity |
+
+Hardcoded as `_CODE_WEIGHTS` and `_KB_WEIGHTS` in `hybrid_retriever.py`.
+
+**Why this works:** Code search needs exact token matching ("orchestrator" finds things named orchestrator), while documentation search benefits from conceptual similarity ("auth flow" finds "authentication pipeline"). The FTS5 gate ensures keyword-relevant candidates enter the pipeline, then type-aware weights balance precision vs recall per chunk type.
+
+**Dual-hybrid fallback:** When embeddings are unavailable (no `sentence-transformers`), redistributes semantic weight proportionally to BM25 and activation (~85% quality vs 95% tri-hybrid).
+
+### Score Normalization
+
+All three scores are independently min-max normalized to [0, 1] before weighting. When all scores are equal, original values are preserved (prevents [0,0,0] → [1,1,1] inflation).
 
 ---
 

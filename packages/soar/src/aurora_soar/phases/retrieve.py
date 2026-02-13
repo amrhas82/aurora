@@ -19,7 +19,6 @@ import logging
 import time
 from typing import TYPE_CHECKING, Any, cast
 
-
 if TYPE_CHECKING:
     from aurora_core.store.base import Store
     from aurora_core.store.sqlite import SQLiteStore
@@ -38,6 +37,7 @@ RETRIEVAL_BUDGETS = {
     "COMPLEX": 15,
     "CRITICAL": 20,
 }
+
 
 def retrieve_context(query: str, complexity: str, store: Store) -> dict[str, Any]:
     """Retrieve relevant context from memory using hybrid retrieval.

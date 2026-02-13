@@ -52,7 +52,6 @@ from aurora_soar.phases import (
 )
 from aurora_soar.phases.respond import Verbosity
 
-
 if TYPE_CHECKING:
     from aurora_core.store.base import Store
     from aurora_reasoning.llm_client import LLMClient

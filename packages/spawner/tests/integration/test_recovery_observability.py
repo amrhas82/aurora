@@ -25,13 +25,9 @@ from aurora_spawner.recovery import (
     RecoveryStrategy,
     TaskRecoveryState,
 )
-from aurora_spawner.timeout_policy import (
-    RetryPolicy,
-    RetryStrategy as TimeoutRetryStrategy,
-    TimeoutMode,
-    TimeoutPolicy,
-)
-
+from aurora_spawner.timeout_policy import RetryPolicy
+from aurora_spawner.timeout_policy import RetryStrategy as TimeoutRetryStrategy
+from aurora_spawner.timeout_policy import TimeoutMode, TimeoutPolicy
 
 # ---------------------------------------------------------------------------
 # Recovery State Machine
@@ -77,7 +73,10 @@ class TestRecoveryStateMachineFallbackFlow:
 
     def test_fallback_flow(self):
         state = TaskRecoveryState(
-            task_id="t1", agent_id="a1", max_retries=1, fallback_enabled=True,
+            task_id="t1",
+            agent_id="a1",
+            max_retries=1,
+            fallback_enabled=True,
         )
         state.start()
 
@@ -102,7 +101,10 @@ class TestRecoveryStateMachineFullFailure:
 
     def test_full_failure(self):
         state = TaskRecoveryState(
-            task_id="t1", agent_id="a1", max_retries=0, fallback_enabled=False,
+            task_id="t1",
+            agent_id="a1",
+            max_retries=0,
+            fallback_enabled=False,
         )
         state.start()
         result = state.fail("fatal error")
@@ -116,7 +118,9 @@ class TestRecoveryStateMachineCircuitOpen:
 
     def test_circuit_open_with_fallback(self):
         state = TaskRecoveryState(
-            task_id="t1", agent_id="a1", fallback_enabled=True,
+            task_id="t1",
+            agent_id="a1",
+            fallback_enabled=True,
         )
         result = state.circuit_open()
         assert result == RecoveryState.CIRCUIT_OPEN
@@ -124,7 +128,9 @@ class TestRecoveryStateMachineCircuitOpen:
 
     def test_circuit_open_no_fallback(self):
         state = TaskRecoveryState(
-            task_id="t1", agent_id="a1", fallback_enabled=False,
+            task_id="t1",
+            agent_id="a1",
+            fallback_enabled=False,
         )
         result = state.circuit_open()
         assert result == RecoveryState.FAILED

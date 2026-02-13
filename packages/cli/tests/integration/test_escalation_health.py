@@ -10,18 +10,13 @@ import shutil
 
 import pytest
 
-from aurora_cli.escalation import (
-    AutoEscalationHandler,
-    EscalationConfig,
-    EscalationResult,
-)
+from aurora_cli.escalation import AutoEscalationHandler, EscalationConfig, EscalationResult
 from aurora_cli.ignore_patterns import (
     DEFAULT_IGNORE_PATTERNS,
     load_ignore_patterns,
     matches_pattern,
     should_ignore,
 )
-
 
 # ---------------------------------------------------------------------------
 # Escalation Config
@@ -306,7 +301,12 @@ class TestHealthRunAllCategories:
         config = FakeConfig()
 
         # Each category should return a non-empty list
-        for CheckClass in (CoreSystemChecks, CodeAnalysisChecks, ConfigurationChecks, InstallationChecks):
+        for CheckClass in (
+            CoreSystemChecks,
+            CodeAnalysisChecks,
+            ConfigurationChecks,
+            InstallationChecks,
+        ):
             checks = CheckClass(config=config)
             results = checks.run_checks()
             assert len(results) > 0, f"{CheckClass.__name__} returned no results"

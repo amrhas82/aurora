@@ -14,7 +14,6 @@ from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
-
 _EMBEDDED_CONFIG = {
     "weights": {
         "exit_error": 1,

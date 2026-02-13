@@ -15,10 +15,10 @@ from aurora_soar.phases.collect import AgentOutput, CollectResult
 from aurora_soar.phases.retrieve import RETRIEVAL_BUDGETS, retrieve_context
 from aurora_soar.phases.synthesize import SynthesisResult, synthesize_results
 
-
 # ---------------------------------------------------------------------------
 # Retrieve phase tests
 # ---------------------------------------------------------------------------
+
 
 def _make_mock_retriever(code_results=None, kb_results=None, has_memory=True):
     """Create a mock MemoryRetriever with configurable results."""
@@ -51,12 +51,15 @@ def _make_mock_chunk(chunk_id, score=0.8, chunk_type="code"):
 class TestRetrieveContext:
     """Tests for retrieve_context()."""
 
-    @pytest.mark.parametrize("complexity,expected_budget", [
-        ("SIMPLE", 5),
-        ("MEDIUM", 10),
-        ("COMPLEX", 15),
-        ("CRITICAL", 20),
-    ])
+    @pytest.mark.parametrize(
+        "complexity,expected_budget",
+        [
+            ("SIMPLE", 5),
+            ("MEDIUM", 10),
+            ("COMPLEX", 15),
+            ("CRITICAL", 20),
+        ],
+    )
     def test_budget_allocation(self, complexity, expected_budget):
         mock_store = MagicMock()
         mock_retriever = _make_mock_retriever()
@@ -152,6 +155,7 @@ class TestRetrieveContext:
 # Synthesize phase tests
 # ---------------------------------------------------------------------------
 
+
 def _make_collect_result(outputs=None):
     """Create a CollectResult with given AgentOutputs."""
     if outputs is None:
@@ -233,12 +237,18 @@ class TestSynthesizeResults:
     def test_files_modified_counted(self):
         outputs = [
             AgentOutput(
-                0, "a1", True, "Modified files",
+                0,
+                "a1",
+                True,
+                "Modified files",
                 confidence=0.9,
                 data={"files_modified": ["a.py", "b.py"]},
             ),
             AgentOutput(
-                1, "a2", True, "More files",
+                1,
+                "a2",
+                True,
+                "More files",
                 confidence=0.8,
                 data={"files_modified": ["c.py"]},
             ),
@@ -277,6 +287,7 @@ class TestSynthesizeResults:
 # ---------------------------------------------------------------------------
 # SynthesisResult serialization tests
 # ---------------------------------------------------------------------------
+
 
 class TestSynthesisResult:
     """Tests for SynthesisResult data class."""

@@ -8,12 +8,12 @@ Receives Edit tool input on stdin, runs LSP usage analysis via the
 aurora MCP lsp tool, and returns context for Claude to see before
 the edit proceeds.
 """
+
 import json
 import os
 import sys
 import warnings
 from pathlib import Path
-
 
 # Suppress warnings that would pollute output
 warnings.filterwarnings("ignore")

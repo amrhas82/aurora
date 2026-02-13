@@ -13,7 +13,6 @@ from .droid import DroidConfigurator
 from .opencode import OpenCodeConfigurator
 from .registry import TOOL_OPTIONS, ToolRegistry
 
-
 __all__ = [
     "AgentsStandardConfigurator",
     "AmpCodeConfigurator",

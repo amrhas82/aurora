@@ -110,7 +110,9 @@ class TestIndexPath:
         stats = manager.index_path(sample_project, max_workers=1)
 
         assert stats.files_indexed >= 2
-        assert stats.chunks_created >= 4  # greet, add, Calculator, multiply, divide, read_file, list_files
+        assert (
+            stats.chunks_created >= 4
+        )  # greet, add, Calculator, multiply, divide, read_file, list_files
 
     def test_returns_index_stats(self, manager, sample_project):
         stats = manager.index_path(sample_project, max_workers=1)

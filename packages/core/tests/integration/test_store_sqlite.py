@@ -17,7 +17,6 @@ from aurora_core.exceptions import ValidationError
 from aurora_core.store.sqlite import SQLiteStore
 from aurora_core.types import ChunkID
 
-
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "unit"))
 from test_store_base import StoreContractTests
 

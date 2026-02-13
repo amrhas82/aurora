@@ -11,11 +11,7 @@ import os
 
 import pytest
 
-from aurora_cli.config import (
-    Config,
-    load_config,
-    validate_config,
-)
+from aurora_cli.config import Config, load_config, validate_config
 from aurora_cli.errors import ConfigurationError
 
 
@@ -56,9 +52,7 @@ class TestLoadConfigDefaults:
         home = tmp_path / "home"
         aurora_dir = home / ".aurora"
         aurora_dir.mkdir(parents=True)
-        (aurora_dir / "config.json").write_text(
-            json.dumps({"escalation": {"threshold": 0.9}})
-        )
+        (aurora_dir / "config.json").write_text(json.dumps({"escalation": {"threshold": 0.9}}))
 
         monkeypatch.setenv("HOME", str(home))
         work = tmp_path / "work"
@@ -80,9 +74,7 @@ class TestLoadConfigDefaults:
         """Partial config merges with defaults — missing fields get defaults."""
         aurora_dir = tmp_path / ".aurora"
         aurora_dir.mkdir()
-        (aurora_dir / "config.json").write_text(
-            json.dumps({"llm": {"model": "custom"}})
-        )
+        (aurora_dir / "config.json").write_text(json.dumps({"llm": {"model": "custom"}}))
         monkeypatch.chdir(tmp_path)
 
         config = load_config()
@@ -146,9 +138,7 @@ class TestLoadConfigEnvOverrides:
         """Env vars take precedence over config file values."""
         aurora_dir = tmp_path / ".aurora"
         aurora_dir.mkdir()
-        (aurora_dir / "config.json").write_text(
-            json.dumps({"escalation": {"threshold": 0.5}})
-        )
+        (aurora_dir / "config.json").write_text(json.dumps({"escalation": {"threshold": 0.5}}))
         monkeypatch.chdir(tmp_path)
         monkeypatch.setenv("AURORA_ESCALATION_THRESHOLD", "0.8")
 
@@ -162,6 +152,7 @@ class TestValidateConfig:
     def test_valid_defaults_pass(self):
         """Default config from defaults.json passes validation."""
         import aurora_cli.config as cfg_mod
+
         with open(cfg_mod.DEFAULTS_FILE) as f:
             defaults = json.load(f)
         assert validate_config(defaults) == []
@@ -284,15 +275,11 @@ class TestValidateConfig:
 
     # -- context.code.hybrid_weights --
     def test_hybrid_weight_out_of_range(self):
-        errors = validate_config({
-            "context": {"code": {"hybrid_weights": {"activation": 1.5}}}
-        })
+        errors = validate_config({"context": {"code": {"hybrid_weights": {"activation": 1.5}}}})
         assert any("hybrid_weights.activation" in e for e in errors)
 
     def test_hybrid_top_k_zero(self):
-        errors = validate_config({
-            "context": {"code": {"hybrid_weights": {"top_k": 0}}}
-        })
+        errors = validate_config({"context": {"code": {"hybrid_weights": {"top_k": 0}}}})
         assert any("hybrid_weights.top_k" in e for e in errors)
 
     def test_context_max_file_size_zero(self):

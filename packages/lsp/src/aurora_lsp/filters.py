@@ -130,7 +130,6 @@ class ImportFilter:
         return usages, imports
 
 
-
 def get_filter_for_file(file_path: str | Path) -> ImportFilter:
     """Get appropriate ImportFilter for a file based on extension.
 

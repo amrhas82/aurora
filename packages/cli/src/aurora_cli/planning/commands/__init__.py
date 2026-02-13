@@ -7,5 +7,4 @@ from __future__ import annotations
 
 from aurora_cli.planning.commands.archive import ArchiveCommand
 
-
 __all__ = ["ArchiveCommand"]

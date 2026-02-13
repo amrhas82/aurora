@@ -8,7 +8,6 @@ Defines Go-specific patterns for:
 
 from aurora_lsp.languages.base import LanguageConfig
 
-
 GO_BRANCH_TYPES = {
     "if_statement",
     "for_statement",
@@ -50,10 +49,17 @@ GO_NESTED_PATTERNS = {
 
 GO_CALLBACK_METHODS = {
     # goroutine/defer patterns
-    "Go", "AfterFunc",
+    "Go",
+    "AfterFunc",
     # HTTP handlers
-    "HandleFunc", "Handle", "HandlerFunc",
-    "Get", "Post", "Put", "Delete", "Patch",  # router methods (gin, chi, echo)
+    "HandleFunc",
+    "Handle",
+    "HandlerFunc",
+    "Get",
+    "Post",
+    "Put",
+    "Delete",
+    "Patch",  # router methods (gin, chi, echo)
     "Use",  # middleware
     "Group",
     # sync primitives
@@ -63,9 +69,13 @@ GO_CALLBACK_METHODS = {
     "Run",  # t.Run subtests
     "Cleanup",  # t.Cleanup
     # channel/goroutine patterns
-    "WithCancel", "WithTimeout", "WithDeadline", "WithValue",
+    "WithCancel",
+    "WithTimeout",
+    "WithDeadline",
+    "WithValue",
     # common callback-taking functions
-    "Walk", "WalkDir",  # filepath.Walk
+    "Walk",
+    "WalkDir",  # filepath.Walk
     "Sort",  # sort.Slice
     "Map",
 }
@@ -73,18 +83,33 @@ GO_CALLBACK_METHODS = {
 # Interface method names and framework patterns that are not dead code
 GO_SKIP_DEADCODE_NAMES = {
     # Common interface implementations
-    "ServeHTTP", "String", "Error", "Unwrap",
-    "MarshalJSON", "UnmarshalJSON",
-    "MarshalText", "UnmarshalText",
-    "MarshalBinary", "UnmarshalBinary",
-    "Scan", "Value",  # sql.Scanner / driver.Valuer
-    "Close", "Read", "Write", "Flush",
-    "Len", "Less", "Swap",  # sort.Interface
+    "ServeHTTP",
+    "String",
+    "Error",
+    "Unwrap",
+    "MarshalJSON",
+    "UnmarshalJSON",
+    "MarshalText",
+    "UnmarshalText",
+    "MarshalBinary",
+    "UnmarshalBinary",
+    "Scan",
+    "Value",  # sql.Scanner / driver.Valuer
+    "Close",
+    "Read",
+    "Write",
+    "Flush",
+    "Len",
+    "Less",
+    "Swap",  # sort.Interface
     # Lifecycle hooks
-    "Setup", "Teardown",
-    "BeforeEach", "AfterEach",
+    "Setup",
+    "Teardown",
+    "BeforeEach",
+    "AfterEach",
     # gRPC
-    "Register", "RegisterServer",
+    "Register",
+    "RegisterServer",
 }
 
 GO_IMPORT_PATTERNS = [
@@ -103,17 +128,48 @@ GO_FUNCTION_DEF_TYPES = {
 # Built-in names to skip in callee analysis
 GO_SKIP_NAMES = {
     # Built-in functions
-    "len", "cap", "make", "new", "append", "copy", "delete",
-    "close", "panic", "recover", "print", "println",
-    "complex", "real", "imag",
-    "min", "max", "clear",  # Go 1.21+
+    "len",
+    "cap",
+    "make",
+    "new",
+    "append",
+    "copy",
+    "delete",
+    "close",
+    "panic",
+    "recover",
+    "print",
+    "println",
+    "complex",
+    "real",
+    "imag",
+    "min",
+    "max",
+    "clear",  # Go 1.21+
     # Type conversions
-    "int", "int8", "int16", "int32", "int64",
-    "uint", "uint8", "uint16", "uint32", "uint64",
-    "float32", "float64", "complex64", "complex128",
-    "string", "byte", "rune", "bool", "error",
+    "int",
+    "int8",
+    "int16",
+    "int32",
+    "int64",
+    "uint",
+    "uint8",
+    "uint16",
+    "uint32",
+    "uint64",
+    "float32",
+    "float64",
+    "complex64",
+    "complex128",
+    "string",
+    "byte",
+    "rune",
+    "bool",
+    "error",
     # Common noisy methods
-    "Error", "String", "Unwrap",
+    "Error",
+    "String",
+    "Unwrap",
 }
 
 

@@ -46,6 +46,7 @@ class TestAdhocAgentDetection:
         assert not cb._is_adhoc_agent("llm")
         assert not cb._is_adhoc_agent("general-purpose")
 
+
 class TestAdhocFailureThreshold:
     """Test adhoc agents have higher failure threshold."""
 

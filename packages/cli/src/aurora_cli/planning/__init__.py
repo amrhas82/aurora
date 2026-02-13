@@ -47,7 +47,6 @@ from aurora_cli.planning.results import (
     ShowResult,
 )
 
-
 __all__ = [
     # Models
     "Plan",

@@ -17,7 +17,6 @@ Outputs (all in .aurora/friction/):
 import sys
 from pathlib import Path
 
-
 # Import from sibling scripts
 script_dir = Path(__file__).parent
 sys.path.insert(0, str(script_dir))

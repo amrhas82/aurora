@@ -16,7 +16,6 @@ from rich.console import Console
 from aurora_cli.configurators import ToolRegistry
 from aurora_cli.configurators.slash import SlashCommandRegistry
 
-
 console = Console()
 
 AURORA_DIR_NAME = ".aurora"
@@ -941,7 +940,6 @@ async def configure_mcp_servers(
             console.print(f"  [red]✗[/] {display_name}: {result.message}")
 
     return created, updated, skipped, validation_warnings
-
 
 
 def detect_claude_hooks(project_path: Path) -> dict[str, bool]:

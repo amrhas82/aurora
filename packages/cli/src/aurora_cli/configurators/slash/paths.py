@@ -199,5 +199,3 @@ def get_tool_paths(tool_id: str) -> ToolPaths | None:
     """
     normalized = tool_id.lower().replace(" ", "-")
     return TOOL_PATHS.get(normalized)
-
-

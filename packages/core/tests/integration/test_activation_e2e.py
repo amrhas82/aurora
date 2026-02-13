@@ -59,10 +59,7 @@ class TestFullActivationPipeline:
         now = datetime.now(timezone.utc)
 
         history_1 = [AccessHistoryEntry(timestamp=now - timedelta(hours=1))]
-        history_5 = [
-            AccessHistoryEntry(timestamp=now - timedelta(hours=i))
-            for i in range(1, 6)
-        ]
+        history_5 = [AccessHistoryEntry(timestamp=now - timedelta(hours=i)) for i in range(1, 6)]
 
         result_1 = engine.calculate_total(access_history=history_1, current_time=now)
         result_5 = engine.calculate_total(access_history=history_5, current_time=now)

@@ -6,7 +6,6 @@ Supports .auroraignore files with gitignore-style patterns.
 import logging
 from pathlib import Path
 
-
 logger = logging.getLogger(__name__)
 
 

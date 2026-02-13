@@ -10,7 +10,6 @@ This classification feeds into the circuit breaker's smart fast-fail logic.
 
 import pytest
 
-
 # We'll test the classification logic by mocking SpawnResult with various error messages
 
 

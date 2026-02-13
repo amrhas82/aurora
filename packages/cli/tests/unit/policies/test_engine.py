@@ -172,9 +172,7 @@ class TestPoliciesEngine:
         """Test creating default policies file."""
         aurora_dir = tmp_path / ".aurora"
         aurora_dir.mkdir()
-        monkeypatch.setattr(
-            "aurora_cli.policies.engine.get_aurora_dir", lambda: aurora_dir
-        )
+        monkeypatch.setattr("aurora_cli.policies.engine.get_aurora_dir", lambda: aurora_dir)
 
         engine = PoliciesEngine()
         created_path = engine.create_default_policies_file()

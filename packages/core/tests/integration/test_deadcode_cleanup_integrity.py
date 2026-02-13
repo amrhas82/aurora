@@ -16,6 +16,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from aurora_core.activation.base_level import AccessHistoryEntry
 from aurora_core.activation.decay import (
     AGGRESSIVE_DECAY,
     DECAY_BY_TYPE,
@@ -36,9 +37,7 @@ from aurora_core.activation.engine import (
     ActivationEngine,
     get_cached_engine,
 )
-from aurora_core.activation.base_level import AccessHistoryEntry
 from aurora_core.store.connection_pool import ConnectionPool, get_connection_pool
-
 
 # ============================================================
 # 1. engine.explain_activation — decay_details uses calculate()
@@ -207,26 +206,28 @@ class TestActivationPackageExports:
 
     def test_all_engine_exports_importable(self):
         from aurora_core.activation import (
-            ActivationComponents,
-            ActivationConfig,
-            ActivationEngine,
             AGGRESSIVE_CONFIG,
             BLA_FOCUSED_CONFIG,
             CONSERVATIVE_CONFIG,
             CONTEXT_FOCUSED_CONFIG,
             DEFAULT_CONFIG,
+            ActivationComponents,
+            ActivationConfig,
+            ActivationEngine,
         )
+
         assert ActivationEngine is not None
 
     def test_all_decay_exports_importable(self):
         from aurora_core.activation import (
             AGGRESSIVE_DECAY,
-            DecayCalculator,
-            DecayConfig,
             GENTLE_DECAY,
             MODERATE_DECAY,
+            DecayCalculator,
+            DecayConfig,
             calculate_decay,
         )
+
         assert DecayCalculator is not None
 
     def test_all_retrieval_exports_importable(self):
@@ -237,6 +238,7 @@ class TestActivationPackageExports:
             RetrievalConfig,
             RetrievalResult,
         )
+
         assert ActivationRetriever is not None
 
     def test_all_formula_exports_importable(self):
@@ -255,18 +257,21 @@ class TestActivationPackageExports:
             calculate_context_boost,
             calculate_spreading,
         )
+
         assert BaseLevelActivation is not None
 
 
 class TestOptimizationPackageExports:
     def test_optimization_empty_all(self):
         from aurora_core.optimization import __all__
+
         assert __all__ == []
 
 
 class TestResiliencePackageExports:
     def test_resilience_exports_retry_handler(self):
         from aurora_core.resilience import RetryHandler, __all__
+
         assert __all__ == ["RetryHandler"]
         assert RetryHandler is not None
 
@@ -290,6 +295,7 @@ class TestTemplatesPackageExports:
             get_all_command_templates,
             get_claude_template,
         )
+
         assert AGENTS_TEMPLATE is not None
         assert callable(get_agents_template)
         assert callable(get_all_command_templates)
@@ -316,10 +322,12 @@ class TestRemovedSymbolsNotAccessible:
 
     def test_connection_pool_no_clear_connection_pool_function(self):
         from aurora_core.store import connection_pool as cp_module
+
         assert not hasattr(cp_module, "clear_connection_pool")
 
     def test_paths_no_get_budget_tracker_path(self):
         from aurora_core import paths
+
         assert not hasattr(paths, "get_budget_tracker_path")
 
 
@@ -331,6 +339,7 @@ class TestRemovedSymbolsNotAccessible:
 class TestSoarRetrieveIntegrity:
     def test_retrieval_budgets_accessible(self):
         from aurora_soar.phases.retrieve import RETRIEVAL_BUDGETS
+
         assert isinstance(RETRIEVAL_BUDGETS, dict)
         assert "SIMPLE" in RETRIEVAL_BUDGETS
         assert "MEDIUM" in RETRIEVAL_BUDGETS
@@ -339,17 +348,20 @@ class TestSoarRetrieveIntegrity:
 
     def test_retrieval_budgets_values(self):
         from aurora_soar.phases.retrieve import RETRIEVAL_BUDGETS
+
         assert RETRIEVAL_BUDGETS["SIMPLE"] < RETRIEVAL_BUDGETS["MEDIUM"]
         assert RETRIEVAL_BUDGETS["MEDIUM"] < RETRIEVAL_BUDGETS["COMPLEX"]
         assert RETRIEVAL_BUDGETS["COMPLEX"] < RETRIEVAL_BUDGETS["CRITICAL"]
 
     def test_no_filter_by_activation(self):
         from aurora_soar.phases import retrieve as ret_module
+
         assert not hasattr(ret_module, "filter_by_activation")
         assert not hasattr(ret_module, "ACTIVATION_THRESHOLD")
 
     def test_retrieve_context_importable(self):
         from aurora_soar.phases.retrieve import retrieve_context
+
         assert callable(retrieve_context)
 
 
@@ -361,17 +373,15 @@ class TestSoarRetrieveIntegrity:
 class TestSoarAssessIntegrity:
     def test_assessment_result_importable(self):
         from aurora_soar.phases.assess import AssessmentResult
-        result = AssessmentResult(
-            level="simple", score=5, confidence=0.9, signals=["short_query"]
-        )
+
+        result = AssessmentResult(level="simple", score=5, confidence=0.9, signals=["short_query"])
         assert result.level == "simple"
         assert result.score == 5
 
     def test_assessment_result_to_dict(self):
         from aurora_soar.phases.assess import AssessmentResult
-        result = AssessmentResult(
-            level="medium", score=15, confidence=0.85, signals=["multi_step"]
-        )
+
+        result = AssessmentResult(level="medium", score=15, confidence=0.85, signals=["multi_step"])
         d = result.to_dict()
         assert d["level"] == "medium"
         assert d["score"] == 15
@@ -379,11 +389,13 @@ class TestSoarAssessIntegrity:
 
     def test_complexity_assessor_importable(self):
         from aurora_soar.phases.assess import ComplexityAssessor
+
         assessor = ComplexityAssessor()
         assert assessor is not None
 
     def test_no_complexity_level_enum(self):
         from aurora_soar.phases import assess as assess_module
+
         assert not hasattr(assess_module, "ComplexityLevel")
 
 
@@ -395,6 +407,7 @@ class TestSoarAssessIntegrity:
 class TestSpawnerRecoveryIntegrity:
     def test_recovery_state_enum(self):
         from aurora_spawner.recovery import RecoveryState
+
         assert RecoveryState.INITIAL.value == "initial"
         assert RecoveryState.EXECUTING.value == "executing"
         assert RecoveryState.SUCCEEDED.value == "succeeded"
@@ -403,6 +416,7 @@ class TestSpawnerRecoveryIntegrity:
 
     def test_recovery_state_transition_creation(self):
         from aurora_spawner.recovery import RecoveryState, RecoveryStateTransition
+
         t = RecoveryStateTransition(
             from_state=RecoveryState.INITIAL,
             to_state=RecoveryState.EXECUTING,
@@ -435,6 +449,7 @@ class TestSpawnerRecoveryIntegrity:
             spawn,
             spawn_parallel,
         )
+
         assert RecoveryStateMachine is not None
         assert callable(spawn)
 
@@ -447,17 +462,20 @@ class TestSpawnerRecoveryIntegrity:
 class TestContextCodeIntegrity:
     def test_bm25_scorer_tokenize(self):
         from aurora_context_code.semantic.bm25_scorer import tokenize
+
         tokens = tokenize("getUserData")
         assert len(tokens) > 0
         assert any("get" in t.lower() for t in tokens)
 
     def test_bm25_scorer_class_importable(self):
         from aurora_context_code.semantic.bm25_scorer import BM25Scorer
+
         scorer = BM25Scorer()
         assert scorer is not None
 
     def test_bm25_no_standalone_functions(self):
         from aurora_context_code.semantic import bm25_scorer as bm25_module
+
         assert not hasattr(bm25_module, "calculate_idf")
         assert not hasattr(bm25_module, "calculate_bm25")
 
@@ -466,20 +484,24 @@ class TestContextCodeIntegrity:
             EmbeddingProvider,
             cosine_similarity,
         )
+
         assert EmbeddingProvider is not None
         assert callable(cosine_similarity)
 
     def test_embedding_no_is_model_loaded(self):
         from aurora_context_code.semantic import embedding_provider as ep_module
+
         assert not hasattr(ep_module, "is_model_loaded")
 
     def test_git_signal_extractor_importable(self):
         from aurora_context_code.git import GitSignalExtractor
+
         extractor = GitSignalExtractor()
         assert extractor is not None
 
     def test_git_no_removed_methods(self):
         from aurora_context_code.git import GitSignalExtractor
+
         extractor = GitSignalExtractor()
         assert not hasattr(extractor, "clear_cache")
         assert not hasattr(extractor, "_parse_blame_output")
@@ -533,6 +555,7 @@ class TestActivationEngineEndToEnd:
 
     def test_cached_engine_works(self):
         from unittest.mock import MagicMock
+
         mock_store = MagicMock()
         mock_store.db_path = ":memory:test_cached"
 

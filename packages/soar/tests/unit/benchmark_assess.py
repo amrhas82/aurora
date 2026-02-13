@@ -45,8 +45,7 @@ def benchmark_single_prompt():
 def benchmark_long_prompt():
     """Benchmark long prompt (500+ chars) latency."""
     assessor = ComplexityAssessor()
-    prompt = (
-        """
+    prompt = """
     Implement a comprehensive user authentication system with the following requirements:
     1. Support for multiple authentication methods (OAuth, SAML, local credentials)
     2. Multi-factor authentication with SMS and TOTP support
@@ -58,9 +57,7 @@ def benchmark_long_prompt():
     8. Comprehensive unit and integration tests
     9. Documentation including API specs and deployment guide
     10. Performance optimization for high-concurrency scenarios
-    """
-        * 2
-    )  # Double it to ensure 500+ chars
+    """ * 2  # Double it to ensure 500+ chars
 
     assert len(prompt) > 500, f"Prompt length: {len(prompt)}"
 

@@ -12,7 +12,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Callable
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -478,4 +477,3 @@ class SpawnPolicy:
             )
 
         return presets[name]()
-

@@ -18,7 +18,6 @@ from aurora_lsp.languages.javascript import (
     JS_SKIP_DEADCODE_NAMES,
 )
 
-
 TS_IMPORT_PATTERNS = [
     r"^\s*import\s+",
     r"^\s*import\s*\{",

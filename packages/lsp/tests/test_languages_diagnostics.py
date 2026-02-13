@@ -10,8 +10,9 @@ import pytest
 
 from aurora_lsp.diagnostics import DiagnosticSeverity, DiagnosticsFormatter
 from aurora_lsp.languages import (
-    get_callback_methods,
+    EXTENSION_MAP,
     get_call_node_type,
+    get_callback_methods,
     get_complexity_branch_types,
     get_config,
     get_function_def_types,
@@ -20,9 +21,7 @@ from aurora_lsp.languages import (
     is_entry_point,
     is_nested_helper,
     supported_extensions,
-    EXTENSION_MAP,
 )
-
 
 # ---------------------------------------------------------------------------
 # Language Registry
@@ -307,7 +306,8 @@ class TestDiagnosticsSeverityFilter:
 
         # Test: severity_filter=2 removes errors
         result = await formatter.get_all_diagnostics(
-            path=tmp_path, severity_filter=2,
+            path=tmp_path,
+            severity_filter=2,
         )
         assert result["total_errors"] == 0  # Filtered out
         assert result["total_warnings"] == 1  # Kept

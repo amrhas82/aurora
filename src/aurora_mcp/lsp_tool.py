@@ -269,9 +269,13 @@ def _get_symbol_name_from_line(file_path: str, line_0indexed: int, workspace: Pa
 def _ext_to_rg_type(ext: str) -> str:
     """Map file extension to ripgrep --type value."""
     return {
-        ".py": "py", ".pyi": "py",
-        ".js": "js", ".jsx": "js", ".mjs": "js",
-        ".ts": "ts", ".tsx": "ts",
+        ".py": "py",
+        ".pyi": "py",
+        ".js": "js",
+        ".jsx": "js",
+        ".mjs": "js",
+        ".ts": "ts",
+        ".tsx": "ts",
         ".go": "go",
         ".java": "java",
     }.get(ext, "py")
@@ -334,8 +338,7 @@ def _count_text_matches(
             try:
                 # Get all unique file:line refs, then sort source before tests
                 ref_result = subprocess.run(
-                    ["rg", "-w", "-n", "--no-heading", "--type", rg_type,
-                     symbol_name, "."],
+                    ["rg", "-w", "-n", "--no-heading", "--type", rg_type, symbol_name, "."],
                     cwd=workspace,
                     capture_output=True,
                     text=True,

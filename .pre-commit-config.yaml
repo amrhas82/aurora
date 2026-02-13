@@ -43,7 +43,7 @@ repos:
 
   # Python code formatting
   - repo: https://github.com/psf/black
-    rev: 24.1.1
+    rev: 26.1.0
     hooks:
       - id: black
         name: Format Python code with Black

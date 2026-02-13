@@ -18,7 +18,6 @@ from aurora_lsp.analysis import (
 )
 from aurora_lsp.client import AuroraLSPClient
 
-
 # ---------------------------------------------------------------------------
 # _ext_to_rg_type
 # ---------------------------------------------------------------------------
@@ -254,7 +253,12 @@ class TestClientNormalization:
     def test_normalize_locations_absolute_path(self, tmp_path):
         """absolutePath key extracted correctly."""
         client = self._make_client(tmp_path)
-        locs = [{"absolutePath": "/home/user/project/foo.py", "range": {"start": {"line": 5, "character": 10}}}]
+        locs = [
+            {
+                "absolutePath": "/home/user/project/foo.py",
+                "range": {"start": {"line": 5, "character": 10}},
+            }
+        ]
         result = client._normalize_locations(locs)
         assert len(result) == 1
         assert result[0]["file"] == "/home/user/project/foo.py"
@@ -264,14 +268,21 @@ class TestClientNormalization:
     def test_normalize_locations_uri(self, tmp_path):
         """uri with file:// prefix stripped."""
         client = self._make_client(tmp_path)
-        locs = [{"uri": "file:///home/user/foo.py", "range": {"start": {"line": 3, "character": 0}}}]
+        locs = [
+            {"uri": "file:///home/user/foo.py", "range": {"start": {"line": 3, "character": 0}}}
+        ]
         result = client._normalize_locations(locs)
         assert result[0]["file"] == "/home/user/foo.py"
 
     def test_normalize_locations_target_uri(self, tmp_path):
         """targetUri extracted and file:// stripped."""
         client = self._make_client(tmp_path)
-        locs = [{"targetUri": "file:///proj/bar.py", "targetRange": {"start": {"line": 7, "character": 2}}}]
+        locs = [
+            {
+                "targetUri": "file:///proj/bar.py",
+                "targetRange": {"start": {"line": 7, "character": 2}},
+            }
+        ]
         result = client._normalize_locations(locs)
         assert result[0]["file"] == "/proj/bar.py"
         assert result[0]["line"] == 7

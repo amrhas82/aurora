@@ -121,7 +121,6 @@ class ExamplesLoader:
         return all_examples[:count]
 
 
-
 # Global singleton instance
 _default_loader: ExamplesLoader | None = None
 

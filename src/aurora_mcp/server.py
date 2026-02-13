@@ -64,7 +64,9 @@ class AuroraMCPServer:
             name="lsp",
             description=lsp_tool.__doc__ or "LSP Code Intelligence",
         )
-        def lsp(action: str = "check", path: str = "", line: int | None = None, accurate: bool = False) -> dict:
+        def lsp(
+            action: str = "check", path: str = "", line: int | None = None, accurate: bool = False
+        ) -> dict:
             """LSP Code Intelligence - dead code detection, impact analysis, pre-edit checks."""
             return lsp_tool(action=action, path=path, line=line, accurate=accurate)
 

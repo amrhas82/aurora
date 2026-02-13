@@ -23,7 +23,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -371,7 +370,6 @@ class RecoveryStateMachine:
         }
 
 
-
 class ErrorCategory(Enum):
     """Error categories for recovery decision making."""
 
@@ -475,7 +473,6 @@ class ErrorClassifier:
             ErrorCategory.RESOURCE,
             ErrorCategory.UNKNOWN,
         )
-
 
 
 @dataclass

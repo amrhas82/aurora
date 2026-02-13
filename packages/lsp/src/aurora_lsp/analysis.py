@@ -24,7 +24,6 @@ from aurora_lsp.languages import (
     is_nested_helper,
 )
 
-
 if TYPE_CHECKING:
     from aurora_lsp.client import AuroraLSPClient
 
@@ -65,9 +64,13 @@ class SymbolKind(IntEnum):
 def _ext_to_rg_type(ext: str) -> str:
     """Map file extension to ripgrep --type value."""
     return {
-        ".py": "py", ".pyi": "py",
-        ".js": "js", ".jsx": "js", ".mjs": "js",
-        ".ts": "ts", ".tsx": "ts",
+        ".py": "py",
+        ".pyi": "py",
+        ".js": "js",
+        ".jsx": "js",
+        ".mjs": "js",
+        ".ts": "ts",
+        ".tsx": "ts",
         ".go": "go",
         ".java": "java",
     }.get(ext, "py")
@@ -159,7 +162,13 @@ def _fallback_grep_search(
         file_types = ["py"]
 
     # Map rg types to grep --include patterns
-    _type_to_exts = {"py": ["*.py"], "js": ["*.js", "*.jsx", "*.mjs"], "ts": ["*.ts", "*.tsx"], "go": ["*.go"], "java": ["*.java"]}
+    _type_to_exts = {
+        "py": ["*.py"],
+        "js": ["*.js", "*.jsx", "*.mjs"],
+        "ts": ["*.ts", "*.tsx"],
+        "go": ["*.go"],
+        "java": ["*.java"],
+    }
     include_flags = []
     for ft in file_types:
         for ext in _type_to_exts.get(ft, [f"*.{ft}"]):
@@ -203,15 +212,59 @@ def _get_skip_names(language: str) -> set[str]:
 
     # Python built-ins and common methods
     return {
-        "int", "str", "float", "bool", "list", "dict", "set", "tuple",
-        "len", "range", "enumerate", "zip", "map", "filter", "sorted",
-        "print", "isinstance", "hasattr", "getattr", "setattr",
-        "min", "max", "sum", "abs", "round", "type", "id", "hash",
-        "open", "super", "next", "iter",
-        "get", "items", "keys", "values", "update", "pop",
-        "append", "extend", "insert", "remove", "clear", "copy",
-        "format", "join", "split", "strip", "replace",
-        "lower", "upper", "startswith", "endswith",
+        "int",
+        "str",
+        "float",
+        "bool",
+        "list",
+        "dict",
+        "set",
+        "tuple",
+        "len",
+        "range",
+        "enumerate",
+        "zip",
+        "map",
+        "filter",
+        "sorted",
+        "print",
+        "isinstance",
+        "hasattr",
+        "getattr",
+        "setattr",
+        "min",
+        "max",
+        "sum",
+        "abs",
+        "round",
+        "type",
+        "id",
+        "hash",
+        "open",
+        "super",
+        "next",
+        "iter",
+        "get",
+        "items",
+        "keys",
+        "values",
+        "update",
+        "pop",
+        "append",
+        "extend",
+        "insert",
+        "remove",
+        "clear",
+        "copy",
+        "format",
+        "join",
+        "split",
+        "strip",
+        "replace",
+        "lower",
+        "upper",
+        "startswith",
+        "endswith",
     }
 
 

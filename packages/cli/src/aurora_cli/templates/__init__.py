@@ -9,7 +9,6 @@ from .claude import CLAUDE_TEMPLATE, get_claude_template
 from .commands import COMMAND_TEMPLATES, get_all_command_templates
 from .project import PROJECT_TEMPLATE
 
-
 __all__ = [
     "AGENTS_TEMPLATE",
     "CLAUDE_TEMPLATE",

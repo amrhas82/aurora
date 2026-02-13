@@ -74,5 +74,3 @@ def get_conversations_dir() -> Path:
 
     """
     return get_logs_dir() / "conversations"
-
-

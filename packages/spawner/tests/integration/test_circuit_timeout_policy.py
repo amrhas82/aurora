@@ -9,11 +9,7 @@ from unittest.mock import patch
 import pytest
 
 from aurora_spawner.circuit_breaker import CircuitBreaker, CircuitState
-from aurora_spawner.heartbeat import (
-    HeartbeatEmitter,
-    HeartbeatEventType,
-    HeartbeatMonitor,
-)
+from aurora_spawner.heartbeat import HeartbeatEmitter, HeartbeatEventType, HeartbeatMonitor
 from aurora_spawner.timeout_policy import (
     RetryPolicy,
     RetryStrategy,
@@ -22,7 +18,6 @@ from aurora_spawner.timeout_policy import (
     TimeoutMode,
     TimeoutPolicy,
 )
-
 
 # ---------------------------------------------------------------------------
 # Circuit breaker state machine
@@ -332,7 +327,9 @@ class TestTerminationPolicy:
 class TestSpawnPolicy:
     """Tests for SpawnPolicy presets and from_name factory."""
 
-    @pytest.mark.parametrize("name", ["default", "production", "fast_fail", "patient", "development", "test"])
+    @pytest.mark.parametrize(
+        "name", ["default", "production", "fast_fail", "patient", "development", "test"]
+    )
     def test_spawn_policy_all_presets_valid(self, name):
         """All 6 presets return valid SpawnPolicy instances."""
         policy = SpawnPolicy.from_name(name)

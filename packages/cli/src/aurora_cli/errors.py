@@ -15,7 +15,6 @@ from typing import Any, TypeVar
 import click
 from rich.console import Console
 
-
 F = TypeVar("F", bound=Callable[..., Any])
 
 # Exit code constants

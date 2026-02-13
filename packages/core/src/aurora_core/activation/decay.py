@@ -47,7 +47,6 @@ from datetime import datetime, timezone
 
 from pydantic import BaseModel, Field, field_validator
 
-
 # Default decay rates by chunk type (ACT-R cognitive modeling)
 # Lower values = "stickier" memories (slower forgetting)
 # Higher values = more volatile (faster forgetting)
@@ -241,6 +240,7 @@ class DecayCalculator:
         """
         # Convert to hours and use standard calculation
         return self.calculate_from_hours(days_since_access * 24.0)
+
 
 def calculate_decay(
     last_access: datetime,

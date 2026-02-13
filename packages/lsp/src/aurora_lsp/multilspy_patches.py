@@ -18,7 +18,6 @@ import pathlib
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
-
 logger = logging.getLogger(__name__)
 
 _PATCHED = False

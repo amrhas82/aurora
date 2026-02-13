@@ -105,6 +105,7 @@ class TestValidateVerdictConsistency:
         _auto_correct_verdict(VerificationVerdict.FAIL, 0.3)
         _auto_correct_verdict(VerificationVerdict.FAIL, 0.49)
 
+
 class TestVerifyDecomposition:
     """Tests for verify_decomposition function."""
 

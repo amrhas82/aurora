@@ -12,7 +12,6 @@ from pathlib import Path
 from aurora_context_code.parser import CodeParser
 from aurora_core.chunks.code_chunk import CodeChunk
 
-
 # Try to import tree-sitter, fall back to text chunking if unavailable
 TREE_SITTER_AVAILABLE = True
 try:
@@ -132,19 +131,21 @@ class JavaParser(CodeParser):
                 docstring = self._extract_javadoc(node, source_code)
                 complexity = self._calculate_complexity(node)
 
-                chunks.append(CodeChunk(
-                    chunk_id=chunk_id,
-                    file_path=str(file_path),
-                    element_type="class",
-                    name=qualified_name,
-                    line_start=line_start,
-                    line_end=line_end,
-                    signature=signature,
-                    docstring=docstring,
-                    dependencies=[],
-                    complexity_score=complexity,
-                    language="java",
-                ))
+                chunks.append(
+                    CodeChunk(
+                        chunk_id=chunk_id,
+                        file_path=str(file_path),
+                        element_type="class",
+                        name=qualified_name,
+                        line_start=line_start,
+                        line_end=line_end,
+                        signature=signature,
+                        docstring=docstring,
+                        dependencies=[],
+                        complexity_score=complexity,
+                        language="java",
+                    )
+                )
 
                 # Extract methods
                 body_node = node.child_by_field_name("body")
@@ -182,26 +183,26 @@ class JavaParser(CodeParser):
                 chunk_id = self._generate_chunk_id(file_path, name, line_start)
                 docstring = self._extract_javadoc(node, source_code)
 
-                chunks.append(CodeChunk(
-                    chunk_id=chunk_id,
-                    file_path=str(file_path),
-                    element_type="class",
-                    name=name,
-                    line_start=line_start,
-                    line_end=line_end,
-                    signature=signature,
-                    docstring=docstring,
-                    dependencies=[],
-                    complexity_score=0.0,
-                    language="java",
-                ))
+                chunks.append(
+                    CodeChunk(
+                        chunk_id=chunk_id,
+                        file_path=str(file_path),
+                        element_type="class",
+                        name=name,
+                        line_start=line_start,
+                        line_end=line_end,
+                        signature=signature,
+                        docstring=docstring,
+                        dependencies=[],
+                        complexity_score=0.0,
+                        language="java",
+                    )
+                )
 
                 # Extract methods in interface
                 body_node = node.child_by_field_name("body")
                 if body_node:
-                    chunks.extend(
-                        self._extract_methods(body_node, name, file_path, source_code)
-                    )
+                    chunks.extend(self._extract_methods(body_node, name, file_path, source_code))
 
             except Exception as e:
                 logger.warning(f"Failed to extract interface: {e}")
@@ -232,19 +233,21 @@ class JavaParser(CodeParser):
                 chunk_id = self._generate_chunk_id(file_path, name, line_start)
                 docstring = self._extract_javadoc(node, source_code)
 
-                chunks.append(CodeChunk(
-                    chunk_id=chunk_id,
-                    file_path=str(file_path),
-                    element_type="class",
-                    name=name,
-                    line_start=line_start,
-                    line_end=line_end,
-                    signature=signature,
-                    docstring=docstring,
-                    dependencies=[],
-                    complexity_score=0.0,
-                    language="java",
-                ))
+                chunks.append(
+                    CodeChunk(
+                        chunk_id=chunk_id,
+                        file_path=str(file_path),
+                        element_type="class",
+                        name=name,
+                        line_start=line_start,
+                        line_end=line_end,
+                        signature=signature,
+                        docstring=docstring,
+                        dependencies=[],
+                        complexity_score=0.0,
+                        language="java",
+                    )
+                )
 
             except Exception as e:
                 logger.warning(f"Failed to extract enum: {e}")
@@ -289,19 +292,21 @@ class JavaParser(CodeParser):
                 docstring = self._extract_javadoc(child, source_code)
                 complexity = self._calculate_complexity(child)
 
-                chunks.append(CodeChunk(
-                    chunk_id=chunk_id,
-                    file_path=str(file_path),
-                    element_type="method",
-                    name=qualified_name,
-                    line_start=line_start,
-                    line_end=line_end,
-                    signature=signature,
-                    docstring=docstring,
-                    dependencies=[],
-                    complexity_score=complexity,
-                    language="java",
-                ))
+                chunks.append(
+                    CodeChunk(
+                        chunk_id=chunk_id,
+                        file_path=str(file_path),
+                        element_type="method",
+                        name=qualified_name,
+                        line_start=line_start,
+                        line_end=line_end,
+                        signature=signature,
+                        docstring=docstring,
+                        dependencies=[],
+                        complexity_score=complexity,
+                        language="java",
+                    )
+                )
 
             except Exception as e:
                 logger.warning(f"Failed to extract method: {e}")
@@ -309,9 +314,7 @@ class JavaParser(CodeParser):
 
         return chunks
 
-    def _build_class_signature(
-        self, node: tree_sitter.Node, source_code: str, keyword: str
-    ) -> str:
+    def _build_class_signature(self, node: tree_sitter.Node, source_code: str, keyword: str) -> str:
         """Build class/interface signature with extends/implements."""
         name_node = node.child_by_field_name("name")
         if not name_node:

@@ -9,7 +9,6 @@ from tempfile import TemporaryDirectory
 from aurora_cli.planning.cache import PlanDecompositionCache
 from aurora_cli.planning.models import Complexity, Subgoal
 
-
 # Configure logging to see cache operations
 logging.basicConfig(
     level=logging.INFO,

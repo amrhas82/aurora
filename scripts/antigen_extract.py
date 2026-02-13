@@ -344,9 +344,7 @@ def cluster_candidates(all_candidates):
 
     for c in all_candidates:
         # Normalize tool sequence: strip :error/:ok suffixes for grouping
-        tool_norm = ",".join(
-            re.sub(r":error|:ok", "", t) for t in c["tool_sequence"]
-        ) or "(none)"
+        tool_norm = ",".join(re.sub(r":error|:ok", "", t) for t in c["tool_sequence"]) or "(none)"
         key = c["anchor_signal"] + "|" + tool_norm
 
         if key not in cluster_map:
@@ -393,19 +391,21 @@ def cluster_candidates(all_candidates):
         top_files = sorted(cl["files"].items(), key=lambda x: -x[1])[:5]
         top_keywords = sorted(cl["keywords"].items(), key=lambda x: -x[1])[:10]
 
-        clusters.append({
-            "anchor_signal": cl["anchor_signal"],
-            "tool_pattern": cl["tool_pattern"],
-            "count": cl["count"],
-            "score": cl["count"] * weight,
-            "sessions": len(cl["sessions"]),
-            "median_peak": peaks[len(peaks) // 2],
-            "max_peak": peaks[-1],
-            "contexts": cl["contexts"],
-            "errors": cl["errors"],
-            "top_files": [f for f, _ in top_files],
-            "top_keywords": [k for k, _ in top_keywords],
-        })
+        clusters.append(
+            {
+                "anchor_signal": cl["anchor_signal"],
+                "tool_pattern": cl["tool_pattern"],
+                "count": cl["count"],
+                "score": cl["count"] * weight,
+                "sessions": len(cl["sessions"]),
+                "median_peak": peaks[len(peaks) // 2],
+                "max_peak": peaks[-1],
+                "contexts": cl["contexts"],
+                "errors": cl["errors"],
+                "top_files": [f for f, _ in top_files],
+                "top_keywords": [k for k, _ in top_keywords],
+            }
+        )
 
     clusters.sort(key=lambda x: -x["score"])
     return clusters

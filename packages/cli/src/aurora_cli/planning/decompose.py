@@ -19,7 +19,6 @@ from aurora_cli.planning.cache import PlanDecompositionCache
 from aurora_cli.planning.memory import FilePathResolver
 from aurora_cli.planning.models import Complexity, FileResolution, Subgoal
 
-
 # Try to import MemoryRetriever for context loading
 try:
     from aurora_cli.memory.retrieval import MemoryRetriever

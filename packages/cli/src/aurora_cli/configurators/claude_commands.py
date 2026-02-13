@@ -118,4 +118,3 @@ class ClaudeCommandsConfigurator:
         # File doesn't exist or no markers - write entire content
         # The template already includes markers, so write as-is
         file_path.write_text(new_content, encoding="utf-8")
-

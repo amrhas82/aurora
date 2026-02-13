@@ -14,7 +14,6 @@ from typing import Any
 
 from aurora_core.chunks.base import Chunk
 
-
 # ============================================================================
 # Mock LLM
 # ============================================================================
@@ -220,7 +219,6 @@ class MockLLM:
             if prompt_substring in call["prompt"]:
                 return
         raise AssertionError(f"MockLLM was not called with prompt containing '{prompt_substring}'")
-
 
 
 # ============================================================================

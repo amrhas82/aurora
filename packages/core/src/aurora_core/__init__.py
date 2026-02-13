@@ -15,7 +15,6 @@ from aurora_core.chunk_types import (
     get_chunk_type,
 )
 
-
 __version__ = "0.1.0"
 
 __all__ = [

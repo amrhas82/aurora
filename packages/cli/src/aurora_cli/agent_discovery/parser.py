@@ -19,7 +19,6 @@ from pydantic import ValidationError
 
 from aurora_cli.agent_discovery.models import AgentInfo
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -184,4 +183,3 @@ class AgentParser:
             error_msg = _format_validation_errors(e.errors())
             logger.warning("Validation failed for %s - %s", path, error_msg)
             return None
-

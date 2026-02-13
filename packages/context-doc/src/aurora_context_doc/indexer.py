@@ -4,10 +4,9 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from aurora_core.store import Store
-
 from aurora_context_doc.chunker import DocumentChunker
 from aurora_context_doc.parser.base import DocumentParser
+from aurora_core.store import Store
 
 logger = logging.getLogger(__name__)
 

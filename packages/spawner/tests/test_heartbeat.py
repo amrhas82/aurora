@@ -178,6 +178,7 @@ class TestHeartbeatMonitor:
         assert healthy is False
         assert "No activity" in reason
 
+
 class TestHeartbeatStream:
     """Test heartbeat streaming functionality."""
 

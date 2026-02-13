@@ -689,7 +689,9 @@ def test_concurrent_searches_thread_safety(tmp_path):
 
     # Verify all successful threads got results with correct count
     for result in results:
-        assert result["result_count"] == 5, f"Thread {result['worker_id']} got {result['result_count']} results, expected 5"
+        assert (
+            result["result_count"] == 5
+        ), f"Thread {result['worker_id']} got {result['result_count']} results, expected 5"
 
 
 def test_cache_failure_graceful_degradation(tmp_path):

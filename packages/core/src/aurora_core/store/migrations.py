@@ -286,7 +286,6 @@ class MigrationManager:
             raise StorageError(f"Failed to backup database: {db_path}", details=str(e))
 
 
-
 # Global migration manager instance
 _migration_manager = MigrationManager()
 

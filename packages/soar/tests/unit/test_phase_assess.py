@@ -278,6 +278,7 @@ class TestEdgeCases:
 class TestLLMFallback:
     """Tests for LLM Tier 2 fallback integration."""
 
+
 def test_critical_routing():
     """Verify CRITICAL routes same as COMPLEX for escalation purposes.
 

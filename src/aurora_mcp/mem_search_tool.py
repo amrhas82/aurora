@@ -273,9 +273,13 @@ def _get_git_info(file_path: str, workspace: Path) -> str:
 def _ext_to_rg_type(ext: str) -> str:
     """Map file extension to ripgrep --type value."""
     return {
-        ".py": "py", ".pyi": "py",
-        ".js": "js", ".jsx": "js", ".mjs": "js",
-        ".ts": "ts", ".tsx": "ts",
+        ".py": "py",
+        ".pyi": "py",
+        ".js": "js",
+        ".jsx": "js",
+        ".mjs": "js",
+        ".ts": "ts",
+        ".tsx": "ts",
         ".go": "go",
         ".java": "java",
     }.get(ext, "py")

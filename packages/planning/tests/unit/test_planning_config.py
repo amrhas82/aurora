@@ -167,7 +167,6 @@ class TestValidatePlansDir:
             readonly_dir.chmod(0o755)
 
 
-
 class TestInitPlansDirectory:
     """Tests for init_plans_directory()."""
 

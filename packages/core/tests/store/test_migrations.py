@@ -679,7 +679,6 @@ class TestMigrationManager:
         assert backup_path == ":memory:", "Should return :memory: for in-memory DB"
 
 
-
 class TestMigrationV2ToV3:
     """Test migration from v2 to v3 schema."""
 

@@ -295,4 +295,3 @@ class TestGoalsJsonFormat:
 
         # Assert
         assert goals.gaps == []
-

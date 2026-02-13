@@ -10,7 +10,6 @@ from pathlib import Path
 import pytest
 from rich.text import Text
 
-
 # Add CLI package to path for import
 cli_path = Path(__file__).parent.parent.parent / "packages" / "cli" / "src"
 sys.path.insert(0, str(cli_path))

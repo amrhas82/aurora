@@ -38,7 +38,6 @@ class HeartbeatEvent:
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
-
 class HeartbeatEmitter:
     """Thread-safe heartbeat event emitter for agent execution.
 

@@ -14,7 +14,6 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -410,7 +409,6 @@ class CircuitBreaker:
             "can_execute": circuit.state == CircuitState.CLOSED
             or circuit.state == CircuitState.HALF_OPEN,
         }
-
 
 
 # Module-level singleton

@@ -17,7 +17,6 @@ from typing import Any
 
 from aurora_cli.errors import ConfigurationError
 
-
 logger = logging.getLogger(__name__)
 
 # Path to package defaults
@@ -202,9 +201,23 @@ def validate_config(config: dict[str, Any]) -> list[str]:
 
     # -- Top-level keys --
     known_sections = {
-        "version", "mode", "storage", "llm", "context", "activation",
-        "search", "escalation", "memory", "mcp", "budget", "agents",
-        "logging", "planning", "soar", "spawner", "proactive_health_checks",
+        "version",
+        "mode",
+        "storage",
+        "llm",
+        "context",
+        "activation",
+        "search",
+        "escalation",
+        "memory",
+        "mcp",
+        "budget",
+        "agents",
+        "logging",
+        "planning",
+        "soar",
+        "spawner",
+        "proactive_health_checks",
         "early_detection",
     }
     unknown = set(config.keys()) - known_sections

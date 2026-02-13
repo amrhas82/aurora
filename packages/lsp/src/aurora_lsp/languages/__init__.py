@@ -27,7 +27,6 @@ from aurora_lsp.languages.javascript import JAVASCRIPT
 from aurora_lsp.languages.python import PYTHON
 from aurora_lsp.languages.typescript import TYPESCRIPT
 
-
 if TYPE_CHECKING:
     pass
 

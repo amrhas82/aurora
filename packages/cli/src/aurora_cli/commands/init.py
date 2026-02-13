@@ -26,7 +26,6 @@ from aurora_cli.commands.init_helpers import (
 from aurora_cli.configurators.slash import SlashCommandRegistry
 from aurora_cli.errors import handle_errors
 
-
 console = Console()
 
 

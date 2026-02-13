@@ -16,10 +16,10 @@ from aurora_core.activation import ActivationEngine
 from aurora_core.chunks.code_chunk import CodeChunk
 from aurora_core.store.sqlite import SQLiteStore
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def make_chunk(chunk_id, name, docstring="", file_path="/test/file.py"):
     return CodeChunk(
@@ -50,6 +50,7 @@ class DummyEmbeddingProvider:
 # ---------------------------------------------------------------------------
 # BM25Scorer tests
 # ---------------------------------------------------------------------------
+
 
 class TestBM25Scorer:
     """Tests for BM25Scorer."""
@@ -150,6 +151,7 @@ class TestTokenizer:
 # HybridConfig tests
 # ---------------------------------------------------------------------------
 
+
 class TestHybridConfig:
     """Tests for HybridConfig validation."""
 
@@ -183,15 +185,22 @@ class TestHybridConfig:
 # HybridRetriever integration tests
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def populated_store(tmp_path):
     """Store with several chunks for retrieval testing."""
     store = SQLiteStore(str(tmp_path / "test.db"))
 
     chunks = [
-        make_chunk("c1", "authenticate_user", docstring="authenticate user verify credentials username password"),
+        make_chunk(
+            "c1",
+            "authenticate_user",
+            docstring="authenticate user verify credentials username password",
+        ),
         make_chunk("c2", "create_session", docstring="create login session token for user"),
-        make_chunk("c3", "database_connect", docstring="establish database connection pool host port"),
+        make_chunk(
+            "c3", "database_connect", docstring="establish database connection pool host port"
+        ),
         make_chunk("c4", "parse_config", docstring="read configuration file yaml path"),
         make_chunk("c5", "run_migrations", docstring="execute database schema migrations"),
     ]

@@ -172,6 +172,7 @@ class TestDocChunkValidation:
 class TestDocChunkSerialization:
     """Test DocChunk serialization to/from JSON."""
 
+
 class TestDocChunkBreadcrumb:
     """Test DocChunk breadcrumb functionality."""
 

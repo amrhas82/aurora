@@ -18,7 +18,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -672,7 +671,6 @@ class AgentHealthMonitor:
         }
 
 
-
 # Global singleton instance
 _global_health_monitor: AgentHealthMonitor | None = None
 
@@ -708,5 +706,3 @@ def reset_health_monitor(config: ProactiveHealthConfig | None = None) -> AgentHe
         _global_health_monitor.stop_proactive_monitoring()
     _global_health_monitor = AgentHealthMonitor(config)
     return _global_health_monitor
-
-

@@ -374,4 +374,3 @@ class ConversationLogger:
             lines.append("")
 
         return "\n".join(lines)
-

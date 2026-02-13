@@ -13,7 +13,6 @@ from typing import Any
 
 from jinja2 import Environment, FileSystemLoader
 
-
 # Import from the correct location - Plan model is in aurora_cli.planning.models
 try:
     from aurora_cli.planning.models import Plan

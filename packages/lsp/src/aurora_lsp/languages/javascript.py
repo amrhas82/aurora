@@ -8,7 +8,6 @@ Defines JavaScript-specific patterns for:
 
 from aurora_lsp.languages.base import LanguageConfig
 
-
 JS_BRANCH_TYPES = {
     "if_statement",
     "for_statement",
@@ -57,13 +56,32 @@ JS_NESTED_PATTERNS = {
 }
 
 JS_CALLBACK_METHODS = {
-    "map", "filter", "sort", "reduce", "forEach", "find", "findIndex",
-    "some", "every", "flatMap", "then", "catch", "finally",
-    "transaction", "on", "once", "addEventListener",
-    "removeEventListener", "subscribe", "pipe",
+    "map",
+    "filter",
+    "sort",
+    "reduce",
+    "forEach",
+    "find",
+    "findIndex",
+    "some",
+    "every",
+    "flatMap",
+    "then",
+    "catch",
+    "finally",
+    "transaction",
+    "on",
+    "once",
+    "addEventListener",
+    "removeEventListener",
+    "subscribe",
+    "pipe",
     # Timer/scheduler callbacks
-    "setTimeout", "setInterval", "setImmediate",
-    "requestAnimationFrame", "requestIdleCallback",
+    "setTimeout",
+    "setInterval",
+    "setImmediate",
+    "requestAnimationFrame",
+    "requestIdleCallback",
     # Node.js process events
     "nextTick",
 }
@@ -72,20 +90,53 @@ JS_CALLBACK_METHODS = {
 # React Query, Express, fetch API, testing libs, etc.
 JS_SKIP_DEADCODE_NAMES = {
     # React Query / TanStack Query
-    "queryFn", "mutationFn", "onSuccess", "onError", "onSettled", "onMutate",
-    "retry", "retryDelay", "enabled", "refetchInterval", "refetchOnWindowFocus",
-    "select", "initialData", "placeholderData", "staleTime",
+    "queryFn",
+    "mutationFn",
+    "onSuccess",
+    "onError",
+    "onSettled",
+    "onMutate",
+    "retry",
+    "retryDelay",
+    "enabled",
+    "refetchInterval",
+    "refetchOnWindowFocus",
+    "select",
+    "initialData",
+    "placeholderData",
+    "staleTime",
     # Fetch / HTTP config
-    "headers", "body", "params", "data", "transformResponse", "transformRequest",
+    "headers",
+    "body",
+    "params",
+    "data",
+    "transformResponse",
+    "transformRequest",
     "validateStatus",
     # Testing (Jest, Vitest)
-    "beforeAll", "beforeEach", "afterAll", "afterEach",
+    "beforeAll",
+    "beforeEach",
+    "afterAll",
+    "afterEach",
     # Event handlers commonly defined as object methods
-    "onSubmit", "onChange", "onClick", "onBlur", "onFocus",
-    "onKeyDown", "onKeyUp", "onKeyPress", "onInput",
+    "onSubmit",
+    "onChange",
+    "onClick",
+    "onBlur",
+    "onFocus",
+    "onKeyDown",
+    "onKeyUp",
+    "onKeyPress",
+    "onInput",
     # Common config patterns
-    "render", "setup", "cleanup", "validate", "format",
-    "compareFn", "sortFn", "filterFn",
+    "render",
+    "setup",
+    "cleanup",
+    "validate",
+    "format",
+    "compareFn",
+    "sortFn",
+    "filterFn",
 }
 
 JS_IMPORT_PATTERNS = [

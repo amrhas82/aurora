@@ -256,15 +256,9 @@ class TestChunkTypeAwareWeights:
         bm25, activation, semantic = 0.9, 0.5, 0.1
 
         code_score = (
-            _CODE_WEIGHTS[0] * bm25
-            + _CODE_WEIGHTS[1] * activation
-            + _CODE_WEIGHTS[2] * semantic
+            _CODE_WEIGHTS[0] * bm25 + _CODE_WEIGHTS[1] * activation + _CODE_WEIGHTS[2] * semantic
         )
-        kb_score = (
-            _KB_WEIGHTS[0] * bm25
-            + _KB_WEIGHTS[1] * activation
-            + _KB_WEIGHTS[2] * semantic
-        )
+        kb_score = _KB_WEIGHTS[0] * bm25 + _KB_WEIGHTS[1] * activation + _KB_WEIGHTS[2] * semantic
 
         assert code_score > kb_score
 
@@ -274,15 +268,9 @@ class TestChunkTypeAwareWeights:
         bm25, activation, semantic = 0.1, 0.5, 0.9
 
         code_score = (
-            _CODE_WEIGHTS[0] * bm25
-            + _CODE_WEIGHTS[1] * activation
-            + _CODE_WEIGHTS[2] * semantic
+            _CODE_WEIGHTS[0] * bm25 + _CODE_WEIGHTS[1] * activation + _CODE_WEIGHTS[2] * semantic
         )
-        kb_score = (
-            _KB_WEIGHTS[0] * bm25
-            + _KB_WEIGHTS[1] * activation
-            + _KB_WEIGHTS[2] * semantic
-        )
+        kb_score = _KB_WEIGHTS[0] * bm25 + _KB_WEIGHTS[1] * activation + _KB_WEIGHTS[2] * semantic
 
         assert kb_score > code_score
 

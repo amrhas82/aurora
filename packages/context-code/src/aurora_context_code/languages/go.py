@@ -12,7 +12,6 @@ from pathlib import Path
 from aurora_context_code.parser import CodeParser
 from aurora_core.chunks.code_chunk import CodeChunk
 
-
 # Try to import tree-sitter, fall back to text chunking if unavailable
 TREE_SITTER_AVAILABLE = True
 try:
@@ -135,19 +134,21 @@ class GoParser(CodeParser):
                 docstring = self._extract_go_doc(node, source_code)
                 complexity = self._calculate_complexity(node)
 
-                chunks.append(CodeChunk(
-                    chunk_id=chunk_id,
-                    file_path=str(file_path),
-                    element_type="function",
-                    name=name,
-                    line_start=line_start,
-                    line_end=line_end,
-                    signature=signature,
-                    docstring=docstring,
-                    dependencies=[],
-                    complexity_score=complexity,
-                    language="go",
-                ))
+                chunks.append(
+                    CodeChunk(
+                        chunk_id=chunk_id,
+                        file_path=str(file_path),
+                        element_type="function",
+                        name=name,
+                        line_start=line_start,
+                        line_end=line_end,
+                        signature=signature,
+                        docstring=docstring,
+                        dependencies=[],
+                        complexity_score=complexity,
+                        language="go",
+                    )
+                )
             except Exception as e:
                 logger.warning(f"Failed to extract function: {e}")
                 continue
@@ -189,7 +190,9 @@ class GoParser(CodeParser):
                 result_node = node.child_by_field_name("result")
                 signature = "func "
                 if receiver_node:
-                    signature += source_code[receiver_node.start_byte : receiver_node.end_byte] + " "
+                    signature += (
+                        source_code[receiver_node.start_byte : receiver_node.end_byte] + " "
+                    )
                 signature += method_name
                 if params_node:
                     signature += source_code[params_node.start_byte : params_node.end_byte]
@@ -202,19 +205,21 @@ class GoParser(CodeParser):
                 docstring = self._extract_go_doc(node, source_code)
                 complexity = self._calculate_complexity(node)
 
-                chunks.append(CodeChunk(
-                    chunk_id=chunk_id,
-                    file_path=str(file_path),
-                    element_type="method",
-                    name=qualified_name,
-                    line_start=line_start,
-                    line_end=line_end,
-                    signature=signature,
-                    docstring=docstring,
-                    dependencies=[],
-                    complexity_score=complexity,
-                    language="go",
-                ))
+                chunks.append(
+                    CodeChunk(
+                        chunk_id=chunk_id,
+                        file_path=str(file_path),
+                        element_type="method",
+                        name=qualified_name,
+                        line_start=line_start,
+                        line_end=line_end,
+                        signature=signature,
+                        docstring=docstring,
+                        dependencies=[],
+                        complexity_score=complexity,
+                        language="go",
+                    )
+                )
             except Exception as e:
                 logger.warning(f"Failed to extract method: {e}")
                 continue
@@ -255,19 +260,21 @@ class GoParser(CodeParser):
                     chunk_id = self._generate_chunk_id(file_path, name, line_start)
                     docstring = self._extract_go_doc(node, source_code)
 
-                    chunks.append(CodeChunk(
-                        chunk_id=chunk_id,
-                        file_path=str(file_path),
-                        element_type=element_type,
-                        name=name,
-                        line_start=line_start,
-                        line_end=line_end,
-                        signature=signature,
-                        docstring=docstring,
-                        dependencies=[],
-                        complexity_score=0.0,
-                        language="go",
-                    ))
+                    chunks.append(
+                        CodeChunk(
+                            chunk_id=chunk_id,
+                            file_path=str(file_path),
+                            element_type=element_type,
+                            name=name,
+                            line_start=line_start,
+                            line_end=line_end,
+                            signature=signature,
+                            docstring=docstring,
+                            dependencies=[],
+                            complexity_score=0.0,
+                            language="go",
+                        )
+                    )
                 except Exception as e:
                     logger.warning(f"Failed to extract type declaration: {e}")
                     continue

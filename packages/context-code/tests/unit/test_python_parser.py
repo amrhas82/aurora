@@ -380,7 +380,12 @@ class TestIntegrationWithFixtures:
     @pytest.fixture
     def fixtures_dir(self):
         """Get fixtures directory path."""
-        return Path(__file__).resolve().parent.parent.parent.parent / "testing" / "fixtures" / "sample_python_files"
+        return (
+            Path(__file__).resolve().parent.parent.parent.parent
+            / "testing"
+            / "fixtures"
+            / "sample_python_files"
+        )
 
     def test_parse_simple_fixture(self, parser, fixtures_dir):
         """Test parsing simple.py fixture."""

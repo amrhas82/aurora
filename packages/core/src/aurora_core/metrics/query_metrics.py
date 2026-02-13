@@ -16,7 +16,6 @@ from typing import Any
 
 from aurora_core.paths import get_db_path
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -298,4 +297,3 @@ class QueryMetrics:
             logger.warning(f"Failed to get query metrics summary: {e}")
 
         return summary
-

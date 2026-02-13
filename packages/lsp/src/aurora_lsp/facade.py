@@ -16,7 +16,6 @@ from aurora_lsp.analysis import CodeAnalyzer
 from aurora_lsp.client import AuroraLSPClient
 from aurora_lsp.diagnostics import DiagnosticsFormatter
 
-
 # Allow nested event loops (needed when called from MCP server)
 nest_asyncio.apply()
 
@@ -352,9 +351,19 @@ class AuroraLSP:
             }
 
         except subprocess.TimeoutExpired:
-            return {"module": module_name, "imported_by": [], "import_count": 0, "error": "Search timed out"}
+            return {
+                "module": module_name,
+                "imported_by": [],
+                "import_count": 0,
+                "error": "Search timed out",
+            }
         except FileNotFoundError:
-            return {"module": module_name, "imported_by": [], "import_count": 0, "error": "ripgrep not installed"}
+            return {
+                "module": module_name,
+                "imported_by": [],
+                "import_count": 0,
+                "error": "ripgrep not installed",
+            }
 
     def _get_imported_by_js_ts(self, module_path: Path) -> dict:
         """Find JS/TS files that import a given module.
@@ -444,9 +453,19 @@ class AuroraLSP:
             }
 
         except subprocess.TimeoutExpired:
-            return {"module": module_name, "imported_by": [], "import_count": 0, "error": "Search timed out"}
+            return {
+                "module": module_name,
+                "imported_by": [],
+                "import_count": 0,
+                "error": "Search timed out",
+            }
         except FileNotFoundError:
-            return {"module": module_name, "imported_by": [], "import_count": 0, "error": "ripgrep not installed"}
+            return {
+                "module": module_name,
+                "imported_by": [],
+                "import_count": 0,
+                "error": "ripgrep not installed",
+            }
 
     def _get_imported_by_java(self, module_path: Path) -> dict:
         """Find Java files that import the class in this file.
@@ -522,9 +541,19 @@ class AuroraLSP:
             }
 
         except subprocess.TimeoutExpired:
-            return {"module": module_name, "imported_by": [], "import_count": 0, "error": "Search timed out"}
+            return {
+                "module": module_name,
+                "imported_by": [],
+                "import_count": 0,
+                "error": "Search timed out",
+            }
         except FileNotFoundError:
-            return {"module": module_name, "imported_by": [], "import_count": 0, "error": "ripgrep not installed"}
+            return {
+                "module": module_name,
+                "imported_by": [],
+                "import_count": 0,
+                "error": "ripgrep not installed",
+            }
 
     def _get_imported_by_go(self, module_path: Path) -> dict:
         """Find Go files that import the package containing this file.
@@ -603,9 +632,19 @@ class AuroraLSP:
             }
 
         except subprocess.TimeoutExpired:
-            return {"module": module_name, "imported_by": [], "import_count": 0, "error": "Search timed out"}
+            return {
+                "module": module_name,
+                "imported_by": [],
+                "import_count": 0,
+                "error": "Search timed out",
+            }
         except FileNotFoundError:
-            return {"module": module_name, "imported_by": [], "import_count": 0, "error": "ripgrep not installed"}
+            return {
+                "module": module_name,
+                "imported_by": [],
+                "import_count": 0,
+                "error": "ripgrep not installed",
+            }
 
     # =========================================================================
     # Utility Methods

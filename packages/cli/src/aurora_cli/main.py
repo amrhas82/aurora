@@ -25,7 +25,6 @@ from aurora_cli.commands.plan import plan_group
 from aurora_cli.commands.soar import soar_command
 from aurora_cli.commands.spawn import spawn_command
 
-
 __all__ = ["cli"]
 
 console = Console()

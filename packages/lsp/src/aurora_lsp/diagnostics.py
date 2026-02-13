@@ -9,7 +9,6 @@ from enum import IntEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-
 if TYPE_CHECKING:
     from aurora_lsp.client import AuroraLSPClient
 
@@ -168,4 +167,3 @@ class DiagnosticsFormatter:
             "warnings": warnings,
             "hints": hints,
         }
-

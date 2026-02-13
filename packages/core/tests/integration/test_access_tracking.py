@@ -75,14 +75,13 @@ class TestRecordAccess:
 
         # After one access, chunk should have activation in the activations table
         conn = store._get_connection()
-        cursor = conn.execute(
-            "SELECT base_level FROM activations WHERE chunk_id = ?", ("c1",)
-        )
+        cursor = conn.execute("SELECT base_level FROM activations WHERE chunk_id = ?", ("c1",))
         row = cursor.fetchone()
         assert row is not None
         # BLA should be a finite number (could be negative in ACT-R log-odds)
         assert row["base_level"] is not None
         import math
+
         assert math.isfinite(row["base_level"])
 
     def test_record_access_with_context(self, tmp_path):
@@ -111,16 +110,12 @@ class TestRecordAccess:
         store.record_access("c1", access_time=now)
 
         conn = store._get_connection()
-        cursor = conn.execute(
-            "SELECT base_level FROM activations WHERE chunk_id = ?", ("c1",)
-        )
+        cursor = conn.execute("SELECT base_level FROM activations WHERE chunk_id = ?", ("c1",))
         bla_after_1 = cursor.fetchone()["base_level"]
 
         store.record_access("c1", access_time=now + timedelta(seconds=1))
 
-        cursor = conn.execute(
-            "SELECT base_level FROM activations WHERE chunk_id = ?", ("c1",)
-        )
+        cursor = conn.execute("SELECT base_level FROM activations WHERE chunk_id = ?", ("c1",))
         bla_after_2 = cursor.fetchone()["base_level"]
 
         # More accesses should increase base level activation
@@ -310,9 +305,7 @@ class TestSaveDocChunk:
 
         # Verify hierarchy metadata was stored
         conn = store._get_connection()
-        cursor = conn.execute(
-            "SELECT * FROM doc_hierarchy WHERE chunk_id = ?", ("doc:manual:ch2",)
-        )
+        cursor = conn.execute("SELECT * FROM doc_hierarchy WHERE chunk_id = ?", ("doc:manual:ch2",))
         row = cursor.fetchone()
         assert row is not None
         assert row["parent_chunk_id"] == "doc:manual:ch2-root"

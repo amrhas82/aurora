@@ -10,7 +10,8 @@ on:
     branches: [ main ]
 
 jobs:
-  test:
+  tests-py312:
+    name: Tests (Python 3.12)
     runs-on: ubuntu-latest
     timeout-minutes: 15
 

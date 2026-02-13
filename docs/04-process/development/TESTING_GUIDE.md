@@ -11,25 +11,25 @@ After the February 2026 test cleanup, all tests live in `packages/*/tests/` and 
 
 | Metric | Value |
 |--------|-------|
-| **Total Tests** | ~2,440 |
-| **Test Files** | 144 |
-| **Test Lines** | ~48,000 |
-| **Pass Rate** | 100% (0 failures) |
+| **Total Tests** | 2,451 |
+| **Test Files** | 137 |
+| **Test Lines** | ~45,500 |
+| **Pass Rate** | 100% (0 failures, 3 skipped) |
 | **Coverage** | ~21% (post-cleanup, many mock-heavy tests deleted) |
 | **CI Python** | 3.12 |
 
 ### Per-Package Breakdown
 
-| Package | Tests | Unit Files | Integration/E2E Files |
-|---------|-------|------------|----------------------|
-| **core** | 861 | 20 | 6 |
-| **cli** | 544 | 21 | 5 |
-| **planning** | 292 | 24 | 1 |
-| **context-code** | 253 | 17 | 4 |
-| **spawner** | 163 | 4 | 5 |
-| **soar** | 162 | 11 | 1 |
-| **reasoning** | 121 | 4 | 1 |
-| **implement** | 35 | 0 | 4 |
+| Package | Tests |
+|---------|-------|
+| **core** | 885 |
+| **cli** | 514 |
+| **planning** | 290 |
+| **context-code** | 276 |
+| **soar** | 167 |
+| **spawner** | 129 |
+| **reasoning** | 121 |
+| **implement** | 35 |
 
 ---
 
@@ -97,12 +97,13 @@ Three essential markers only:
 
 ## CI/CD
 
-**Workflow**: `.github/workflows/testing-infrastructure-new.yml`
+**Workflow**: `.github/workflows/ci.yml`
 
 - Python 3.12 on ubuntu-latest
 - Installs all packages editable
 - Runs `pytest -m "not ml and not real_api" --timeout=60`
 - Coverage uploaded to Codecov
+- Tests must be self-sufficient — no dependency on `.aurora/` directory (use `tmp_path` or `monkeypatch` for `get_aurora_dir`)
 
 ---
 
@@ -157,4 +158,4 @@ Coverage is ~21% after deleting mock-heavy tests that tested mocks, not behavior
 | Headless tests | all | Headless mode removed |
 
 **Before**: 5,500 tests, 314 files, 126k lines, unknown pass rate
-**After**: ~2,440 tests, 144 files, 48k lines, 100% pass rate
+**After**: 2,451 tests, 137 files, 45.5k lines, 100% pass rate

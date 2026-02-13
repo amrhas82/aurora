@@ -283,12 +283,16 @@ def _get_lsp_usage(
             _lsp_instance = AuroraLSP(Path.cwd())
             logger.debug("Initialized LSP for usage enrichment")
 
-        # Suppress multilspy INFO logs during LSP operations
+        # Suppress noisy logs during LSP operations
         import logging as _logging
 
         multilspy_logger = _logging.getLogger("multilspy")
-        old_level = multilspy_logger.level
+        old_multilspy_level = multilspy_logger.level
         multilspy_logger.setLevel(_logging.WARNING)
+
+        lsp_client_logger = _logging.getLogger("aurora_lsp.client")
+        old_lsp_client_level = lsp_client_logger.level
+        lsp_client_logger.setLevel(_logging.ERROR)
 
         # LSP uses 0-indexed lines
         line_0indexed = line_start - 1
@@ -313,7 +317,8 @@ def _get_lsp_usage(
         try:
             summary = _lsp_instance.get_usage_summary(file_path, line_0indexed, col=col)
         finally:
-            multilspy_logger.setLevel(old_level)
+            multilspy_logger.setLevel(old_multilspy_level)
+            lsp_client_logger.setLevel(old_lsp_client_level)
 
         total_usages = summary.get("total_usages", 0)
         files_affected = summary.get("files_affected", 0)

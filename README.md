@@ -254,9 +254,9 @@ aur spawn tasks.md --verbose
 ```bash
 aur friction ~/.claude/projects
 Per-Project:
-aurora        56% BAD (40/72)  median: 16.0  🔴
-mcp-gov       40% BAD (2/5)    median: 0.5   🟡
-liteagents     0% BAD (0/1)    median: 0.0   ✅
+my-app         56% BAD (40/72)  median: 16.0  🔴
+api-service    40% BAD (2/5)    median: 0.5   🟡
+web-client      0% BAD (0/1)    median: 0.0   ✅
 
 Session Extremes:
 WORST: aurora/0203-1630-11eb903a  peak=225  turns=127

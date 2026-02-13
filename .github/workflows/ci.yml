@@ -1,4 +1,4 @@
-name: Testing Infrastructure (New)
+name: CI
 
 # Streamlined CI for direct-to-main workflow
 # - Single Python version (3.12)

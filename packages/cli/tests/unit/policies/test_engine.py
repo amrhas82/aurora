@@ -81,9 +81,9 @@ class TestPoliciesEngine:
         assert engine.config.agent_recovery.max_retries == 1
         assert engine.config.agent_recovery.fallback_to_llm is False
 
-    def test_check_file_delete_below_limit(self):
+    def test_check_file_delete_below_limit(self, tmp_path):
         """Test file delete operation below limit."""
-        engine = PoliciesEngine()
+        engine = PoliciesEngine(tmp_path / "policies.yaml")
         op = Operation(type=OperationType.FILE_DELETE, target="test.txt", count=3)
 
         result = engine.check_operation(op)
@@ -91,9 +91,9 @@ class TestPoliciesEngine:
         # Should allow or prompt (default is prompt with max 5)
         assert result.action in (PolicyAction.ALLOW, PolicyAction.PROMPT)
 
-    def test_check_file_delete_above_limit(self):
+    def test_check_file_delete_above_limit(self, tmp_path):
         """Test file delete operation above limit."""
-        engine = PoliciesEngine()
+        engine = PoliciesEngine(tmp_path / "policies.yaml")
         op = Operation(type=OperationType.FILE_DELETE, target="*.txt", count=10)
 
         result = engine.check_operation(op)
@@ -102,9 +102,9 @@ class TestPoliciesEngine:
         assert result.action == PolicyAction.PROMPT
         assert "10 files" in result.reason
 
-    def test_check_git_force_push_denied(self):
+    def test_check_git_force_push_denied(self, tmp_path):
         """Test git force push is denied."""
-        engine = PoliciesEngine()
+        engine = PoliciesEngine(tmp_path / "policies.yaml")
         op = Operation(type=OperationType.GIT_FORCE_PUSH, target="origin/main")
 
         result = engine.check_operation(op)
@@ -112,9 +112,9 @@ class TestPoliciesEngine:
         assert result.action == PolicyAction.DENY
         assert "Force push" in result.reason
 
-    def test_check_git_push_main_prompt(self):
+    def test_check_git_push_main_prompt(self, tmp_path):
         """Test git push to main prompts."""
-        engine = PoliciesEngine()
+        engine = PoliciesEngine(tmp_path / "policies.yaml")
         op = Operation(type=OperationType.GIT_PUSH_MAIN, target="main")
 
         result = engine.check_operation(op)
@@ -122,9 +122,9 @@ class TestPoliciesEngine:
         assert result.action == PolicyAction.PROMPT
         assert "main" in result.reason
 
-    def test_check_sql_drop_denied(self):
+    def test_check_sql_drop_denied(self, tmp_path):
         """Test SQL DROP TABLE is denied."""
-        engine = PoliciesEngine()
+        engine = PoliciesEngine(tmp_path / "policies.yaml")
         op = Operation(type=OperationType.SQL_DROP, target="users")
 
         result = engine.check_operation(op)
@@ -132,35 +132,35 @@ class TestPoliciesEngine:
         assert result.action == PolicyAction.DENY
         assert "DROP TABLE" in result.reason
 
-    def test_check_scope_within_limits(self):
+    def test_check_scope_within_limits(self, tmp_path):
         """Test scope check within limits."""
-        engine = PoliciesEngine()
+        engine = PoliciesEngine(tmp_path / "policies.yaml")
 
         result = engine.check_scope(files_modified=10, lines_changed=500)
 
         assert result.action == PolicyAction.ALLOW
 
-    def test_check_scope_exceeds_files(self):
+    def test_check_scope_exceeds_files(self, tmp_path):
         """Test scope check exceeds file limit."""
-        engine = PoliciesEngine()
+        engine = PoliciesEngine(tmp_path / "policies.yaml")
 
         result = engine.check_scope(files_modified=25, lines_changed=100)
 
         assert result.action == PolicyAction.PROMPT
         assert "25 files" in result.reason
 
-    def test_check_scope_exceeds_lines(self):
+    def test_check_scope_exceeds_lines(self, tmp_path):
         """Test scope check exceeds line limit."""
-        engine = PoliciesEngine()
+        engine = PoliciesEngine(tmp_path / "policies.yaml")
 
         result = engine.check_scope(files_modified=5, lines_changed=2000)
 
         assert result.action == PolicyAction.PROMPT
         assert "2000 lines" in result.reason
 
-    def test_get_protected_paths(self):
+    def test_get_protected_paths(self, tmp_path):
         """Test retrieving protected paths."""
-        engine = PoliciesEngine()
+        engine = PoliciesEngine(tmp_path / "policies.yaml")
 
         paths = engine.get_protected_paths()
 

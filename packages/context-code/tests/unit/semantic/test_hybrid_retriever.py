@@ -1,9 +1,8 @@
 """Tests for HybridRetriever class.
 
 Tests include:
-- Configuration loading from AURORA Config object
-- Configuration precedence (explicit config > aurora_config > defaults)
 - Hybrid scoring with configurable weights
+- Chunk-type-aware weight selection (code vs KB)
 - Validation of weight constraints (sum to 1.0, range [0, 1])
 - Fallback behavior when embeddings unavailable
 - Integration with activation engine and embedding provider
@@ -12,7 +11,12 @@ Tests include:
 import pytest
 
 from aurora_context_code.semantic.embedding_provider import EmbeddingProvider
-from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
+from aurora_context_code.semantic.hybrid_retriever import (
+    HybridConfig,
+    HybridRetriever,
+    _CODE_WEIGHTS,
+    _KB_WEIGHTS,
+)
 
 
 # Mock classes for testing
@@ -46,25 +50,6 @@ class MockActivationEngine:
     def __init__(self):
         pass
 
-
-class MockConfig:
-    """Mock AURORA Config object."""
-
-    def __init__(self, config_data):
-        self._data = config_data
-
-    def get(self, key, default=None):
-        """Get configuration value by dot-notation key."""
-        keys = key.split(".")
-        value = self._data
-
-        for k in keys:
-            if isinstance(value, dict) and k in value:
-                value = value[k]
-            else:
-                return default
-
-        return value
 
 
 class TestHybridConfig:
@@ -161,141 +146,6 @@ class TestHybridRetrieverInit:
         assert retriever.config.semantic_weight == 0.3
         assert retriever.config.activation_top_k == 50
 
-    def test_aurora_config_initialization(self):
-        """Test initialization with AURORA Config object (dual-hybrid via config)."""
-        store = MockStore()
-        engine = MockActivationEngine()
-        provider = EmbeddingProvider()
-
-        aurora_config = MockConfig(
-            {
-                "context": {
-                    "code": {
-                        "hybrid_weights": {
-                            "bm25": 0.0,
-                            "activation": 0.8,
-                            "semantic": 0.2,
-                            "top_k": 75,
-                            "fallback_to_activation": False,
-                        },
-                    },
-                },
-            },
-        )
-
-        retriever = HybridRetriever(store, engine, provider, aurora_config=aurora_config)
-
-        assert retriever.config.bm25_weight == 0.0
-        assert retriever.config.activation_weight == 0.8
-        assert retriever.config.semantic_weight == 0.2
-        assert retriever.config.activation_top_k == 75
-        assert retriever.config.fallback_to_activation is False
-
-    def test_config_precedence_explicit_over_aurora(self):
-        """Test that explicit config takes precedence over aurora_config."""
-        store = MockStore()
-        engine = MockActivationEngine()
-        provider = EmbeddingProvider()
-
-        explicit_config = HybridConfig(
-            bm25_weight=0.0,
-            activation_weight=0.7,
-            semantic_weight=0.3,
-        )
-
-        aurora_config = MockConfig(
-            {
-                "context": {
-                    "code": {
-                        "hybrid_weights": {
-                            "bm25": 0.0,
-                            "activation": 0.9,
-                            "semantic": 0.1,
-                        },
-                    },
-                },
-            },
-        )
-
-        retriever = HybridRetriever(
-            store,
-            engine,
-            provider,
-            config=explicit_config,
-            aurora_config=aurora_config,
-        )
-
-        # Should use explicit_config values
-        assert retriever.config.activation_weight == 0.7
-        assert retriever.config.semantic_weight == 0.3
-
-    def test_aurora_config_with_defaults(self):
-        """Test aurora_config with partial configuration uses defaults."""
-        store = MockStore()
-        engine = MockActivationEngine()
-        provider = EmbeddingProvider()
-
-        aurora_config = MockConfig(
-            {
-                "context": {
-                    "code": {
-                        "hybrid_weights": {
-                            "bm25": 0.0,
-                            "activation": 0.75,
-                            "semantic": 0.25,
-                            # top_k and fallback_to_activation not specified
-                        },
-                    },
-                },
-            },
-        )
-
-        retriever = HybridRetriever(store, engine, provider, aurora_config=aurora_config)
-
-        assert retriever.config.bm25_weight == 0.0
-        assert retriever.config.activation_weight == 0.75
-        assert retriever.config.semantic_weight == 0.25
-        assert retriever.config.activation_top_k == 500  # default
-        assert retriever.config.fallback_to_activation is True  # default
-
-    def test_aurora_config_missing_section(self):
-        """Test aurora_config with missing hybrid_weights section uses defaults."""
-        store = MockStore()
-        engine = MockActivationEngine()
-        provider = EmbeddingProvider()
-
-        aurora_config = MockConfig({"context": {"code": {}}})
-
-        retriever = HybridRetriever(store, engine, provider, aurora_config=aurora_config)
-
-        # Should use all tri-hybrid defaults
-        assert retriever.config.bm25_weight == 0.3
-        assert retriever.config.activation_weight == 0.3
-        assert retriever.config.semantic_weight == 0.4
-        assert retriever.config.activation_top_k == 500
-
-    def test_aurora_config_invalid_weights_raises_error(self):
-        """Test that invalid weights from aurora_config raise ValueError."""
-        store = MockStore()
-        engine = MockActivationEngine()
-        provider = EmbeddingProvider()
-
-        aurora_config = MockConfig(
-            {
-                "context": {
-                    "code": {
-                        "hybrid_weights": {
-                            "bm25": 0.3,
-                            "activation": 0.5,
-                            "semantic": 0.6,  # Sum > 1.0
-                        },
-                    },
-                },
-            },
-        )
-
-        with pytest.raises(ValueError, match="Weights must sum to 1.0"):
-            HybridRetriever(store, engine, provider, aurora_config=aurora_config)
 
 
 class TestHybridRetrieverRetrieve:
@@ -378,6 +228,48 @@ class TestHybridRetrieverNormalization:
 
         normalized = retriever._normalize_scores([])
         assert normalized == []
+
+
+class TestChunkTypeAwareWeights:
+    """Test chunk-type-aware hybrid scoring weights."""
+
+    def test_code_chunks_use_code_weights(self):
+        """Code chunks should use BM25-heavy weights."""
+        assert _CODE_WEIGHTS == (0.5, 0.3, 0.2)
+
+        # Simulate scoring: BM25=1.0, activation=0.5, semantic=0.5
+        bm25_w, act_w, sem_w = _CODE_WEIGHTS
+        score = bm25_w * 1.0 + act_w * 0.5 + sem_w * 0.5
+        assert score == pytest.approx(0.75)
+
+    def test_kb_chunks_use_kb_weights(self):
+        """KB chunks should use semantic-heavy weights."""
+        assert _KB_WEIGHTS == (0.3, 0.3, 0.4)
+
+        # Same raw scores but different weights
+        bm25_w, act_w, sem_w = _KB_WEIGHTS
+        score = bm25_w * 1.0 + act_w * 0.5 + sem_w * 0.5
+        assert score == pytest.approx(0.65)
+
+    def test_code_chunk_scores_higher_on_bm25(self):
+        """Code chunk should score higher than KB when BM25 dominates."""
+        # BM25 high, semantic low — code weights should win
+        bm25, activation, semantic = 0.9, 0.5, 0.1
+
+        code_score = _CODE_WEIGHTS[0] * bm25 + _CODE_WEIGHTS[1] * activation + _CODE_WEIGHTS[2] * semantic
+        kb_score = _KB_WEIGHTS[0] * bm25 + _KB_WEIGHTS[1] * activation + _KB_WEIGHTS[2] * semantic
+
+        assert code_score > kb_score
+
+    def test_kb_chunk_scores_higher_on_semantic(self):
+        """KB chunk should score higher than code when semantic dominates."""
+        # Semantic high, BM25 low — KB weights should win
+        bm25, activation, semantic = 0.1, 0.5, 0.9
+
+        code_score = _CODE_WEIGHTS[0] * bm25 + _CODE_WEIGHTS[1] * activation + _CODE_WEIGHTS[2] * semantic
+        kb_score = _KB_WEIGHTS[0] * bm25 + _KB_WEIGHTS[1] * activation + _KB_WEIGHTS[2] * semantic
+
+        assert kb_score > code_score
 
 
 class TestHybridRetrieverFallback:

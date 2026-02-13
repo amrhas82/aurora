@@ -97,7 +97,7 @@ packages/
 
 **Config Resolution:** CLI flags > env vars > project `.aurora/config.json` > global `~/.aurora/config.json` > defaults
 
-**Memory:** Hybrid retrieval (BM25 40% + ACT-R 30% + semantic 30%). DB at `.aurora/memory.db`
+**Memory:** Hybrid retrieval with chunk-type-aware weights — code: (BM25 50% / ACT-R 30% / semantic 20%), KB: (BM25 30% / ACT-R 30% / semantic 40%). DB at `.aurora/memory.db`
 
 **SOAR:** ASSESS > RETRIEVE > DECOMPOSE > VERIFY > ROUTE > COLLECT > SYNTHESIZE > RECORD > RESPOND
 
@@ -124,11 +124,13 @@ See `docs/KNOWLEDGE_BASE.md` for detailed documentation.
 Key facts extracted from session stashes (full details in `.claude/memory/MEMORY.md`):
 
 - Tests must be self-sufficient, no `.aurora/` dependency in CI — use `tmp_path` or `monkeypatch` for `get_aurora_dir`
-- All tests in `packages/*/tests/`, CI workflow at `.github/workflows/ci.yml` (2,608 tests, 0 failures)
+- All tests in `packages/*/tests/`, CI workflow at `.github/workflows/ci.yml` (2,608 tests, 0 failures, 3 skipped)
 - LSP supports 5 languages (Python, JS, TS, Go, Java); MCP uses `python3.12` (3.14 has anyio issues)
-- `aur headless` and API key functionality removed entirely
+- `aur headless` and API key functionality removed entirely; released v0.16.0
 - `_identify_dependencies()` returns empty list (imports extracted but discarded)
 - CLI `aur mem search` lacks LSP enrichment (separate implementation from MCP `mem_search`)
 - MCP registration: use `claude mcp add-json`, not file writes
+- `spawner/spawner.py` at 3% coverage — remaining P1 gap
+- Never claim success without running verification (58% BAD rate from false_success pattern)
 - Don't use `git stash` with unstaged subagent changes
 <!-- MEMORY:END -->

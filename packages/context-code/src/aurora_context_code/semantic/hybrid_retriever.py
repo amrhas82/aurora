@@ -2,10 +2,9 @@
 
 This module implements tri-hybrid retrieval with staged architecture:
 - Stage 1: BM25 filtering (keyword exact match, top_k=100)
-- Stage 2: Re-ranking with tri-hybrid scoring:
-  * BM25 keyword matching (30% weight by default)
-  * Semantic similarity (40% weight by default)
-  * Activation-based ranking (30% weight by default)
+- Stage 2: Re-ranking with chunk-type-aware tri-hybrid scoring:
+  * Code chunks: BM25 50% / ACT-R 30% / Semantic 20% (identifiers are exact tokens)
+  * KB chunks:   BM25 30% / ACT-R 30% / Semantic 40% (prose benefits from embeddings)
 
 Performance optimizations (Epic 1 + Epic 2):
 - Lazy BM25 index loading: Deferred until first retrieve() call (99.9% faster creation)
@@ -36,6 +35,13 @@ import numpy.typing as npt
 
 
 logger = logging.getLogger(__name__)
+
+
+# Retrieval weights by chunk type
+# Code: BM25-heavy (identifiers are exact tokens, semantic adds noise)
+# KB: semantic-heavy (prose benefits from embedding similarity)
+_CODE_WEIGHTS = (0.5, 0.3, 0.2)  # (bm25, activation, semantic)
+_KB_WEIGHTS = (0.3, 0.3, 0.4)  # (bm25, activation, semantic)
 
 
 # Module-level cache for HybridRetriever instances
@@ -96,9 +102,6 @@ class HybridConfig:
     bm25_index_path: str | None = None
     # Enable persistent BM25 index (load from disk if available)
     enable_bm25_persistence: bool = True
-    # Code-first ordering: boost score for code type chunks (0.0-0.5, default 0.0)
-    # Disabled by default - type-aware retrieval handles code/kb separation
-    code_type_boost: float = 0.0
     # MMR (Maximal Marginal Relevance) configuration
     # Default lambda=0.5 balances relevance and diversity
     mmr_lambda: float = 0.5
@@ -128,10 +131,6 @@ class HybridConfig:
         if self.query_cache_ttl_seconds < 0:
             raise ValueError(
                 f"query_cache_ttl_seconds must be >= 0, got {self.query_cache_ttl_seconds}",
-            )
-        if not (0.0 <= self.code_type_boost <= 0.5):
-            raise ValueError(
-                f"code_type_boost must be in [0, 0.5], got {self.code_type_boost}",
             )
         if not (0.0 <= self.mmr_lambda <= 1.0):
             raise ValueError(
@@ -355,7 +354,6 @@ def get_cached_retriever(
     activation_engine: Any,
     embedding_provider: Any,
     config: "HybridConfig | None" = None,
-    aurora_config: Any | None = None,
 ) -> "HybridRetriever":
     """Get or create cached HybridRetriever instance.
 
@@ -367,7 +365,6 @@ def get_cached_retriever(
         activation_engine: ACT-R activation engine
         embedding_provider: Embedding provider
         config: Hybrid configuration (optional)
-        aurora_config: Global AURORA Config object (optional)
 
     Returns:
         Cached or new HybridRetriever instance
@@ -426,7 +423,6 @@ def get_cached_retriever(
             activation_engine=activation_engine,
             embedding_provider=embedding_provider,
             config=config,
-            aurora_config=aurora_config,
         )
 
         # Cache with timestamp
@@ -513,7 +509,6 @@ class HybridRetriever:
         activation_engine: Any,  # aurora_core.activation.ActivationEngine
         embedding_provider: Any,  # EmbeddingProvider
         config: HybridConfig | None = None,
-        aurora_config: Any | None = None,  # aurora_core.config.Config
     ):
         """Initialize tri-hybrid retriever with lazy BM25 loading (Epic 2).
 
@@ -525,12 +520,9 @@ class HybridRetriever:
             store: Storage backend
             activation_engine: ACT-R activation engine
             embedding_provider: Embedding provider (None triggers dual-hybrid fallback)
-            config: Hybrid configuration (takes precedence if provided)
-            aurora_config: Global AURORA Config object (loads hybrid_weights from context.code.hybrid_weights)
+            config: Hybrid configuration (optional, defaults to HybridConfig())
 
         Note:
-            If both config and aurora_config are provided, config takes precedence.
-            If neither is provided, uses default HybridConfig values (tri-hybrid: 30/40/30).
             If embedding_provider is None, dual-hybrid fallback (BM25+Activation) is used.
 
         """
@@ -541,13 +533,7 @@ class HybridRetriever:
         self.activation_engine = activation_engine
         self.embedding_provider = embedding_provider
 
-        # Load configuration with precedence: explicit config > aurora_config > defaults
-        if config is not None:
-            self.config = config
-        elif aurora_config is not None:
-            self.config = self._load_from_aurora_config(aurora_config)
-        else:
-            self.config = HybridConfig()
+        self.config = config or HybridConfig()
 
         # BM25 scorer (lazy-initialized in retrieve() or loaded from persistent index)
         self.bm25_scorer: Any = None  # BM25Scorer from aurora_context_code.semantic.bm25_scorer
@@ -775,20 +761,11 @@ class HybridRetriever:
             semantic_norm = semantic_scores_normalized[i]
             bm25_norm = bm25_scores_normalized[i]
 
-            # Tri-hybrid scoring formula: weights × normalized scores
-            hybrid_score = (
-                self.config.bm25_weight * bm25_norm
-                + self.config.activation_weight * activation_norm
-                + self.config.semantic_weight * semantic_norm
-            )
-
-            # Apply code-first ordering boost for code type chunks
-            # This ensures code results rank higher than KB/markdown in search results
+            # Chunk-type-aware scoring: code chunks favor BM25, KB chunks favor semantic
             chunk_type = getattr(chunk, "type", "unknown")
-            if chunk_type == "code" and self.config.code_type_boost > 0:
-                hybrid_score += self.config.code_type_boost
-                # Clamp to [0, 1] range to satisfy validation constraints
-                hybrid_score = min(hybrid_score, 1.0)
+            bm25_w, act_w, sem_w = _CODE_WEIGHTS if chunk_type == "code" else _KB_WEIGHTS
+
+            hybrid_score = bm25_w * bm25_norm + act_w * activation_norm + sem_w * semantic_norm
 
             # Extract content and metadata from chunk (using cached access stats)
             content, metadata = self._extract_chunk_content_metadata(
@@ -1198,13 +1175,6 @@ class HybridRetriever:
             # Dual-hybrid scoring: weighted BM25 + activation (no semantic)
             hybrid_score = bm25_dual * bm25_norm + activation_dual * activation_norm
 
-            # Apply code-first ordering boost for code type chunks
-            chunk_type = getattr(chunk, "type", "unknown")
-            if chunk_type == "code" and self.config.code_type_boost > 0:
-                hybrid_score += self.config.code_type_boost
-                # Clamp to [0, 1] range to satisfy validation constraints
-                hybrid_score = min(hybrid_score, 1.0)
-
             content, metadata = self._extract_chunk_content_metadata(
                 chunk,
                 access_stats_cache=access_stats_cache,
@@ -1254,42 +1224,6 @@ class HybridRetriever:
             return list(scores)
 
         return [(s - min_score) / (max_score - min_score) for s in scores]
-
-    def _load_from_aurora_config(self, aurora_config: Any) -> HybridConfig:
-        """Load tri-hybrid configuration from global AURORA Config.
-
-        Args:
-            aurora_config: AURORA Config object with context.code.hybrid_weights
-
-        Returns:
-            HybridConfig loaded from config
-
-        Raises:
-            ValueError: If config values are invalid
-
-        """
-        # Load from context.code.hybrid_weights section
-        weights = aurora_config.get("context.code.hybrid_weights", {})
-
-        # Extract values with fallback to tri-hybrid defaults
-        bm25_weight = weights.get("bm25", 0.3)
-        activation_weight = weights.get("activation", 0.3)
-        semantic_weight = weights.get("semantic", 0.4)
-        activation_top_k = weights.get("top_k", 500)  # Match HybridConfig default
-        stage1_top_k = weights.get("stage1_top_k", 100)
-        fallback_to_activation = weights.get("fallback_to_activation", True)
-        use_staged_retrieval = weights.get("use_staged_retrieval", True)
-
-        # Create and validate HybridConfig (validation happens in __post_init__)
-        return HybridConfig(
-            bm25_weight=bm25_weight,
-            activation_weight=activation_weight,
-            semantic_weight=semantic_weight,
-            activation_top_k=activation_top_k,
-            stage1_top_k=stage1_top_k,
-            fallback_to_activation=fallback_to_activation,
-            use_staged_retrieval=use_staged_retrieval,
-        )
 
     def get_cache_stats(self) -> dict[str, Any]:
         """Get query embedding cache statistics.

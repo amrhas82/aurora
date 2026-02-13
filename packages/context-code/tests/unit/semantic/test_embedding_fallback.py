@@ -483,21 +483,9 @@ class TestFallbackConfiguration:
         with pytest.raises(ValueError, match="Failed to generate query embedding"):
             retriever.retrieve("query", top_k=1)
 
-    def test_aurora_config_fallback_setting(self):
-        """Test loading fallback setting from aurora_config."""
-        from aurora_context_code.semantic.hybrid_retriever import HybridRetriever
-
-        # Mock AURORA Config with fallback disabled
-        class MockAuroraConfig:
-            def get(self, key, default=None):
-                if key == "context.code.hybrid_weights":
-                    return {
-                        "bm25": 0.0,
-                        "activation": 0.6,
-                        "semantic": 0.4,
-                        "fallback_to_activation": False,
-                    }
-                return default
+    def test_config_fallback_disabled(self):
+        """Test fallback disabled via explicit config."""
+        from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
 
         chunks = [MockChunk("1", "chunk", activation=0.5, embeddings=None)]
         store = MockStore(chunks=chunks)
@@ -506,8 +494,8 @@ class TestFallbackConfiguration:
         mock_provider = Mock(spec=EmbeddingProvider)
         mock_provider.embed_query.side_effect = RuntimeError("Failed")
 
-        aurora_config = MockAuroraConfig()
-        retriever = HybridRetriever(store, engine, mock_provider, aurora_config=aurora_config)
+        config = HybridConfig(fallback_to_activation=False)
+        retriever = HybridRetriever(store, engine, mock_provider, config=config)
 
         # Should have fallback disabled from config
         assert retriever.config.fallback_to_activation is False

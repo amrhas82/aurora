@@ -11,7 +11,7 @@ After the February 2026 test cleanup, all tests live in `packages/*/tests/` and 
 
 | Metric | Value |
 |--------|-------|
-| **Total Tests** | 2,608 |
+| **Total Tests** | 2,610 |
 | **Test Files** | 143 |
 | **Test Lines** | ~48,000 |
 | **Pass Rate** | 100% (0 failures, 3 skipped) |
@@ -25,7 +25,7 @@ After the February 2026 test cleanup, all tests live in `packages/*/tests/` and 
 | **core** | 885 | 78% |
 | **cli** | 568 | 55% |
 | **planning** | 290 | 70% |
-| **context-code** | 276 | 48% |
+| **context-code** | 275 | 48% |
 | **soar** | 167 | 46% |
 | **spawner** | 201 | 45% |
 | **reasoning** | 121 | 94% |

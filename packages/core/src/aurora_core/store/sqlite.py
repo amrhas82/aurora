@@ -27,7 +27,7 @@ from aurora_core.exceptions import (
 )
 from aurora_core.store.base import Store
 from aurora_core.store.connection_pool import get_connection_pool
-from aurora_core.store.schema import get_init_statements
+from aurora_core.store.schema import SCHEMA_VERSION, get_init_statements
 from aurora_core.types import ChunkID
 
 if TYPE_CHECKING:
@@ -137,6 +137,9 @@ class SQLiteStore(Store):
         except sqlite3.Error as e:
             raise StorageError("Failed to initialize database schema", details=str(e))
 
+        # Populate FTS5 from existing chunks if migrating from older schema
+        self._migrate_to_fts5()
+
     def _detect_schema_version(self) -> tuple[int, int]:
         """Detect the schema version of an existing database.
 
@@ -223,6 +226,11 @@ class SQLiteStore(Store):
 
         # If detected version matches expected, we're good
         if detected_version == SCHEMA_VERSION:
+            return
+
+        # Allow forward-compatible upgrade from v5 to v6 (FTS5 addition only)
+        # v6 only adds a virtual table — existing tables are unchanged
+        if detected_version == 5 and SCHEMA_VERSION == 6:
             return
 
         # Schema mismatch - raise error with details
@@ -321,6 +329,9 @@ class SQLiteStore(Store):
                         0,
                     ),
                 )
+
+                # Populate FTS5 index for keyword search
+                self._upsert_fts(conn, chunk.id, chunk.type, chunk_json.get("content", {}))
 
                 return True
             except sqlite3.Error as e:
@@ -593,6 +604,215 @@ class SQLiteStore(Store):
 
         except sqlite3.Error as e:
             raise StorageError("Failed to retrieve chunks by activation", details=str(e))
+
+    @staticmethod
+    def _extract_fts_fields(content: dict[str, Any]) -> tuple[str, str, str]:
+        """Extract FTS-indexable fields from chunk content JSON.
+
+        Args:
+            content: Chunk content dictionary (from chunk.to_json()["content"])
+
+        Returns:
+            Tuple of (name, body, file_path) for FTS5 indexing
+
+        """
+        name = content.get("function", "") or ""
+        sig = content.get("signature", "") or ""
+        doc = content.get("docstring", "") or ""
+        body = f"{sig} {doc}".strip()
+        file_path = content.get("file", "") or ""
+        return name, body, file_path
+
+    def _upsert_fts(
+        self,
+        conn: sqlite3.Connection,
+        chunk_id: str,
+        chunk_type: str,
+        content: dict[str, Any],
+    ) -> None:
+        """Insert or update a chunk's FTS5 record.
+
+        FTS5 doesn't support REPLACE, so we DELETE then INSERT.
+
+        Args:
+            conn: Active database connection
+            chunk_id: Chunk identifier
+            chunk_type: Chunk type (code, kb, etc.)
+            content: Chunk content dictionary
+
+        """
+        try:
+            # Check if FTS5 table exists (may not on old DBs before migration)
+            cursor = conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='chunks_fts'",
+            )
+            if cursor.fetchone() is None:
+                return  # FTS5 table not yet created
+
+            name, body, file_path = self._extract_fts_fields(content)
+            conn.execute("DELETE FROM chunks_fts WHERE chunk_id = ?", (chunk_id,))
+            conn.execute(
+                "INSERT INTO chunks_fts (chunk_id, chunk_type, name, body, file_path) VALUES (?, ?, ?, ?, ?)",
+                (chunk_id, chunk_type, name, body, file_path),
+            )
+        except sqlite3.OperationalError:
+            # FTS5 table may not exist yet (pre-migration)
+            pass
+
+    def retrieve_by_fts(
+        self,
+        query: str,
+        limit: int = 100,
+        include_embeddings: bool = True,
+        chunk_type: str | None = None,
+    ) -> list["Chunk"]:
+        """Retrieve chunks using FTS5 full-text search.
+
+        Uses SQLite FTS5 MATCH for keyword relevance ranking. This replaces
+        activation-based gating with keyword-based gating, ensuring that
+        rarely-accessed but keyword-relevant chunks are surfaced.
+
+        Args:
+            query: Search query string
+            limit: Maximum number of chunks to return
+            include_embeddings: Whether to include embedding vectors
+            chunk_type: Optional filter by chunk type ('code' or 'kb')
+
+        Returns:
+            List of chunks with fts_rank attached, ordered by FTS5 rank (best first)
+
+        """
+        if not query or not query.strip():
+            return []
+
+        conn = self._get_connection()
+        try:
+            # Escape FTS5 special characters to prevent syntax errors
+            fts_query = self._escape_fts_query(query)
+            if not fts_query:
+                return []
+
+            # Build WHERE clause for optional type filtering
+            type_filter = ""
+            params: list[Any] = [fts_query]
+            if chunk_type:
+                type_filter = "AND f.chunk_type = ?"
+                params.append(chunk_type)
+            params.append(limit)
+
+            embed_col = "c.embeddings" if include_embeddings else "NULL as embeddings"
+            cursor = conn.execute(
+                f"""
+                SELECT c.id, c.type, c.content, c.metadata, {embed_col}, c.created_at, c.updated_at,
+                       COALESCE(a.base_level, 0.0) AS activation,
+                       f.rank AS fts_rank
+                FROM chunks_fts f
+                JOIN chunks c ON f.chunk_id = c.id
+                LEFT JOIN activations a ON c.id = a.chunk_id
+                WHERE chunks_fts MATCH ? {type_filter}
+                ORDER BY f.rank
+                LIMIT ?
+                """,
+                params,
+            )
+
+            chunks = []
+            for row in cursor:
+                row_dict = dict(row)
+                activation_value = row_dict.pop("activation", 0.0)
+                fts_rank_value = row_dict.pop("fts_rank", 0.0)
+                chunk = self._deserialize_chunk(row_dict)
+                if chunk is not None:
+                    chunk.activation = activation_value  # type: ignore[attr-defined]
+                    chunk.fts_rank = fts_rank_value  # type: ignore[attr-defined]
+                    chunks.append(chunk)
+
+            return chunks
+
+        except sqlite3.OperationalError as e:
+            # FTS5 syntax errors or missing table — return empty gracefully
+            import logging
+
+            logging.getLogger(__name__).debug(f"FTS5 query failed: {e}")
+            return []
+
+    @staticmethod
+    def _escape_fts_query(query: str) -> str:
+        """Escape FTS5 special characters in query.
+
+        Wraps each token in double quotes to prevent FTS5 syntax errors
+        from special characters like *, -, etc.
+
+        Args:
+            query: Raw query string
+
+        Returns:
+            Escaped FTS5 query string with OR logic between tokens
+
+        """
+        tokens = query.strip().split()
+        if not tokens:
+            return ""
+        # Quote each token and join with OR for broad matching
+        escaped = [f'"{t}"' for t in tokens if t]
+        return " OR ".join(escaped)
+
+    def _migrate_to_fts5(self) -> None:
+        """Populate FTS5 table from existing chunks if needed.
+
+        Called during schema initialization. Idempotent — skips if FTS5
+        already has data.
+
+        """
+        conn = self._get_connection()
+        try:
+            # Check if FTS5 table exists
+            cursor = conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='chunks_fts'",
+            )
+            if cursor.fetchone() is None:
+                return  # FTS5 table not created yet
+
+            # Check if FTS5 already populated
+            cursor = conn.execute("SELECT COUNT(*) FROM chunks_fts")
+            fts_count = cursor.fetchone()[0]
+            if fts_count > 0:
+                return  # Already populated
+
+            # Check if chunks table has data to migrate
+            cursor = conn.execute("SELECT COUNT(*) FROM chunks")
+            chunk_count = cursor.fetchone()[0]
+            if chunk_count == 0:
+                return  # No data to migrate
+
+            # Populate FTS5 from existing chunks
+            cursor = conn.execute("SELECT id, type, content FROM chunks")
+            migrated = 0
+            for row in cursor:
+                chunk_id = row[0]
+                chunk_type = row[1]
+                try:
+                    content = json.loads(row[2]) if row[2] else {}
+                except (json.JSONDecodeError, TypeError):
+                    continue
+                name, body, file_path = self._extract_fts_fields(content)
+                conn.execute(
+                    "INSERT INTO chunks_fts (chunk_id, chunk_type, name, body, file_path) VALUES (?, ?, ?, ?, ?)",
+                    (chunk_id, chunk_type, name, body, file_path),
+                )
+                migrated += 1
+
+            conn.commit()
+
+            import logging
+
+            logging.getLogger(__name__).info(
+                f"Migrated {migrated} chunks to FTS5 index"
+            )
+
+        except sqlite3.Error:
+            # Non-fatal — FTS5 will be populated on next save_chunk()
+            pass
 
     def fetch_embeddings_for_chunks(self, chunk_ids: list[ChunkID]) -> dict[ChunkID, bytes]:
         """Fetch embeddings only for specified chunks.

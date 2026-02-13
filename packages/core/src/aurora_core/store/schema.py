@@ -6,7 +6,7 @@ storage implementations.
 """
 
 # Schema version for migration tracking
-SCHEMA_VERSION = 5  # Incremented for doc_hierarchy table (document indexing)
+SCHEMA_VERSION = 6  # FTS5 full-text search for keyword retrieval
 
 # SQL statements for creating tables and indexes
 CREATE_CHUNKS_TABLE = """
@@ -110,6 +110,18 @@ CREATE_DOC_HIERARCHY_TYPE_INDEX = """
 CREATE INDEX IF NOT EXISTS idx_doc_type ON doc_hierarchy(document_type);
 """
 
+# FTS5 full-text search index for keyword retrieval (v6+)
+CREATE_CHUNKS_FTS_TABLE = """
+CREATE VIRTUAL TABLE IF NOT EXISTS chunks_fts USING fts5(
+    chunk_id UNINDEXED,
+    chunk_type UNINDEXED,
+    name,
+    body,
+    file_path,
+    tokenize='porter unicode61'
+);
+"""
+
 # Schema version tracking table
 CREATE_SCHEMA_VERSION_TABLE = """
 CREATE TABLE IF NOT EXISTS schema_version (
@@ -135,6 +147,7 @@ INIT_SCHEMA = [
     CREATE_DOC_HIERARCHY_PARENT_INDEX,
     CREATE_DOC_HIERARCHY_LEVEL_INDEX,
     CREATE_DOC_HIERARCHY_TYPE_INDEX,
+    CREATE_CHUNKS_FTS_TABLE,
     CREATE_SCHEMA_VERSION_TABLE,
 ]
 
@@ -169,6 +182,7 @@ __all__ = [
     "CREATE_RELATIONSHIPS_TABLE",
     "CREATE_FILE_INDEX_TABLE",
     "CREATE_DOC_HIERARCHY_TABLE",
+    "CREATE_CHUNKS_FTS_TABLE",
     "INIT_SCHEMA",
     "get_schema_version_insert",
     "get_init_statements",

@@ -100,22 +100,6 @@ class TestBM25Scorer:
 
         assert score_match > score_no_match
 
-    def test_save_and_load_index(self, tmp_path):
-        scorer = BM25Scorer()
-        docs = [("d1", "test document"), ("d2", "another document")]
-        scorer.build_index(docs)
-
-        index_path = tmp_path / "bm25.pkl"
-        scorer.save_index(index_path)
-
-        scorer2 = BM25Scorer()
-        scorer2.load_index(index_path)
-
-        # Should produce same scores
-        s1 = scorer.score("test", "test document")
-        s2 = scorer2.score("test", "test document")
-        assert abs(s1 - s2) < 1e-6
-
     def test_empty_corpus(self):
         scorer = BM25Scorer()
         scorer.build_index([])
@@ -226,8 +210,7 @@ class TestHybridRetrieverFallbacks:
             bm25_weight=0.5,
             activation_weight=0.5,
             semantic_weight=0.0,
-            enable_bm25_persistence=False,
-        )
+                    )
         retriever = HybridRetriever(populated_store, engine, None, config)
 
         results = retriever.retrieve("authenticate", top_k=3)
@@ -237,7 +220,7 @@ class TestHybridRetrieverFallbacks:
         """Empty store should return empty results."""
         store = SQLiteStore(str(tmp_path / "empty.db"))
         engine = ActivationEngine()
-        config = HybridConfig(enable_bm25_persistence=False)
+        config = HybridConfig()
         provider = DummyEmbeddingProvider()
         retriever = HybridRetriever(store, engine, provider, config)
 
@@ -248,7 +231,7 @@ class TestHybridRetrieverFallbacks:
     def test_retrieve_with_dummy_embeddings(self, populated_store):
         """Full tri-hybrid path with dummy embeddings."""
         engine = ActivationEngine()
-        config = HybridConfig(enable_bm25_persistence=False)
+        config = HybridConfig()
         provider = DummyEmbeddingProvider()
         retriever = HybridRetriever(populated_store, engine, provider, config)
 
@@ -259,7 +242,7 @@ class TestHybridRetrieverFallbacks:
 
     def test_empty_query_raises(self, populated_store):
         engine = ActivationEngine()
-        config = HybridConfig(enable_bm25_persistence=False)
+        config = HybridConfig()
         provider = DummyEmbeddingProvider()
         retriever = HybridRetriever(populated_store, engine, provider, config)
 
@@ -268,7 +251,7 @@ class TestHybridRetrieverFallbacks:
 
     def test_results_have_expected_keys(self, populated_store):
         engine = ActivationEngine()
-        config = HybridConfig(enable_bm25_persistence=False)
+        config = HybridConfig()
         provider = DummyEmbeddingProvider()
         retriever = HybridRetriever(populated_store, engine, provider, config)
 
@@ -283,7 +266,7 @@ class TestHybridRetrieverFallbacks:
 
     def test_top_k_respected(self, populated_store):
         engine = ActivationEngine()
-        config = HybridConfig(enable_bm25_persistence=False)
+        config = HybridConfig()
         provider = DummyEmbeddingProvider()
         retriever = HybridRetriever(populated_store, engine, provider, config)
 
@@ -292,7 +275,7 @@ class TestHybridRetrieverFallbacks:
 
     def test_results_ordered_by_hybrid_score(self, populated_store):
         engine = ActivationEngine()
-        config = HybridConfig(enable_bm25_persistence=False)
+        config = HybridConfig()
         provider = DummyEmbeddingProvider()
         retriever = HybridRetriever(populated_store, engine, provider, config)
 

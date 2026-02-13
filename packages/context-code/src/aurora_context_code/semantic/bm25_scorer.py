@@ -23,10 +23,8 @@ References:
 
 import logging
 import math
-import pickle
 import re
 from collections import Counter, defaultdict
-from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -288,68 +286,3 @@ class BM25Scorer:
 
         return bm25_score
 
-    def save_index(self, path: Path) -> None:
-        """Save BM25 index to file.
-
-        Args:
-            path: Path to save index file (will be pickle format)
-
-        Example:
-            >>> scorer.save_index(Path("~/.aurora/indexes/bm25_index.pkl"))
-
-        """
-        index_data = {
-            "version": "1.0",
-            "k1": self.k1,
-            "b": self.b,
-            "idf": self.idf,
-            "doc_lengths": self.doc_lengths,
-            "avg_doc_length": self.avg_doc_length,
-            "corpus_size": self.corpus_size,
-            "term_doc_counts": dict(self.term_doc_counts),
-        }
-
-        path.parent.mkdir(parents=True, exist_ok=True)
-
-        with open(path, "wb") as f:
-            pickle.dump(index_data, f, protocol=pickle.HIGHEST_PROTOCOL)
-
-        logger.info(f"Saved BM25 index to {path} ({self.corpus_size} documents)")
-
-    def load_index(self, path: Path) -> None:
-        """Load BM25 index from file.
-
-        Args:
-            path: Path to index file
-
-        Raises:
-            FileNotFoundError: If index file doesn't exist
-            pickle.UnpicklingError: If index file is corrupted
-
-        Example:
-            >>> scorer.load_index(Path("~/.aurora/indexes/bm25_index.pkl"))
-
-        """
-        if not path.exists():
-            raise FileNotFoundError(f"BM25 index not found: {path}")
-
-        with open(path, "rb") as f:
-            index_data = pickle.load(f)
-
-        # Validate version
-        version = index_data.get("version", "unknown")
-        if version != "1.0":
-            logger.warning(f"BM25 index version mismatch: got {version}, expected 1.0")
-
-        # Restore index data
-        self.k1 = index_data["k1"]
-        self.b = index_data["b"]
-        self.idf = index_data["idf"]
-        self.doc_lengths = index_data["doc_lengths"]
-        self.avg_doc_length = index_data["avg_doc_length"]
-        self.corpus_size = index_data["corpus_size"]
-        self.term_doc_counts = defaultdict(int, index_data["term_doc_counts"])
-
-        logger.info(
-            f"Loaded BM25 index from {path} ({self.corpus_size} documents, {len(self.idf)} terms)",
-        )

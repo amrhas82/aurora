@@ -22,7 +22,6 @@ import hashlib
 import json
 import logging
 import os
-import pickle
 import threading
 import time
 from collections import OrderedDict
@@ -70,7 +69,6 @@ class HybridConfig:
         stage1_top_k: Number of candidates to pass from Stage 1 BM25 filter (default 100)
         fallback_to_activation: If True, fall back to activation-only if embeddings unavailable
         use_staged_retrieval: Enable staged retrieval (BM25 filter → re-rank)
-        bm25_index_path: Path to persist BM25 index (default: .aurora/indexes/bm25_index.pkl)
         mmr_lambda: MMR diversity parameter (0.0=pure diversity, 1.0=pure relevance, default 0.5)
 
     Example (tri-hybrid):
@@ -89,18 +87,14 @@ class HybridConfig:
     bm25_weight: float = 0.3
     activation_weight: float = 0.3
     semantic_weight: float = 0.4
-    activation_top_k: int = 500  # Increased from 100 to improve recall on large repos
-    stage1_top_k: int = 100
+    activation_top_k: int = 500  # Used in fallback path when FTS5 unavailable
+    stage1_top_k: int = 100  # Controls FTS5 candidate limit (or BM25 fallback)
     fallback_to_activation: bool = True
     use_staged_retrieval: bool = True
     # Caching configuration
     enable_query_cache: bool = True
     query_cache_size: int = 100
     query_cache_ttl_seconds: int = 1800  # 30 minutes
-    # BM25 index persistence (path relative to project root or absolute)
-    bm25_index_path: str | None = None
-    # Enable persistent BM25 index (load from disk if available)
-    enable_bm25_persistence: bool = True
     # MMR (Maximal Marginal Relevance) configuration
     # Default lambda=0.5 balances relevance and diversity
     mmr_lambda: float = 0.5
@@ -342,7 +336,6 @@ def _compute_config_hash(config: "HybridConfig") -> str:
         "enable_query_cache": config.enable_query_cache,
         "query_cache_size": config.query_cache_size,
         "query_cache_ttl_seconds": config.query_cache_ttl_seconds,
-        "enable_bm25_persistence": config.enable_bm25_persistence,
     }
     config_json = json.dumps(config_dict, sort_keys=True)
     return hashlib.md5(config_json.encode(), usedforsecurity=False).hexdigest()
@@ -534,10 +527,8 @@ class HybridRetriever:
 
         self.config = config or HybridConfig()
 
-        # BM25 scorer (lazy-initialized in retrieve() or loaded from persistent index)
+        # BM25 scorer (used as fallback when FTS5 unavailable)
         self.bm25_scorer: Any = None  # BM25Scorer from aurora_context_code.semantic.bm25_scorer
-        self._bm25_index_loaded = False  # Track if we've loaded the persistent index
-        self._bm25_lock = threading.Lock()  # Thread-safety for lazy loading
 
         # Query embedding cache (shared across all retrievers - Task 4.0)
         if self.config.enable_query_cache:
@@ -605,25 +596,33 @@ class HybridRetriever:
         if top_k < 1:
             raise ValueError(f"top_k must be >= 1, got {top_k}")
 
-        # ========== TWO-PHASE RETRIEVAL OPTIMIZATION ==========
-        # Phase 1: Retrieve chunks WITHOUT embeddings (fast, ~1.5KB saved per chunk)
-        # Phase 2: Fetch embeddings ONLY for top candidates after BM25 filtering
-        # This optimization reduces I/O significantly for large result sets
+        # ========== CANDIDATE RETRIEVAL ==========
+        # Primary: FTS5 keyword search (keyword-relevant candidates, never starves rare content)
+        # Fallback: Activation-based retrieval (for old DBs without FTS5)
+        use_fts5 = hasattr(self.store, "retrieve_by_fts")
 
-        # Step 1: Retrieve top-K chunks by activation WITHOUT embeddings
-        # Embeddings will be fetched later only for BM25-filtered candidates
+        # Two-phase optimization: fetch embeddings separately after filtering
         use_two_phase = (
             self.config.use_staged_retrieval
-            and self.config.bm25_weight > 0
             and hasattr(self.store, "fetch_embeddings_for_chunks")
         )
 
-        activation_candidates = self.store.retrieve_by_activation(
-            min_activation=0.0,  # Get all chunks, we'll filter by score
-            limit=self.config.activation_top_k,
-            include_embeddings=not use_two_phase,  # Skip embeddings if two-phase enabled
-            chunk_type=chunk_type,  # Optional filter by type ('code' or 'kb')
-        )
+        if use_fts5:
+            # FTS5 gate: keyword relevance determines candidates
+            activation_candidates = self.store.retrieve_by_fts(
+                query=query,
+                limit=self.config.stage1_top_k,
+                include_embeddings=not use_two_phase,
+                chunk_type=chunk_type,
+            )
+        else:
+            # Fallback: activation gate (old DB without FTS5)
+            activation_candidates = self.store.retrieve_by_activation(
+                min_activation=0.0,
+                limit=self.config.activation_top_k,
+                include_embeddings=not use_two_phase,
+                chunk_type=chunk_type,
+            )
 
         # If no chunks available, return empty list
         if not activation_candidates:
@@ -658,10 +657,13 @@ class HybridRetriever:
                 raise ValueError(f"Failed to generate query embedding: {e}") from e
 
         # ========== STAGE 1: BM25 FILTERING ==========
-        if self.config.use_staged_retrieval and self.config.bm25_weight > 0:
+        # When FTS5 is used, skip BM25 stage — FTS5 already did keyword filtering
+        # and provides rank scores. Only use BM25 as fallback for old DBs.
+        if use_fts5:
+            stage1_candidates = activation_candidates  # Already keyword-filtered by FTS5
+        elif self.config.use_staged_retrieval and self.config.bm25_weight > 0:
             stage1_candidates = self._stage1_bm25_filter(query, activation_candidates)
         else:
-            # Skip Stage 1 if staged retrieval disabled or BM25 weight is 0
             stage1_candidates = activation_candidates
 
         # ========== PHASE 2: FETCH EMBEDDINGS FOR TOP CANDIDATES ==========
@@ -705,9 +707,13 @@ class HybridRetriever:
             else:
                 continue  # Skip chunks without embeddings
 
-            # Calculate BM25 score (if enabled)
-            if self.config.bm25_weight > 0 and self.bm25_scorer is not None:
-                # Get chunk content for BM25 scoring
+            # Calculate BM25 score
+            # When FTS5 is used, use its rank as the BM25 component
+            # FTS5 rank is negative (lower=better), so negate it for scoring
+            fts_rank = getattr(chunk, "fts_rank", None)
+            if use_fts5 and fts_rank is not None:
+                bm25_score = -fts_rank  # Negate: FTS5 rank is negative=better
+            elif self.config.bm25_weight > 0 and self.bm25_scorer is not None:
                 chunk_content = self._get_chunk_content_for_bm25(chunk)
                 bm25_score = self.bm25_scorer.score(query, chunk_content)
             else:
@@ -916,15 +922,10 @@ class HybridRetriever:
         return float(np.dot(vec1, vec2) / (norm1 * norm2))
 
     def _stage1_bm25_filter(self, query: str, candidates: list[Any]) -> list[Any]:
-        """Stage 1: Filter candidates using BM25 keyword matching with lazy loading (Epic 2).
+        """Stage 1: Filter candidates using BM25 keyword matching.
 
-        BM25 index is loaded lazily on first call using thread-safe double-checked locking.
-        This defers the 150-250ms index load cost from __init__() to first retrieve(),
-        improving retriever creation time by 99.9% (0.0ms vs 150-250ms).
-
-        Uses persistent BM25 index if available, otherwise builds from candidates.
-        The persistent index is built during indexing and loaded on first retrieve(),
-        eliminating the O(n) index build on each query (51% of search time savings).
+        Used as fallback when FTS5 is unavailable (old databases).
+        Builds BM25 index from candidates on each query.
 
         Args:
             query: User query string
@@ -936,29 +937,16 @@ class HybridRetriever:
         """
         from aurora_context_code.semantic.bm25_scorer import BM25Scorer
 
-        # Lazy load BM25 index on first retrieve() call (thread-safe)
-        if not self._bm25_index_loaded and self.config.enable_bm25_persistence:
-            with self._bm25_lock:
-                # Double-check pattern (another thread may have loaded while we waited)
-                if not self._bm25_index_loaded:
-                    self._try_load_bm25_index()
+        # Build BM25 index from candidates
+        logger.debug("Building BM25 index from candidates (FTS5 unavailable)")
+        self.bm25_scorer = BM25Scorer(k1=1.5, b=0.75)
 
-        # Use persistent index if loaded, otherwise build from candidates
-        if self._bm25_index_loaded and self.bm25_scorer is not None:
-            logger.debug("Using persistent BM25 index")
-        else:
-            # Build BM25 index from candidates (fallback if no persistent index)
-            logger.debug("Building BM25 index from candidates (no persistent index)")
-            self.bm25_scorer = BM25Scorer(k1=1.5, b=0.75)
+        documents = []
+        for chunk in candidates:
+            chunk_content = self._get_chunk_content_for_bm25(chunk)
+            documents.append((chunk.id, chunk_content))
 
-            # Prepare documents for BM25 indexing
-            documents = []
-            for chunk in candidates:
-                chunk_content = self._get_chunk_content_for_bm25(chunk)
-                documents.append((chunk.id, chunk_content))
-
-            # Build BM25 index
-            self.bm25_scorer.build_index(documents)
+        self.bm25_scorer.build_index(documents)
 
         # Score all candidates with BM25
         scored_candidates = []
@@ -1116,8 +1104,14 @@ class HybridRetriever:
             "To enable: pip install sentence-transformers torch"
         )
 
-        # Run Stage 1 BM25 filter to get keyword scores
-        stage1_candidates = self._stage1_bm25_filter(query, activation_candidates)
+        # When FTS5 is available, candidates are already keyword-filtered — skip BM25 stage
+        use_fts5 = hasattr(self.store, "retrieve_by_fts") and any(
+            getattr(c, "fts_rank", None) is not None for c in activation_candidates
+        )
+        if use_fts5:
+            stage1_candidates = activation_candidates
+        else:
+            stage1_candidates = self._stage1_bm25_filter(query, activation_candidates)
 
         # Normalize weights (redistribute semantic_weight to bm25 and activation)
         total_weight = self.config.bm25_weight + self.config.activation_weight
@@ -1135,8 +1129,11 @@ class HybridRetriever:
         for chunk in stage1_candidates:
             activation_score = getattr(chunk, "activation", 0.0)
 
-            # Get BM25 score (already calculated in _stage1_bm25_filter)
-            if self.config.bm25_weight > 0 and self.bm25_scorer is not None:
+            # Get BM25 score — use FTS5 rank when available
+            fts_rank = getattr(chunk, "fts_rank", None)
+            if use_fts5 and fts_rank is not None:
+                bm25_score = -fts_rank
+            elif self.config.bm25_weight > 0 and self.bm25_scorer is not None:
                 chunk_content = self._get_chunk_content_for_bm25(chunk)
                 bm25_score = self.bm25_scorer.score(query, chunk_content)
             else:
@@ -1259,137 +1256,3 @@ class HybridRetriever:
             self._query_cache.clear()
             logger.debug("Query embedding cache cleared")
 
-    def _get_bm25_index_path(self) -> Path | None:
-        """Get the path for the BM25 index file.
-
-        Returns:
-            Path to BM25 index file, or None if not configured
-
-        """
-        if self.config.bm25_index_path:
-            return Path(self.config.bm25_index_path).expanduser()
-
-        # Default: try to find .aurora directory relative to store's db_path
-        if hasattr(self.store, "db_path") and self.store.db_path != ":memory:":
-            db_path = Path(self.store.db_path)
-            return db_path.parent / "indexes" / "bm25_index.pkl"
-
-        return None
-
-    def _try_load_bm25_index(self) -> bool:
-        """Try to load a persistent BM25 index from disk.
-
-        Returns:
-            True if index was loaded successfully, False otherwise
-
-        """
-        index_path = self._get_bm25_index_path()
-        if index_path is None or not index_path.exists():
-            # Changed from DEBUG to INFO for better visibility (Task 3.6)
-            logger.info(f"No persistent BM25 index found at {index_path}")
-            return False
-
-        try:
-            from aurora_context_code.semantic.bm25_scorer import BM25Scorer
-
-            self.bm25_scorer = BM25Scorer(k1=1.5, b=0.75)
-            self.bm25_scorer.load_index(index_path)
-            self._bm25_index_loaded = True
-
-            # Enhanced logging with corpus size and file size (Task 3.6)
-            file_size_mb = index_path.stat().st_size / (1024 * 1024)
-            corpus_size = self.bm25_scorer.corpus_size
-
-            # Validate loaded index has documents (Task 3.7)
-            if corpus_size == 0:
-                logger.warning(
-                    f"✗ Loaded BM25 index from {index_path} but corpus_size is 0 (empty index)"
-                )
-                self.bm25_scorer = None
-                self._bm25_index_loaded = False
-                return False
-
-            logger.info(
-                f"✓ Loaded BM25 index from {index_path} "
-                f"({corpus_size} documents, {file_size_mb:.2f} MB)"
-            )
-            return True
-        except (pickle.UnpicklingError, ModuleNotFoundError, EOFError) as e:
-            # Improved error handling for pickle format mismatches (Task 3.8)
-            error_type = type(e).__name__
-            logger.warning(f"✗ Failed to load BM25 index from {index_path} ({error_type}): {e}")
-            self.bm25_scorer = None
-            self._bm25_index_loaded = False
-            return False
-        except Exception as e:
-            # Catch-all for other errors
-            error_type = type(e).__name__
-            logger.warning(f"✗ Failed to load BM25 index from {index_path} ({error_type}): {e}")
-            self.bm25_scorer = None
-            self._bm25_index_loaded = False
-            return False
-
-    def build_and_save_bm25_index(self, documents: list[tuple[str, str]] | None = None) -> bool:
-        """Build BM25 index from documents and save to disk.
-
-        This method is called during indexing to build the persistent BM25 index.
-        If documents are not provided, it retrieves all chunks from the store.
-
-        Args:
-            documents: List of (doc_id, doc_content) tuples, or None to load from store
-
-        Returns:
-            True if index was built and saved successfully, False otherwise
-
-        """
-        index_path = self._get_bm25_index_path()
-        if index_path is None:
-            logger.warning("Cannot save BM25 index: no index path configured")
-            return False
-
-        try:
-            from aurora_context_code.semantic.bm25_scorer import BM25Scorer
-
-            # If no documents provided, load from store
-            if documents is None:
-                documents = self._load_all_chunks_for_bm25()
-
-            if not documents:
-                logger.warning("No documents to build BM25 index from")
-                return False
-
-            # Build the index
-            self.bm25_scorer = BM25Scorer(k1=1.5, b=0.75)
-            self.bm25_scorer.build_index(documents)
-
-            # Save to disk
-            self.bm25_scorer.save_index(index_path)
-            self._bm25_index_loaded = True
-            logger.info(
-                f"Built and saved BM25 index to {index_path} ({len(documents)} documents)",
-            )
-            return True
-
-        except Exception as e:
-            logger.error(f"Failed to build/save BM25 index: {e}")
-            return False
-
-    def _load_all_chunks_for_bm25(self) -> list[tuple[str, str]]:
-        """Load all chunks from store for BM25 indexing.
-
-        Returns:
-            List of (chunk_id, content) tuples
-
-        """
-        documents = []
-        try:
-            # Retrieve all chunks (high limit to get all)
-            chunks = self.store.retrieve_by_activation(min_activation=0.0, limit=100000)
-            for chunk in chunks:
-                chunk_content = self._get_chunk_content_for_bm25(chunk)
-                if chunk_content:
-                    documents.append((chunk.id, chunk_content))
-            logger.debug(f"Loaded {len(documents)} chunks for BM25 indexing")
-        except Exception as e:
-            logger.warning(f"Failed to load chunks for BM25 index: {e}")
-        return documents

@@ -1311,7 +1311,7 @@ class MemoryManager:
             if hasattr(self.memory_store, "_transaction"):
                 with self.memory_store._transaction() as conn:
                     cursor = conn.execute(
-                        "SELECT COUNT(DISTINCT json_extract(content, '$.file')) FROM chunks WHERE type = 'code'",
+                        "SELECT COUNT(DISTINCT json_extract(content, '$.file')) FROM chunks",
                     )
                     result = cursor.fetchone()
                     return result[0] if result else 0
@@ -1784,38 +1784,18 @@ class MemoryManager:
             logger.warning(f"Failed to write index log: {e}")
 
     def _build_bm25_index(self) -> bool:
-        """Build and save BM25 index for faster search.
+        """No-op: FTS5 replaces the pkl-based BM25 index.
 
-        This eliminates ~51% of search time by pre-building the BM25 index
-        during indexing instead of rebuilding it on every query.
+        FTS5 is populated automatically in save_chunk(), so no separate
+        index build step is needed. This method is kept for backward
+        compatibility with callers.
 
         Returns:
-            True if index was built successfully, False otherwise
+            True always (FTS5 is auto-populated)
 
         """
-        try:
-            from aurora_context_code.semantic.hybrid_retriever import HybridRetriever
-            from aurora_core.activation import ActivationEngine
-
-            # Initialize retriever (embedding provider not needed for BM25 index)
-            activation_engine = ActivationEngine()
-            retriever = HybridRetriever(
-                self.memory_store,
-                activation_engine,
-                embedding_provider=None,  # Not needed for BM25 indexing
-            )
-
-            # Build and save the BM25 index
-            success = retriever.build_and_save_bm25_index()
-            if success:
-                logger.info("BM25 index built and saved successfully")
-            else:
-                logger.warning("Failed to build BM25 index")
-            return success
-
-        except Exception as e:
-            logger.warning(f"Failed to build BM25 index: {e}")
-            return False
+        logger.info("BM25 pkl index skipped — FTS5 is populated automatically in save_chunk()")
+        return True
 
 
 __all__ = ["MemoryManager", "IndexStats", "IndexProgress", "SearchResult", "MemoryStats"]

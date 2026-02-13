@@ -1011,14 +1011,13 @@ def search_command(
         )
 
     # Perform hybrid search - waits for embedding model if loading
-    # If type filter is specified, retrieve 3x limit to ensure enough results after filtering
-    # This fixes the bug where filtering happened after limit, returning 0 results
-    retrieve_limit = limit * 3 if chunk_type else limit
+    # FTS5 handles type filtering at the DB level, so no over-fetch needed
     raw_results = retriever.retrieve(
         query,
-        limit=retrieve_limit,
+        limit=limit,
         min_semantic_score=min_score,
         wait_for_model=True,  # Wait for embeddings, fall back to BM25 only if unavailable
+        chunk_type=chunk_type,
     )
 
     # Convert to SearchResult objects for display compatibility
@@ -1137,11 +1136,8 @@ def stats_command(_ctx: click.Context, db_path: Path | None) -> None:
     table.add_column("Value", style="white")
 
     table.add_row("Total Chunks", f"[bold]{stats.total_chunks:,}[/]")
-    # Use files_by_language sum if available (more accurate), else fall back to DB count
-    total_indexed_files = (
-        sum(stats.files_by_language.values()) if stats.files_by_language else stats.total_files
-    )
-    table.add_row("Total Files", f"[bold]{total_indexed_files:,}[/]")
+    # DB count reflects all indexed files; files_by_language only tracks the last run
+    table.add_row("Total Files", f"[bold]{stats.total_files:,}[/]")
     table.add_row("Database Size", f"[bold]{stats.database_size_mb:.2f} MB[/]")
 
     # Add indexing metadata if available

@@ -1,4 +1,4 @@
-.PHONY: help install install-dev clean test test-unit test-integration test-performance lint format type-check quality-check benchmark benchmark-soar benchmark-startup coverage docs
+.PHONY: help install install-dev clean test test-unit test-integration lint format type-check quality-check coverage docs
 
 help:
 	@echo "AURORA Development Commands"
@@ -9,14 +9,10 @@ help:
 	@echo "test             - Run all tests"
 	@echo "test-unit        - Run unit tests only"
 	@echo "test-integration - Run integration tests only"
-	@echo "test-performance - Run performance benchmarks"
 	@echo "lint             - Run ruff linter"
 	@echo "format           - Format code with ruff"
 	@echo "type-check       - Run mypy type checker"
 	@echo "quality-check    - Run all quality checks (lint, type-check, test)"
-	@echo "benchmark        - Run performance benchmarks with detailed output"
-	@echo "benchmark-soar   - Run SOAR startup benchmarks only"
-	@echo "benchmark-startup - Run all startup performance benchmarks"
 	@echo "coverage         - Generate and open HTML coverage report"
 	@echo "docs             - Build documentation"
 
@@ -58,40 +54,28 @@ clean:
 	rm -rf build dist htmlcov .coverage coverage.xml
 
 test:
-	pytest tests/
+	pytest packages/
 
 test-unit:
-	pytest tests/unit/ -m unit
+	pytest packages/ -m unit
 
 test-integration:
-	pytest tests/integration/ -m integration
-
-test-performance:
-	pytest tests/performance/ -m performance
+	pytest packages/ -m integration
 
 lint:
-	ruff check packages/ tests/
+	ruff check packages/
 
 format:
-	ruff check --fix packages/ tests/
-	ruff format packages/ tests/
+	ruff check --fix packages/
+	ruff format packages/
 
 type-check:
 	mypy -p aurora_core -p aurora_context_code -p aurora_soar
 
 quality-check: lint type-check test
 
-benchmark:
-	pytest tests/performance/ -m performance --benchmark-only --benchmark-verbose
-
-benchmark-soar:
-	pytest tests/performance/test_soar_startup_performance.py -v --benchmark-only --benchmark-verbose
-
-benchmark-startup:
-	pytest tests/performance/test_soar_startup_performance.py tests/performance/test_goals_startup_performance.py tests/performance/test_init_performance.py -v --benchmark-only --benchmark-verbose
-
 coverage:
-	pytest tests/ --cov=packages --cov-report=html
+	pytest packages/ --cov=packages --cov-report=html
 	@echo "Opening coverage report..."
 	@python -m webbrowser htmlcov/index.html || xdg-open htmlcov/index.html || open htmlcov/index.html
 

@@ -1,7 +1,7 @@
 # Aurora Testing Guide
 
-**Last Updated**: 2026-02-12
-**Status**: Active (post-cleanup)
+**Last Updated**: 2026-02-13
+**Status**: Active
 
 ---
 
@@ -11,25 +11,26 @@ After the February 2026 test cleanup, all tests live in `packages/*/tests/` and 
 
 | Metric | Value |
 |--------|-------|
-| **Total Tests** | 2,451 |
-| **Test Files** | 137 |
-| **Test Lines** | ~45,500 |
+| **Total Tests** | 2,508 |
+| **Test Files** | 140 |
+| **Test Lines** | ~47,000 |
 | **Pass Rate** | 100% (0 failures, 3 skipped) |
-| **Coverage** | ~21% (post-cleanup, many mock-heavy tests deleted) |
+| **Coverage** | 57% |
 | **CI Python** | 3.12 |
 
-### Per-Package Breakdown
+### Per-Package Coverage
 
-| Package | Tests |
-|---------|-------|
-| **core** | 885 |
-| **cli** | 514 |
-| **planning** | 290 |
-| **context-code** | 276 |
-| **soar** | 167 |
-| **spawner** | 129 |
-| **reasoning** | 121 |
-| **implement** | 35 |
+| Package | Tests | Coverage |
+|---------|-------|----------|
+| **core** | 885 | 78% |
+| **cli** | 542 | 55% |
+| **planning** | 290 | 70% |
+| **context-code** | 276 | 48% |
+| **soar** | 167 | 46% |
+| **spawner** | 158 | 45% |
+| **reasoning** | 121 | 94% |
+| **implement** | 35 | 91% |
+| **lsp** | 37 | 34% |
 
 ---
 
@@ -109,16 +110,43 @@ Three essential markers only:
 
 ## Coverage Priorities
 
-Coverage is ~21% after deleting mock-heavy tests that tested mocks, not behavior. Areas needing real tests:
+### Completed (Feb 2026)
 
-| Priority | Area | Current | Why |
-|----------|------|---------|-----|
-| **P0** | `core/store/sqlite.py` | Low | Core data layer |
-| **P0** | `core/activation/` | Low | ACT-R math is critical |
-| **P1** | `cli/commands/` | Low | User-facing commands |
-| **P1** | `context-code/semantic/` | Low | Retrieval pipeline |
-| **P2** | `soar/phases/` | Low | SOAR pipeline phases |
-| **P2** | `reasoning/llm_client.py` | Low | LLM integration |
+| Area | Tests Added | Coverage Result |
+|------|-------------|-----------------|
+| `core/store/sqlite.py` — access tracking | 15 | 62% |
+| `core/activation/` — E2E pipeline | 12 | 78% (package) |
+| `cli/commands/` — mem index/search | 15 | 52% (package) |
+| `soar/phases/` — retrieve & synthesize | 16 | 46% (package) |
+| `context-code/semantic/` — retriever fallbacks | 14 | 48% (package) |
+| `spawner/` — recovery, observability, early detection | 29 | 45% (package) |
+| `lsp/` — languages registry, diagnostics | 30 | 34% (package) |
+| `cli/` — escalation, health checks, ignore patterns | 28 | 55% (package) |
+
+### Remaining Gaps
+
+| Priority | Area | Coverage | Blocker |
+|----------|------|----------|---------|
+| **P1** | `spawner/spawner.py` | 3% | No LLM needed — orchestration logic is testable |
+| **P1** | `lsp/analysis.py`, `lsp/client.py` | 14-17% | No LLM needed — ripgrep paths, LSP client logic |
+| **P1** | `cli/commands/` (agents, budget) | 55% | No LLM needed — CLI arg parsing, config, friction |
+| **P2** | `soar/orchestrator.py` | 6% | Needs LLM calls — mark `@pytest.mark.real_api`, skip in CI |
+| **P2** | `soar/phases/` (assess, collect, decompose, verify, respond) | 5-13% | Needs LLM calls — mark `@pytest.mark.real_api`, skip in CI |
+| **P2** | `reasoning/llm_client.py` | 23% | Needs LLM calls — mark `@pytest.mark.real_api`, skip in CI |
+
+### LLM-Dependent Tests
+
+Tests that make real LLM calls use `@pytest.mark.real_api`. CI skips them via `-m "not ml and not real_api"`. Run locally with:
+
+```bash
+# Run only LLM-dependent tests (requires API key in env)
+pytest -m real_api -v
+
+# Run everything including LLM tests
+pytest -v
+```
+
+These tests are for local verification only — they require API keys, cost money, and have non-deterministic output. Keep them focused on contract validation (correct request/response shapes) rather than output quality.
 
 **Philosophy**: Write integration tests that test real behavior over unit tests that mock everything. A test that exercises SQLiteStore with tmp_path is worth 10 tests that mock sqlite3.
 
@@ -158,4 +186,6 @@ Coverage is ~21% after deleting mock-heavy tests that tested mocks, not behavior
 | Headless tests | all | Headless mode removed |
 
 **Before**: 5,500 tests, 314 files, 126k lines, unknown pass rate
-**After**: 2,451 tests, 137 files, 45.5k lines, 100% pass rate
+**After cleanup**: 2,359 tests, 137 files, 45.5k lines, 100% pass rate, ~21% coverage
+**After P0 integration tests**: 2,451 tests, 56% coverage — 92 real integration tests added across 5 areas
+**After P1 integration tests**: 2,508 tests, 57% coverage — 87 more tests (spawner recovery/observability, LSP languages/diagnostics, CLI escalation/health) + fix escalation.py bug

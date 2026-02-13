@@ -163,7 +163,7 @@ class AutoEscalationHandler:
         # Assess complexity using Phase 2 keyword classifier
         llm_for_assessment = None if self.config.enable_keyword_only else self.llm_client
 
-        assessment = assess_complexity(query, llm_client=llm_for_assessment)
+        assessment = assess_complexity(query, _llm_client=llm_for_assessment)
 
         complexity = assessment["complexity"]
         confidence = assessment["confidence"]

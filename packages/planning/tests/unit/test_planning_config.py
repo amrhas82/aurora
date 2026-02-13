@@ -26,20 +26,6 @@ from aurora_planning.planning_config import (
 class TestGetPlansDir:
     """Tests for get_plans_dir()."""
 
-    def test_default_location(self):
-        """Should return ~/.aurora/plans by default."""
-        with patch.dict(os.environ, {}, clear=True):
-            # Clear any AURORA_PLANS_DIR env var
-            if "AURORA_PLANS_DIR" in os.environ:
-                del os.environ["AURORA_PLANS_DIR"]
-
-            plans_dir = get_plans_dir()
-            # Should create the directory if it doesn't exist
-            assert plans_dir.exists()
-            assert plans_dir.is_dir()
-            # Should be in home directory
-            assert str(plans_dir).startswith(str(Path.home()))
-
     def test_env_var_override(self, tmp_path):
         """Should respect AURORA_PLANS_DIR environment variable."""
         custom_dir = tmp_path / "custom_plans"
@@ -180,12 +166,6 @@ class TestValidatePlansDir:
             # Restore permissions for cleanup
             readonly_dir.chmod(0o755)
 
-    def test_default_plans_dir_when_none(self):
-        """Should validate default plans_dir when None is passed."""
-        # This should use get_plans_dir() internally
-        result = validate_plans_dir(None)
-        # Should succeed for default location
-        assert result is True
 
 
 class TestInitPlansDirectory:

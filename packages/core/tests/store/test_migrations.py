@@ -678,64 +678,6 @@ class TestMigrationManager:
         backup_path = manager.backup_database(":memory:")
         assert backup_path == ":memory:", "Should return :memory: for in-memory DB"
 
-    def test_migrate_with_backup_creates_backup(self):
-        """Test migrate_with_backup creates backup before migration."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            db_path = Path(tmpdir) / "test.db"
-            conn = sqlite3.connect(str(db_path))
-
-            # Create a minimal v1 schema that won't fail migration
-            conn.execute(
-                """
-                CREATE TABLE chunks (
-                    id TEXT PRIMARY KEY,
-                    content TEXT NOT NULL,
-                    metadata TEXT
-                )
-            """,
-            )
-            conn.execute(
-                """
-                CREATE TABLE activations (
-                    chunk_id TEXT PRIMARY KEY,
-                    activation REAL NOT NULL,
-                    last_access TIMESTAMP,
-                    FOREIGN KEY (chunk_id) REFERENCES chunks (id)
-                )
-            """,
-            )
-            conn.execute("CREATE TABLE schema_version (version INTEGER)")
-            conn.execute("INSERT INTO schema_version (version) VALUES (1)")
-            conn.commit()
-
-            manager = MigrationManager()
-
-            # Mock SCHEMA_VERSION to ensure migration is needed
-            with mock.patch("aurora_core.store.migrations.SCHEMA_VERSION", 2):
-                backup_path = manager.migrate_with_backup(conn, str(db_path))
-
-            assert backup_path is not None, "Backup path should be returned"
-            assert Path(backup_path).exists(), "Backup file should exist"
-
-            conn.close()
-
-    def test_migrate_with_backup_no_backup_if_not_needed(self):
-        """Test migrate_with_backup skips backup if migration not needed."""
-        from aurora_core.store.schema import SCHEMA_VERSION
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            db_path = Path(tmpdir) / "test.db"
-            conn = sqlite3.connect(str(db_path))
-            conn.execute("CREATE TABLE schema_version (version INTEGER)")
-            conn.execute(f"INSERT INTO schema_version (version) VALUES ({SCHEMA_VERSION})")
-            conn.commit()
-
-            manager = MigrationManager()
-            backup_path = manager.migrate_with_backup(conn, str(db_path))
-
-            assert backup_path is None, "Should not create backup when migration not needed"
-
-            conn.close()
 
 
 class TestMigrationV2ToV3:

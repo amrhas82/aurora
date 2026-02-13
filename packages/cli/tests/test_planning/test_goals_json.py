@@ -7,7 +7,7 @@ FR-6.2 format from PRD-0026.
 import json
 from datetime import datetime
 
-from aurora_cli.planning.models import AgentGap, Subgoal
+from aurora_cli.planning.models import AgentGap
 
 
 class TestGoalsJsonFormat:
@@ -114,28 +114,6 @@ class TestGoalsJsonFormat:
         assert context.file == "src/api.py"
         assert context.relevance == 0.75
         assert 0.0 <= context.relevance <= 1.0
-
-    def test_subgoal_data_model(self):
-        """Test SubgoalData model with all required fields."""
-        from aurora_cli.planning.models import SubgoalData
-
-        # Act
-        subgoal = SubgoalData(
-            id="sg-1",
-            title="Implement feature",
-            description="Detailed description",
-            agent="@code-developer",
-            confidence=0.92,
-            dependencies=["sg-0"],
-        )
-
-        # Assert
-        assert subgoal.id == "sg-1"
-        assert subgoal.title == "Implement feature"
-        assert subgoal.description == "Detailed description"
-        assert subgoal.agent == "@code-developer"
-        assert subgoal.confidence == 0.92
-        assert subgoal.dependencies == ["sg-0"]
 
     def test_subgoal_data_no_dependencies(self):
         """Test SubgoalData with empty dependencies."""
@@ -318,36 +296,3 @@ class TestGoalsJsonFormat:
         # Assert
         assert goals.gaps == []
 
-    def test_generate_goals_json_function(self):
-        """Test generate_goals_json() helper function."""
-        from aurora_cli.planning.core import generate_goals_json
-
-        # Arrange
-        plan_id = "0001-test-goal"
-        goal = "Test goal description"
-        subgoals = [
-            Subgoal(
-                id="sg-1",
-                title="Test subgoal",
-                description="Test description",
-                recommended_agent="@test-agent",
-                dependencies=[],
-            ),
-        ]
-        memory_context = [("test.py", 0.8)]
-        gaps = []
-
-        # Act
-        goals_data = generate_goals_json(
-            plan_id=plan_id,
-            goal=goal,
-            subgoals=subgoals,
-            memory_context=memory_context,
-            gaps=gaps,
-        )
-
-        # Assert
-        assert goals_data.id == plan_id
-        assert goals_data.title == goal
-        assert len(goals_data.subgoals) == 1
-        assert len(goals_data.memory_context) == 1

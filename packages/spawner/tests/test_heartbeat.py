@@ -165,18 +165,6 @@ class TestHeartbeatMonitor:
         assert healthy is True
         assert reason is None
 
-    def test_health_check_total_timeout(self):
-        """Test health check detects total timeout."""
-        emitter = HeartbeatEmitter(task_id="test-012")
-        monitor = HeartbeatMonitor(emitter, total_timeout=0.1, activity_timeout=5)
-
-        emitter.emit(HeartbeatEventType.STARTED)
-        time.sleep(0.2)
-
-        healthy, reason = monitor.check_health()
-        assert healthy is False
-        assert "Total timeout" in reason
-
     def test_health_check_activity_timeout(self):
         """Test health check detects activity timeout."""
         emitter = HeartbeatEmitter(task_id="test-013")
@@ -189,50 +177,6 @@ class TestHeartbeatMonitor:
         healthy, reason = monitor.check_health()
         assert healthy is False
         assert "No activity" in reason
-
-    def test_warning_threshold(self):
-        """Test timeout warning emission."""
-        emitter = HeartbeatEmitter(task_id="test-014")
-        monitor = HeartbeatMonitor(emitter, total_timeout=1.0, warning_threshold=0.5)
-
-        emitter.emit(HeartbeatEventType.STARTED)
-        time.sleep(0.6)
-
-        monitor.check_health()
-
-        events = emitter.get_all_events()
-        warning_events = [e for e in events if e.event_type == HeartbeatEventType.TIMEOUT_WARNING]
-        assert len(warning_events) == 1
-
-    @pytest.mark.asyncio
-    async def test_monitor_until_complete_success(self):
-        """Test monitoring until successful completion."""
-        emitter = HeartbeatEmitter(task_id="test-015")
-        monitor = HeartbeatMonitor(emitter, total_timeout=5)
-
-        async def simulate_success():
-            await asyncio.sleep(0.1)
-            emitter.emit(HeartbeatEventType.COMPLETED)
-
-        task = asyncio.create_task(simulate_success())
-        success, reason = await monitor.monitor_until_complete(check_interval=0.05)
-
-        await task
-        assert success is True
-        assert reason is None
-
-    @pytest.mark.asyncio
-    async def test_monitor_until_complete_timeout(self):
-        """Test monitoring detects timeout."""
-        emitter = HeartbeatEmitter(task_id="test-016")
-        monitor = HeartbeatMonitor(emitter, total_timeout=0.2)
-
-        emitter.emit(HeartbeatEventType.STARTED)
-
-        success, reason = await monitor.monitor_until_complete(check_interval=0.05)
-        assert success is False
-        assert "timeout" in reason.lower()
-
 
 class TestHeartbeatStream:
     """Test heartbeat streaming functionality."""

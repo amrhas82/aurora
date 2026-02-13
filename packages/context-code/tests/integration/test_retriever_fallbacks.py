@@ -210,7 +210,7 @@ class TestHybridRetrieverFallbacks:
             bm25_weight=0.5,
             activation_weight=0.5,
             semantic_weight=0.0,
-                    )
+        )
         retriever = HybridRetriever(populated_store, engine, None, config)
 
         results = retriever.retrieve("authenticate", top_k=3)

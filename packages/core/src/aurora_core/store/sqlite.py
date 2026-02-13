@@ -806,9 +806,7 @@ class SQLiteStore(Store):
 
             import logging
 
-            logging.getLogger(__name__).info(
-                f"Migrated {migrated} chunks to FTS5 index"
-            )
+            logging.getLogger(__name__).info(f"Migrated {migrated} chunks to FTS5 index")
 
         except sqlite3.Error:
             # Non-fatal — FTS5 will be populated on next save_chunk()

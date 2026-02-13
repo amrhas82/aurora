@@ -8,10 +8,7 @@ import asyncio
 
 import pytest
 
-from aurora_spawner.early_detection import (
-    EarlyDetectionConfig,
-    EarlyDetectionMonitor,
-)
+from aurora_spawner.early_detection import EarlyDetectionConfig, EarlyDetectionMonitor
 
 
 class TestMonitorLifecycle:

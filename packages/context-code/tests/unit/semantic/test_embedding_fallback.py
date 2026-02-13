@@ -484,10 +484,7 @@ class TestFallbackConfiguration:
 
     def test_config_fallback_disabled(self):
         """Test fallback disabled via explicit config."""
-        from aurora_context_code.semantic.hybrid_retriever import (
-            HybridConfig,
-            HybridRetriever,
-        )
+        from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
 
         chunks = [MockChunk("1", "chunk", activation=0.5, embeddings=None)]
         store = MockStore(chunks=chunks)

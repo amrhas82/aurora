@@ -96,9 +96,7 @@ def verify_lite(
         # Validate required fields (key must exist AND value must be non-empty)
         description = subgoal.get("description", "")
         if not description or not description.strip():
-            issues.append(
-                f"Subgoal {subgoal_index} missing or empty 'description' field"
-            )
+            issues.append(f"Subgoal {subgoal_index} missing or empty 'description' field")
             continue
 
         # Support both new schema (assigned_agent) and legacy (suggested_agent)

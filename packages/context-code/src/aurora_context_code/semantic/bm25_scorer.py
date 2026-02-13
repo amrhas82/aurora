@@ -285,4 +285,3 @@ class BM25Scorer:
         )
 
         return bm25_score
-

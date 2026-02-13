@@ -602,9 +602,8 @@ class HybridRetriever:
         use_fts5 = hasattr(self.store, "retrieve_by_fts")
 
         # Two-phase optimization: fetch embeddings separately after filtering
-        use_two_phase = (
-            self.config.use_staged_retrieval
-            and hasattr(self.store, "fetch_embeddings_for_chunks")
+        use_two_phase = self.config.use_staged_retrieval and hasattr(
+            self.store, "fetch_embeddings_for_chunks"
         )
 
         if use_fts5:
@@ -690,9 +689,7 @@ class HybridRetriever:
             # Calculate semantic similarity
             chunk_embedding = getattr(chunk, "embeddings", None)
             if chunk_embedding is not None:
-                from aurora_context_code.semantic.embedding_provider import (
-                    cosine_similarity,
-                )
+                from aurora_context_code.semantic.embedding_provider import cosine_similarity
 
                 # Convert embedding bytes to numpy array if needed
                 if isinstance(chunk_embedding, bytes):
@@ -1255,4 +1252,3 @@ class HybridRetriever:
         if self._query_cache is not None:
             self._query_cache.clear()
             logger.debug("Query embedding cache cleared")
-

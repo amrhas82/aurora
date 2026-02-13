@@ -370,3 +370,199 @@ class TestVerifyLite:
         assert passed is True
         assert len(agent_assignments) == 2
         assert len(issues) == 0
+
+    def test_complex_query_rejects_single_subgoal(self):
+        """Test verify_lite rejects 1 subgoal for COMPLEX queries.
+
+        COMPLEX queries require at least 2 subgoals to ensure proper
+        decomposition across different concerns.
+        """
+        decomposition = {
+            "goal": "Add dynamic agent spawning to the collect phase",
+            "subgoals": [
+                {
+                    "subgoal_index": 0,
+                    "description": "Research and implement everything",
+                    "suggested_agent": "test-agent",
+                    "is_critical": True,
+                    "depends_on": [],
+                },
+            ],
+        }
+
+        available_agents = [
+            AgentInfo(
+                id="test-agent",
+                name="Test Agent",
+                description="Agent",
+                capabilities=["test"],
+                agent_type="local",
+            ),
+        ]
+
+        from aurora_soar.phases.verify import verify_lite
+
+        passed, agent_assignments, issues = verify_lite(
+            decomposition, available_agents, complexity="COMPLEX"
+        )
+
+        assert passed is False
+        assert len(issues) == 1
+        assert "too few subgoals" in issues[0].lower()
+        assert "COMPLEX" in issues[0]
+
+    def test_complex_query_accepts_two_subgoals(self):
+        """Test verify_lite accepts 2 subgoals for COMPLEX queries."""
+        decomposition = {
+            "goal": "Add dynamic agent spawning",
+            "subgoals": [
+                {
+                    "subgoal_index": 0,
+                    "description": "Research spawner architecture",
+                    "suggested_agent": "test-agent",
+                    "is_critical": True,
+                    "depends_on": [],
+                },
+                {
+                    "subgoal_index": 1,
+                    "description": "Implement dynamic spawning",
+                    "suggested_agent": "test-agent",
+                    "is_critical": True,
+                    "depends_on": [0],
+                },
+            ],
+        }
+
+        available_agents = [
+            AgentInfo(
+                id="test-agent",
+                name="Test Agent",
+                description="Agent",
+                capabilities=["test"],
+                agent_type="local",
+            ),
+        ]
+
+        from aurora_soar.phases.verify import verify_lite
+
+        passed, agent_assignments, issues = verify_lite(
+            decomposition, available_agents, complexity="COMPLEX"
+        )
+
+        assert passed is True
+        assert len(agent_assignments) == 2
+        assert len(issues) == 0
+
+    def test_critical_query_rejects_two_subgoals(self):
+        """Test verify_lite rejects 2 subgoals for CRITICAL queries (minimum 3)."""
+        decomposition = {
+            "goal": "Fix production security breach",
+            "subgoals": [
+                {
+                    "subgoal_index": 0,
+                    "description": "Investigate breach",
+                    "suggested_agent": "test-agent",
+                    "is_critical": True,
+                    "depends_on": [],
+                },
+                {
+                    "subgoal_index": 1,
+                    "description": "Patch vulnerability",
+                    "suggested_agent": "test-agent",
+                    "is_critical": True,
+                    "depends_on": [0],
+                },
+            ],
+        }
+
+        available_agents = [
+            AgentInfo(
+                id="test-agent",
+                name="Test Agent",
+                description="Agent",
+                capabilities=["test"],
+                agent_type="local",
+            ),
+        ]
+
+        from aurora_soar.phases.verify import verify_lite
+
+        passed, agent_assignments, issues = verify_lite(
+            decomposition, available_agents, complexity="CRITICAL"
+        )
+
+        assert passed is False
+        assert "too few subgoals" in issues[0].lower()
+        assert "CRITICAL" in issues[0]
+
+    def test_empty_description_rejected(self):
+        """Test verify_lite rejects subgoals with empty description string."""
+        decomposition = {
+            "goal": "Test goal",
+            "subgoals": [
+                {
+                    "subgoal_index": 0,
+                    "description": "",
+                    "suggested_agent": "test-agent",
+                    "depends_on": [],
+                },
+                {
+                    "subgoal_index": 1,
+                    "description": "Valid subgoal",
+                    "suggested_agent": "test-agent",
+                    "depends_on": [],
+                },
+            ],
+        }
+
+        available_agents = [
+            AgentInfo(
+                id="test-agent",
+                name="Test Agent",
+                description="Agent",
+                capabilities=["test"],
+                agent_type="local",
+            ),
+        ]
+
+        from aurora_soar.phases.verify import verify_lite
+
+        passed, agent_assignments, issues = verify_lite(decomposition, available_agents)
+
+        assert passed is False
+        assert any("empty" in issue.lower() and "description" in issue.lower() for issue in issues)
+
+    def test_medium_query_accepts_single_subgoal(self):
+        """Test verify_lite accepts 1 subgoal for MEDIUM queries (no floor)."""
+        decomposition = {
+            "goal": "What does this function do?",
+            "subgoals": [
+                {
+                    "subgoal_index": 0,
+                    "description": "Explain the function",
+                    "suggested_agent": "test-agent",
+                    "is_critical": True,
+                    "depends_on": [],
+                },
+            ],
+        }
+
+        available_agents = [
+            AgentInfo(
+                id="test-agent",
+                name="Test Agent",
+                description="Agent",
+                capabilities=["test"],
+                agent_type="local",
+            ),
+        ]
+
+        from aurora_soar.phases.verify import verify_lite
+
+        passed, agent_assignments, issues = verify_lite(
+            decomposition, available_agents, complexity="MEDIUM"
+        )
+
+        assert passed is True
+        assert len(agent_assignments) == 1
+        assert len(issues) == 0

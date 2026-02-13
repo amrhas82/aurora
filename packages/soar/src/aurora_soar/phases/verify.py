@@ -63,9 +63,18 @@ def verify_lite(
         issues.append("Decomposition must have at least one subgoal")
         return (False, [], issues)
 
-    # Check 3: Enforce complexity-based subgoal limits
+    # Check 3: Enforce complexity-based subgoal limits (floor and ceiling)
     SUBGOAL_LIMITS = {"MEDIUM": 2, "COMPLEX": 5, "CRITICAL": 8}
+    SUBGOAL_MINIMUMS = {"COMPLEX": 2, "CRITICAL": 3}
     max_allowed = SUBGOAL_LIMITS.get(complexity, 5)
+    min_required = SUBGOAL_MINIMUMS.get(complexity, 1)
+
+    if len(subgoals) < min_required:
+        issues.append(
+            f"Too few subgoals: {len(subgoals)} is below {complexity} minimum of {min_required}. "
+            f"Decompose into at least {min_required} independent subgoals across different concerns."
+        )
+        return (False, [], issues)
 
     if len(subgoals) > max_allowed:
         issues.append(
@@ -84,9 +93,12 @@ def verify_lite(
         # Ensure subgoal_index is set on the dict for downstream phases
         subgoal["subgoal_index"] = subgoal_index
 
-        # Validate required fields
-        if "description" not in subgoal:
-            issues.append(f"Subgoal {subgoal_index} missing 'description' field")
+        # Validate required fields (key must exist AND value must be non-empty)
+        description = subgoal.get("description", "")
+        if not description or not description.strip():
+            issues.append(
+                f"Subgoal {subgoal_index} missing or empty 'description' field"
+            )
             continue
 
         # Support both new schema (assigned_agent) and legacy (suggested_agent)

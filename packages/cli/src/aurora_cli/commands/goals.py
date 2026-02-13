@@ -663,8 +663,9 @@ def _index_goals_result(goals_file: Path, store: object | None = None) -> None:
             )
             code_chunk.type = reas_type
 
-            # Generate embedding
-            code_chunk.embedding = embedding_provider.embed_chunk(code_chunk)
+            # Generate embedding from docstring content (embed_chunk expects str)
+            embed_text = code_chunk.docstring or code_chunk.name or ""
+            code_chunk.embedding = embedding_provider.embed_chunk(embed_text)
 
             # Save to store
             store.save_chunk(code_chunk)

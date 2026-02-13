@@ -1424,10 +1424,17 @@ def _decompose_with_soar(
         # Get dependencies directly - Pydantic coerces to sg-N format
         dependencies = sg_data.get("depends_on", [])
 
+        # Derive title from description, with fallback to avoid empty string
+        raw_title = (
+            sg_detail.get("description")
+            or sg_data.get("description")
+            or sg_data.get("task")
+            or f"Subgoal {i + 1}"
+        )
         subgoal = Subgoal(
             id=sg_data.get("id", f"sg-{i + 1}"),
-            title=sg_detail.get("description", sg_data.get("description", ""))[:100],
-            description=sg_data.get("description", ""),
+            title=raw_title[:100],
+            description=sg_data.get("description") or raw_title,
             assigned_agent=assigned_agent,
             dependencies=dependencies,
             ideal_agent=ideal_agent,

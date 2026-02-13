@@ -11,9 +11,9 @@ After the February 2026 test cleanup, all tests live in `packages/*/tests/` and 
 
 | Metric | Value |
 |--------|-------|
-| **Total Tests** | 2,610 |
-| **Test Files** | 143 |
-| **Test Lines** | ~48,000 |
+| **Total Tests** | 2,619 |
+| **Test Files** | 144 |
+| **Test Lines** | ~48,200 |
 | **Pass Rate** | 100% (0 failures, 3 skipped) |
 | **Coverage** | 57% |
 | **CI Python** | 3.12 |
@@ -125,6 +125,8 @@ Three essential markers only:
 | `spawner/` — circuit breaker, timeout/retry/termination policies, heartbeat | 43 | 45% (package) |
 | `lsp/` — analysis helpers, ripgrep search, client normalization | 31 | 34% (package) |
 | `cli/` — agent search/similarity, doctor helpers | 26 | 55% (package) |
+| `spawner/early_detection` — async monitor lifecycle (Py3.14 compat) | 8 | 72% (module) |
+| `soar/phases/verify` — floor check, empty description rejection | 1 | 79% (module) |
 
 ### Remaining Gaps
 
@@ -191,3 +193,4 @@ These tests are for local verification only — they require API keys, cost mone
 **After P0 integration tests**: 2,451 tests, 56% coverage — 92 real integration tests added across 5 areas
 **After P1 batch 1 integration tests**: 2,508 tests, 57% coverage — 87 more tests (spawner recovery/observability, LSP languages/diagnostics, CLI escalation/health) + fix escalation.py bug
 **After P1 batch 2 integration tests**: 2,608 tests, 57% coverage — 100 more tests (spawner circuit breaker/policies/heartbeat, LSP analysis helpers/client normalization, CLI agent search/doctor helpers)
+**After bugfix tests**: 2,619 tests — 9 tests for verify floor/empty-description + early detection async lifecycle (Py3.14 compat), 2 new files

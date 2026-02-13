@@ -120,15 +120,11 @@ class EarlyDetectionMonitor:
             return
 
         self._stop_event.set()
+        self._monitor_task.cancel()
         try:
-            await asyncio.wait_for(self._monitor_task, timeout=2.0)
-        except asyncio.TimeoutError:
-            logger.warning("Monitor stop timeout, cancelling task")
-            self._monitor_task.cancel()
-            try:
-                await self._monitor_task
-            except asyncio.CancelledError:
-                pass
+            await self._monitor_task
+        except asyncio.CancelledError:
+            pass
 
         self._monitor_task = None
         logger.info("Early detection stopped")
@@ -226,11 +222,11 @@ class EarlyDetectionMonitor:
             except Exception as e:
                 logger.error(f"Health check error: {e}", exc_info=True)
 
+            # Sleep between checks (Python 3.14 compat: avoid wait_for + Event.wait)
             try:
-                await asyncio.wait_for(self._stop_event.wait(), timeout=self.config.check_interval)
-                break  # Stop event was set
-            except asyncio.TimeoutError:
-                pass  # Continue monitoring
+                await asyncio.sleep(self.config.check_interval)
+            except asyncio.CancelledError:
+                break
 
     async def _perform_health_checks(self) -> None:
         """Perform health checks on all active executions."""

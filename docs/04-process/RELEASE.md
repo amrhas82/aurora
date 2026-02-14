@@ -68,51 +68,146 @@ Releases a specific version to PyPI.
 
 **Use when:** You're ready to publish a new version to PyPI immediately.
 
-## Pre-Release Checklist
+## Complete Release Checklist
 
-Before releasing, ensure quality by running local CI checks:
+Follow these steps in order. **Never skip pre-commit hooks.**
 
 **For configurator/template changes:** See `TOOLS_CONFIG_GUIDE.md` § Release Checklist for additional checks specific to slash command configurators and tool integrations.
 
-### 1. Quick Health Check (30 seconds)
-```bash
-./scripts/quick-check.sh
+### 1. Update CHANGELOG.md
+
+Add entries for all changes since the last release under a new version heading:
+
+```markdown
+## [0.X.Y] - YYYY-MM-DD
+
+### Added
+- New features...
+
+### Fixed
+- Bug fixes...
+
+### Changed
+- Other changes...
 ```
 
-This runs the test suite quickly to catch obvious issues.
+### 2. Bump Version
 
-### 2. Full CI Check (3-5 minutes) - **REQUIRED BEFORE RELEASE**
 ```bash
-./scripts/run-local-ci.sh
+./scripts/bump-version.sh 0.X.Y
 ```
 
-This runs:
-- All tests (same as GitHub CI)
-- Pre-commit hooks (formatting, linting, security)
-- Coverage reporting
+This updates `pyproject.toml` and `packages/cli/src/aurora_cli/main.py`.
 
-**Release Criteria:**
-- ✅ All tests passing
-- ✅ No security issues (bandit)
-- ✅ Code properly formatted (black, isort)
-- ✅ Test coverage meets standards
+### 3. Run Pre-Commit Hooks (NEVER SKIP)
 
-### 3. Then Release
+Stage all changes and run pre-commit. Fix any failures iteratively:
+
 ```bash
-./scripts/release.sh <version>
+git add -A
+pre-commit run --all-files
 ```
 
-**Typical pre-release workflow:**
+If hooks modify files (black, isort), re-stage and re-run until all pass.
+
+### 4. Run Tests
+
 ```bash
-# 1. Run full local CI
-./scripts/run-local-ci.sh
-
-# 2. If all checks pass, release
-./scripts/release.sh 0.5.1
-
-# 3. Verify on PyPI
-pip install --upgrade aurora-actr
+make test
 ```
+
+All tests must pass. Do not release with failures.
+
+### 5. Commit
+
+```bash
+git commit -m "chore: release v0.X.Y"
+```
+
+Pre-commit hooks run again during commit — this is expected and must pass.
+
+### 6. Build Distribution
+
+```bash
+rm -rf dist/ build/ src/*.egg-info
+python3 -m build
+```
+
+### 7. Verify Build Contents
+
+Check that the wheel includes all expected packages before uploading:
+
+```bash
+python3 -m zipfile -l dist/aurora_actr-*.whl | grep -E '/__init__\.py$' | sort
+```
+
+Expected packages: `aurora_cli`, `aurora_core`, `aurora_context_code`, `aurora_context_doc`, `aurora_lsp`, `aurora_reasoning`, `aurora_soar`, `aurora_spawner`, `aurora_testing`, `implement`, `aurora_mcp`.
+
+If a package is missing, check the symlinks in `src/` and `pyproject.toml` `[tool.setuptools.packages.find]`.
+
+### 8. Upload to PyPI
+
+```bash
+export TWINE_USERNAME=__token__
+export TWINE_PASSWORD=$(pass amr/pypi_api)
+python3 -m twine upload dist/*
+```
+
+### 9. Refresh Local Install and Verify
+
+```bash
+pip install -e .
+```
+
+Verify the correct version is active and source paths point to the repo (not stale site-packages):
+
+```bash
+aur --version
+python3 -c "import aurora_core; print(aurora_core.__file__)"
+# Should show: /path/to/aurora/src/aurora_core/__init__.py (NOT site-packages)
+```
+
+If you see a `site-packages` path, the editable install is being shadowed by a stale non-editable install:
+
+```bash
+pip uninstall aurora-actr && pip install -e .
+```
+
+### 10. Tag and Push
+
+```bash
+git tag v0.X.Y
+git push origin main --tags
+```
+
+### 11. Monitor CI
+
+```bash
+gh run list --limit 1
+gh run watch        # Wait for completion
+```
+
+CI must be green. If it fails, investigate and fix immediately — do not leave main broken.
+
+### 12. Verify on PyPI
+
+```bash
+pip install --upgrade aurora-actr  # From a clean venv if possible
+```
+
+Visit: `https://pypi.org/project/aurora-actr/0.X.Y/`
+
+---
+
+**Alternative: One-Command Release** (if all pre-checks already pass)
+
+`release.sh` combines steps 2, 6, 5, 8 into one command. Only use it after steps 1, 3, 4 are already done:
+
+```bash
+./scripts/release.sh 0.X.Y
+```
+
+Note: `release.sh` uses `git add -A` — ensure no unwanted files are in the working tree.
 
 ## Version Strategy
 

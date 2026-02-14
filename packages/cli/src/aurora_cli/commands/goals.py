@@ -664,7 +664,12 @@ def _index_goals_result(goals_file: Path, store: object | None = None) -> None:
             code_chunk.type = reas_type
 
             # Generate embedding from docstring content (embed_chunk expects str)
+            # Full content stays in docstring for BM25/FTS5; truncate for embedding only
             embed_text = code_chunk.docstring or code_chunk.name or ""
+            max_embed_chars = 2048
+            if len(embed_text) > max_embed_chars:
+                truncated = embed_text[: max_embed_chars - 60]
+                embed_text = f"{truncated}\n\n[... full content in {goals_file}]"
             code_chunk.embedding = embedding_provider.embed_chunk(embed_text)
 
             # Save to store

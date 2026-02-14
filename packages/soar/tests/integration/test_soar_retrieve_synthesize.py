@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from aurora_soar.phases.collect import AgentOutput, CollectResult
-from aurora_soar.phases.retrieve import RETRIEVAL_BUDGETS, retrieve_context
+from aurora_soar.phases.retrieve import retrieve_context
 from aurora_soar.phases.synthesize import SynthesisResult, synthesize_results
 
 # ---------------------------------------------------------------------------

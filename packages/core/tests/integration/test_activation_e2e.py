@@ -8,8 +8,6 @@ All tests use real SQLiteStore with tmp_path.
 import math
 from datetime import datetime, timedelta, timezone
 
-import pytest
-
 from aurora_core.activation.base_level import AccessHistoryEntry
 from aurora_core.activation.engine import ActivationComponents, ActivationConfig, ActivationEngine
 from aurora_core.chunks.code_chunk import CodeChunk

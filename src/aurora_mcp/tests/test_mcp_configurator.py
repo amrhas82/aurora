@@ -4,10 +4,7 @@ Tests that MCP tools are properly integrated with the configurator infrastructur
 Written BEFORE implementation (TDD).
 """
 
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
-
-import pytest
+from unittest.mock import patch
 
 
 class TestMCPConfiguratorIntegration:
@@ -112,12 +109,10 @@ class TestMCPServerConfiguration:
         """Test Aurora MCP server has correct command format."""
         # This would test the actual server configuration
         # The server should be invocable via standard Python module invocation
-        pass
 
     def test_aurora_server_includes_lsp_tools(self):
         """Test Aurora server configuration mentions LSP tools."""
         # Configuration should indicate LSP tools are available
-        pass
 
 
 class TestMCPToolDiscoverability:
@@ -127,9 +122,7 @@ class TestMCPToolDiscoverability:
         """Test lsp tool has title for discoverability."""
         # When implemented, lsp tool should have metadata
         # including title like "LSP Code Intelligence"
-        pass
 
     def test_mem_search_tool_has_title(self):
         """Test mem_search tool has title for discoverability."""
         # When implemented, mem_search tool should have metadata
-        pass

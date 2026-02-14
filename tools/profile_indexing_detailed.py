@@ -8,8 +8,6 @@ in I/O, CPU, and memory usage patterns.
 import cProfile
 import io
 import pstats
-import subprocess
-import sys
 import tempfile
 import time
 from pathlib import Path

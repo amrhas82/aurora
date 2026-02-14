@@ -5,8 +5,6 @@ tokenizer code-awareness, and HybridRetriever fallback behavior
 when embeddings are unavailable.
 """
 
-import math
-
 import numpy as np
 import pytest
 

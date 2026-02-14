@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Antigen extractor - Extract failure patterns from BAD sessions.
+"""Antigen extractor - Extract failure patterns from BAD sessions.
 
 Usage:
     python antigen_extract.py <sessions-directory>

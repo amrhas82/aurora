@@ -41,7 +41,6 @@ from implement.parser import TaskParser
 from implement.persistence import SpawnRunStore
 from implement.topo_sort import topological_sort_tasks
 
-
 console = Console()
 logger = logging.getLogger(__name__)
 
@@ -204,7 +203,9 @@ def spawn_command(
 
         try:
             if has_deps:
-                console.print(f"[cyan]Executing {len(pending_tasks)} tasks in dependency waves...[/]")
+                console.print(
+                    f"[cyan]Executing {len(pending_tasks)} tasks in dependency waves...[/]"
+                )
                 result = asyncio.run(
                     _execute_waves(
                         pending_tasks,
@@ -345,7 +346,9 @@ def _display_dry_run(tasks: list[ParsedTask], has_deps: bool) -> None:
                 for task in wave:
                     status = "[x]" if task.completed else "[ ]"
                     deps = f" (depends: {', '.join(task.depends_on)})" if task.depends_on else ""
-                    console.print(f"    {status} {task.id}. {task.description} (agent: {task.agent}){deps}")
+                    console.print(
+                        f"    {status} {task.id}. {task.description} (agent: {task.agent}){deps}"
+                    )
         except ValueError as e:
             console.print(f"  [red]Dependency error: {e}[/]")
     else:
@@ -674,4 +677,6 @@ def execute_tasks_parallel(tasks: list[ParsedTask]) -> dict[str, int]:
         Execution summary with total, completed, failed counts
 
     """
-    return asyncio.run(_execute_parallel(tasks, verbose=False, store=SpawnRunStore(), run_dir=Path(".")))
+    return asyncio.run(
+        _execute_parallel(tasks, verbose=False, store=SpawnRunStore(), run_dir=Path("."))
+    )

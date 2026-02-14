@@ -3,7 +3,6 @@
 Tests that the store correctly deserializes chunks with type='reas'.
 """
 
-import json
 import tempfile
 from pathlib import Path
 

@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.6] - 2026-02-14
+
+### Added
+
+- **`aur spawn` dependency-aware wave execution**
+  - `depends_on` field in `ParsedTask` with `- Depends: 1.0, 2.0` sub-bullet parsing
+  - Topological sort (Kahn's algorithm) producing parallel-safe waves
+  - Wave-based execution: sequential across waves, parallel within each wave
+  - Completed task outputs forwarded as context into dependent tasks
+  - Dry-run shows wave breakdown
+- **`aur spawn` prompt-to-tasks decomposition**
+  - `decompose_prompt_to_tasks_md()` via LLM for natural language → tasks.md
+  - Auto-detection of input type: file path vs prompt text
+  - Discovers available agents via `AgentScanner`/`AgentParser`
+- **`aur spawn` output persistence**
+  - `SpawnRunStore` class with `.aurora/spawn/runs/<timestamp>/` structure
+  - Stores `tasks.md`, `results/task-{id}.json`, `summary.json`, `meta.json`
+  - Re-run detection via SHA-256 hash; skip-completed-tasks on re-runs
+- `FEATURE_BACKLOG.md` tracking parked features and future work
+
+### Fixed
+
+- Truncate long goals content before embedding to avoid 2048 char limit (full content kept for BM25/FTS5)
+
+### Changed
+
+- Replace HTML comment agent metadata with visible markdown sub-bullets in task output
+- Code formatting cleanup across 170+ files (black/isort)
+
 ## [0.17.2] - 2026-02-14
 
 ### Fixed

@@ -3,8 +3,6 @@
 Tests use real SQLite databases (tmp_path), no mocks.
 """
 
-import json
-
 import pytest
 
 from aurora_core.store.sqlite import SQLiteStore

@@ -6,8 +6,6 @@ They should fail until the lsp tool is implemented.
 
 from unittest.mock import MagicMock, Mock, patch
 
-import pytest
-
 
 class TestLSPDeadcode:
     """Tests for lsp(action='deadcode')."""

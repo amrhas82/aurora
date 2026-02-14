@@ -2,7 +2,6 @@
 """Verify that code chunks are properly retrieved over markdown/logs."""
 
 import subprocess
-import sys
 
 
 def run_search(query: str, limit: int = 10) -> tuple[int, int, int]:

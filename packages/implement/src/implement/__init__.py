@@ -10,7 +10,6 @@ from implement.parser import TaskParser
 from implement.persistence import SpawnRunStore
 from implement.topo_sort import topological_sort_tasks
 
-
 __all__ = [
     "ParsedTask",
     "TaskParser",

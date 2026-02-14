@@ -35,7 +35,7 @@ repos:
 
       - id: debug-statements
         name: Check for debug statements (pdb, ipdb)
-        exclude: '^tests/'
+        exclude: '^(tests/|.*fixtures/sample_python_files/broken\.py$)'
 
       - id: mixed-line-ending
         name: Check for mixed line endings
@@ -48,7 +48,7 @@ repos:
       - id: black
         name: Format Python code with Black
         args: ['--line-length=100']
-        exclude: 'tests/fixtures/.*broken\.py$'
+        exclude: '.*fixtures/.*broken\.py$'
 
   # Python import sorting
   - repo: https://github.com/pycqa/isort
@@ -66,8 +66,8 @@ repos:
         name: Lint Python code with flake8
         args: [
           '--max-line-length=100',
-          '--extend-ignore=E203,W503,E501,E722,E721,F841,E402,F541',  # Black compatibility + test/script leniency
-          '--exclude=.git,__pycache__,build,dist,*.egg-info,tests/fixtures/sample_python_files/broken.py'
+          '--extend-ignore=E203,W503,E501,E722,E721,F841,E402,F541,E731',  # Black compatibility + test/script leniency
+          '--exclude=.git,__pycache__,build,dist,*.egg-info,**/fixtures/sample_python_files/broken.py'
         ]
 
   # Python type checking (optional, can be slow)
@@ -125,7 +125,7 @@ repos:
       - id: pydocstyle
         name: Check docstring style
         args: ['--convention=google', '--add-ignore=D100,D101,D102,D103,D104,D105,D106,D107,D202,D205,D209,D300,D301,D402,D403,D415']
-        exclude: '^(tests/|packages/.*/tests/|docs/archive/|.*_test\.py$|test_.*\.py$|compare_batch_sizes\.py|profile_.*\.py|benchmark_.*\.py|saas_financial_model\.py)'
+        exclude: '^(tests/|packages/.*/tests/|packages/.*/fixtures/|docs/archive/|.*_test\.py$|test_.*\.py$|compare_batch_sizes\.py|profile_.*\.py|benchmark_.*\.py|saas_financial_model\.py)'
 
 # Configuration
 default_language_version:

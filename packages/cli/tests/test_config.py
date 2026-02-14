@@ -7,7 +7,6 @@ Tests the dict-based config system:
 """
 
 import json
-import os
 
 import pytest
 

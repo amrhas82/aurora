@@ -5,9 +5,6 @@ health check categories, and ignore pattern matching.
 No LLM calls — escalation uses keyword-only mode, health checks use mocked filesystem.
 """
 
-import os
-import shutil
-
 import pytest
 
 from aurora_cli.escalation import AutoEscalationHandler, EscalationConfig, EscalationResult

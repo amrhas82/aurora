@@ -9,7 +9,6 @@ from typing import Any
 
 from aurora_reasoning.llm_client import LLMClient
 
-
 logger = logging.getLogger(__name__)
 
 _SYSTEM_PROMPT = """\
@@ -77,7 +76,14 @@ def _json_to_tasks_md(data: dict[str, Any], prompt: str) -> str:
         Markdown formatted tasks.md string
 
     """
-    lines = ["# Tasks: decomposed from prompt", "", f"Goal: {prompt}", "", "## Implementation Tasks", ""]
+    lines = [
+        "# Tasks: decomposed from prompt",
+        "",
+        f"Goal: {prompt}",
+        "",
+        "## Implementation Tasks",
+        "",
+    ]
 
     tasks = data.get("tasks", [])
     for task in tasks:

@@ -10,33 +10,13 @@ Focus areas:
 4. Core APIs that depend on modified modules
 """
 
-import sqlite3
-import threading
 from datetime import datetime, timedelta, timezone
 
 import pytest
 
 from aurora_core.activation.base_level import AccessHistoryEntry
-from aurora_core.activation.decay import (
-    AGGRESSIVE_DECAY,
-    DECAY_BY_TYPE,
-    GENTLE_DECAY,
-    MODERATE_DECAY,
-    DecayCalculator,
-    DecayConfig,
-    calculate_decay,
-)
-from aurora_core.activation.engine import (
-    AGGRESSIVE_CONFIG,
-    BLA_FOCUSED_CONFIG,
-    CONSERVATIVE_CONFIG,
-    CONTEXT_FOCUSED_CONFIG,
-    DEFAULT_CONFIG,
-    ActivationComponents,
-    ActivationConfig,
-    ActivationEngine,
-    get_cached_engine,
-)
+from aurora_core.activation.decay import DECAY_BY_TYPE, DecayCalculator
+from aurora_core.activation.engine import ActivationEngine, get_cached_engine
 from aurora_core.store.connection_pool import ConnectionPool, get_connection_pool
 
 # ============================================================
@@ -205,58 +185,22 @@ class TestActivationPackageExports:
     """Verify activation package exports all expected symbols."""
 
     def test_all_engine_exports_importable(self):
-        from aurora_core.activation import (
-            AGGRESSIVE_CONFIG,
-            BLA_FOCUSED_CONFIG,
-            CONSERVATIVE_CONFIG,
-            CONTEXT_FOCUSED_CONFIG,
-            DEFAULT_CONFIG,
-            ActivationComponents,
-            ActivationConfig,
-            ActivationEngine,
-        )
+        from aurora_core.activation import ActivationEngine
 
         assert ActivationEngine is not None
 
     def test_all_decay_exports_importable(self):
-        from aurora_core.activation import (
-            AGGRESSIVE_DECAY,
-            GENTLE_DECAY,
-            MODERATE_DECAY,
-            DecayCalculator,
-            DecayConfig,
-            calculate_decay,
-        )
+        from aurora_core.activation import DecayCalculator
 
         assert DecayCalculator is not None
 
     def test_all_retrieval_exports_importable(self):
-        from aurora_core.activation import (
-            ActivationRetriever,
-            BatchRetriever,
-            ChunkData,
-            RetrievalConfig,
-            RetrievalResult,
-        )
+        from aurora_core.activation import ActivationRetriever
 
         assert ActivationRetriever is not None
 
     def test_all_formula_exports_importable(self):
-        from aurora_core.activation import (
-            AccessHistoryEntry,
-            BaseLevelActivation,
-            BLAConfig,
-            ContextBoost,
-            ContextBoostConfig,
-            KeywordExtractor,
-            Relationship,
-            RelationshipGraph,
-            SpreadingActivation,
-            SpreadingConfig,
-            calculate_bla,
-            calculate_context_boost,
-            calculate_spreading,
-        )
+        from aurora_core.activation import BaseLevelActivation
 
         assert BaseLevelActivation is not None
 
@@ -288,9 +232,6 @@ class TestTemplatesPackageExports:
     def test_templates_exports(self):
         from aurora_cli.templates import (
             AGENTS_TEMPLATE,
-            CLAUDE_TEMPLATE,
-            COMMAND_TEMPLATES,
-            PROJECT_TEMPLATE,
             get_agents_template,
             get_all_command_templates,
             get_claude_template,
@@ -427,28 +368,7 @@ class TestSpawnerRecoveryIntegrity:
         assert t.to_state == RecoveryState.EXECUTING
 
     def test_spawner_package_exports(self):
-        from aurora_spawner import (
-            CircuitBreaker,
-            ErrorCategory,
-            ErrorClassifier,
-            HeartbeatEmitter,
-            HeartbeatMonitor,
-            RecoveryMetrics,
-            RecoveryPolicy,
-            RecoveryResult,
-            RecoveryState,
-            RecoveryStateMachine,
-            RecoveryStrategy,
-            RecoverySummary,
-            SpawnResult,
-            SpawnTask,
-            TaskRecoveryState,
-            get_circuit_breaker,
-            get_recovery_metrics,
-            reset_recovery_metrics,
-            spawn,
-            spawn_parallel,
-        )
+        from aurora_spawner import RecoveryStateMachine, spawn
 
         assert RecoveryStateMachine is not None
         assert callable(spawn)

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Friction analysis pipeline - analyze sessions and extract antigens.
+"""Friction analysis pipeline - analyze sessions and extract antigens.
 
 Usage:
     python friction.py <sessions-directory>
@@ -22,13 +21,6 @@ script_dir = Path(__file__).parent
 sys.path.insert(0, str(script_dir))
 
 from antigen_extract import main as extract_main
-from friction_analyze import (
-    aggregate_sessions,
-    analyze_session,
-    derive_session_name,
-    extract_signals,
-    load_config,
-)
 from friction_analyze import main as analyze_main
 
 

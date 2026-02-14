@@ -4,7 +4,6 @@ Tests use real SQLiteStore + real HybridRetriever (no MockStore).
 """
 
 import numpy as np
-import pytest
 
 from aurora_context_code.semantic.hybrid_retriever import HybridConfig, HybridRetriever
 from aurora_core.store.sqlite import SQLiteStore
@@ -29,8 +28,6 @@ def _make_code_chunk(chunk_id, name, signature, docstring, file_path):
 
 class MockActivationEngine:
     """Minimal activation engine for testing."""
-
-    pass
 
 
 class MockEmbeddingProvider:

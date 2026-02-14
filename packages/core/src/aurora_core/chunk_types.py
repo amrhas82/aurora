@@ -11,7 +11,6 @@ Type Taxonomy:
 """
 
 from pathlib import Path
-from typing import Union
 
 # Extension-based type mapping
 EXTENSION_TYPE_MAP: dict[str, str] = {

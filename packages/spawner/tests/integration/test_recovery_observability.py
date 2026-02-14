@@ -13,7 +13,6 @@ from aurora_spawner.observability import (
     AgentHealthMonitor,
     FailureEvent,
     FailureReason,
-    HealthMetrics,
     ProactiveHealthConfig,
 )
 from aurora_spawner.recovery import (

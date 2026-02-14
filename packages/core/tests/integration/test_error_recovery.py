@@ -3,7 +3,6 @@
 Tests the retry logic for transient and non-recoverable errors.
 """
 
-import time
 from unittest.mock import Mock
 
 import pytest

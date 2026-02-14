@@ -156,7 +156,6 @@ class SQLiteStore(Store):
             StorageError: If the chunks table doesn't exist or query fails
 
         """
-        from aurora_core.store.schema import SCHEMA_VERSION
 
         conn = self._get_connection()
 
@@ -216,7 +215,6 @@ class SQLiteStore(Store):
             StorageError: If schema detection fails
 
         """
-        from aurora_core.store.schema import SCHEMA_VERSION
 
         detected_version, column_count = self._detect_schema_version()
 

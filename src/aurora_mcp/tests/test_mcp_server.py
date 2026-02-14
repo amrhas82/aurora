@@ -6,8 +6,6 @@ Written BEFORE implementation (TDD).
 
 from unittest.mock import Mock, patch
 
-import pytest
-
 
 class TestMCPServerStartup:
     """Tests for MCP server initialization."""

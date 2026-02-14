@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Friction analyzer - Extract signals and analyze patterns.
+"""Friction analyzer - Extract signals and analyze patterns.
 
 Usage:
     python friction_analyze.py <sessions-directory>

@@ -5,17 +5,11 @@ Tests pure logic — no running language servers, no network.
 
 import json
 import subprocess
-from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from aurora_lsp.analysis import (
-    CodeAnalyzer,
-    _batched_ripgrep_search,
-    _ext_to_rg_type,
-    _fallback_grep_search,
-)
+from aurora_lsp.analysis import CodeAnalyzer, _batched_ripgrep_search, _ext_to_rg_type
 from aurora_lsp.client import AuroraLSPClient
 
 # ---------------------------------------------------------------------------
@@ -340,7 +334,6 @@ class TestReferenceCache:
     @pytest.mark.asyncio
     async def test_cache_hit_avoids_server_call(self, tmp_path):
         """Second call with same args returns cached result without querying LSP."""
-        import time
 
         client = self._make_client(tmp_path)
 
@@ -382,7 +375,6 @@ class TestReferenceCache:
     @pytest.mark.asyncio
     async def test_cache_expiry(self, tmp_path, monkeypatch):
         """Expired entries are evicted and LSP is re-queried."""
-        import time as time_mod
 
         client = self._make_client(tmp_path)
         client._ref_cache_ttl = 0.0  # expire immediately

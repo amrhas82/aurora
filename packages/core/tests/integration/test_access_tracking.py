@@ -5,7 +5,6 @@ get_access_stats, get_access_stats_batch, save_doc_chunk, and
 schema version detection. All tests use real SQLite with tmp_path.
 """
 
-import time
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -326,7 +325,7 @@ class TestSchemaDetection:
     """Tests for schema version detection."""
 
     def test_fresh_db_returns_current_version(self, tmp_path):
-        import sqlite3
+        pass
 
         from aurora_core.store.schema import SCHEMA_VERSION
 

@@ -4,7 +4,7 @@ ParsedTask extends the basic task tracking pattern from TaskProgress
 with agent and model metadata for task execution.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 
@@ -21,6 +21,7 @@ class ParsedTask:
         agent: Agent to execute task (default: "self" for direct execution)
         model: Model to use for execution (default: None, uses agent's default)
         completed: Whether task is completed (default: False)
+        depends_on: List of task IDs this task depends on (default: [])
 
     """
 
@@ -29,6 +30,7 @@ class ParsedTask:
     agent: str = "self"
     model: str | None = None
     completed: bool = False
+    depends_on: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert ParsedTask to dictionary representation.
@@ -43,6 +45,7 @@ class ParsedTask:
             "agent": self.agent,
             "model": self.model,
             "completed": self.completed,
+            "depends_on": self.depends_on,
         }
 
     @classmethod
@@ -66,4 +69,5 @@ class ParsedTask:
             agent=data.get("agent", "self"),
             model=data.get("model"),
             completed=data.get("completed", False),
+            depends_on=data.get("depends_on", []),
         )

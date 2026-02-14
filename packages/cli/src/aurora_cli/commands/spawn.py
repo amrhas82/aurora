@@ -1,8 +1,8 @@
-"""Spawn command - Execute tasks from task files in parallel.
+"""Spawn command - Execute tasks from task files or prompts.
 
-This command loads tasks from a markdown file (default: tasks.md) and executes
-them in parallel using the aurora-spawner package. Tasks can specify which agent
-should handle them via HTML comment metadata.
+This command loads tasks from a markdown file (default: tasks.md) or decomposes
+a natural language prompt into tasks, then executes them. Supports dependency-aware
+wave execution and output persistence.
 
 Examples:
     # Execute tasks.md in current directory
@@ -10,6 +10,9 @@ Examples:
 
     # Execute specific task file
     aur spawn path/to/tasks.md
+
+    # Decompose a prompt into tasks and execute
+    aur spawn "Create a hello world Python script with tests"
 
     # Execute sequentially instead of parallel
     aur spawn --sequential
@@ -35,6 +38,9 @@ from aurora_spawner import spawn_parallel_tracked
 from aurora_spawner.models import SpawnTask
 from implement.models import ParsedTask
 from implement.parser import TaskParser
+from implement.persistence import SpawnRunStore
+from implement.topo_sort import topological_sort_tasks
+
 
 console = Console()
 logger = logging.getLogger(__name__)
@@ -42,8 +48,7 @@ logger = logging.getLogger(__name__)
 
 @click.command(name="spawn")
 @click.argument(
-    "task_file",
-    type=click.Path(exists=False, path_type=Path),
+    "input_arg",
     default="tasks.md",
     required=False,
 )
@@ -98,7 +103,7 @@ logger = logging.getLogger(__name__)
     help="Disable LLM fallback on agent failure",
 )
 def spawn_command(
-    task_file: Path,
+    input_arg: str,
     parallel: bool,
     sequential: bool,
     verbose: bool,
@@ -109,81 +114,58 @@ def spawn_command(
     policy: str,
     no_fallback: bool,
 ) -> None:
-    """Execute tasks from a markdown task file.
+    """Execute tasks from a markdown task file or a prompt.
 
-    Loads tasks from TASK_FILE (default: tasks.md) and executes them using
-    the aurora-spawner package. Tasks can specify agents via sub-bullets:
+    INPUT_ARG can be a path to a tasks.md file (default: tasks.md) or a
+    natural language prompt that will be decomposed into tasks.
+
+    Tasks can specify agents and dependencies via sub-bullets:
 
         - [ ] 1. My task description
           - Agent: @agent-name
+          - Depends: 1.0, 2.0
 
     By default, tasks are executed in parallel with max_concurrent=4.
     Use --sequential to force one-at-a-time execution.
-
-    Args:
-        task_file: Path to task file (default: tasks.md)
-        parallel: Execute in parallel (default: True)
-        sequential: Force sequential execution
-        verbose: Show detailed output
-        dry_run: Validate without executing
-        yes: Skip execution preview prompt
-        max_concurrent: Maximum concurrent tasks (default: 4)
-        stagger_delay: Delay between task starts in seconds (default: 5.0)
-        policy: Spawn timeout policy preset (default: patient)
-        no_fallback: Disable LLM fallback on agent failure
+    Tasks with dependencies are automatically executed in waves.
 
     """
     try:
-        # Load tasks from file
-        tasks = load_tasks(task_file)
+        input_path = Path(input_arg)
+        is_file_mode = input_path.exists()
+
+        if is_file_mode:
+            # File mode: load tasks from file
+            tasks, tasks_md_content = _load_from_file(input_path)
+        else:
+            # Check if default tasks.md doesn't exist and input looks like a file path
+            if input_arg == "tasks.md":
+                raise FileNotFoundError(f"Task file not found: {input_arg}")
+
+            # Prompt mode: decompose prompt into tasks
+            tasks, tasks_md_content = _load_from_prompt(input_arg)
 
         if not tasks:
-            console.print("[yellow]No tasks found in file.[/]")
+            console.print("[yellow]No tasks found.[/]")
             return
 
-        console.print(f"[cyan]Loaded {len(tasks)} tasks from {task_file}[/]")
+        source = str(input_path) if is_file_mode else "prompt"
+        console.print(f"[cyan]Loaded {len(tasks)} tasks from {source}[/]")
+
+        # Check for dependencies
+        has_deps = any(t.depends_on for t in tasks)
 
         if dry_run:
-            console.print("[yellow]Dry-run mode: tasks validated but not executed.[/]")
-            for task in tasks:
-                status = "[x]" if task.completed else "[ ]"
-                console.print(f"  {status} {task.id}. {task.description} (agent: {task.agent})")
+            _display_dry_run(tasks, has_deps)
             return
 
         # Check policies for potentially destructive operations
-        from aurora_cli.policies import Operation, OperationType, PoliciesEngine, PolicyAction
-
-        try:
-            policies = PoliciesEngine()
-
-            # Scan tasks for keywords that might indicate destructive operations
-            for task in tasks:
-                desc_lower = task.description.lower()
-
-                # Check for file deletion keywords
-                if any(kw in desc_lower for kw in ["delete", "remove", "rm ", "del "]):
-                    op = Operation(type=OperationType.FILE_DELETE, target=task.description, count=1)
-                    result = policies.check_operation(op)
-
-                    if result.action == PolicyAction.DENY:
-                        console.print(f"[red]Policy violation:[/] {result.reason}")
-                        console.print(f"[red]Task blocked:[/] {task.description}")
-                        return
-                    if result.action == PolicyAction.PROMPT and not yes:
-                        console.print(f"[yellow]Warning:[/] {result.reason}")
-                        console.print(f"[yellow]Task:[/] {task.description}")
-                        if not click.confirm("Proceed with this task?"):
-                            console.print("[yellow]Execution cancelled by user.[/]")
-                            return
-
-        except Exception as e:
-            logger.warning(f"Policy check failed: {e}, proceeding without policy enforcement")
+        _check_policies(tasks, yes)
 
         # Show execution preview (unless --yes)
         if not yes:
             from aurora_cli.execution import ExecutionPreview, ReviewDecision
 
-            # Convert tasks to preview format
             preview_tasks = [
                 {"description": t.description, "agent_id": t.agent or "llm", "task": t.description}
                 for t in tasks
@@ -197,19 +179,56 @@ def spawn_command(
                 console.print("[yellow]Execution cancelled by user.[/]")
                 return
 
+        # Setup persistence
+        store = SpawnRunStore()
+        run_dir = store.create_run(tasks_md_content)
+
+        # Load previous results for re-runs (skip already completed tasks)
+        completed_outputs: dict[str, str] = {}
+        if is_file_mode:
+            prev = store.load_previous_results(tasks_md_content)
+            if prev:
+                completed_outputs = prev
+                console.print(f"[dim]Found {len(prev)} previous results for re-run[/]")
+
+        # Filter out already-completed tasks
+        pending_tasks = [t for t in tasks if not t.completed and t.id not in completed_outputs]
+
+        if not pending_tasks:
+            console.print("[green]All tasks already completed.[/]")
+            store.finalize_run(run_dir, total=len(tasks), completed=len(tasks), failed=0)
+            return
+
         # Determine execution mode
         use_parallel = parallel and not sequential
 
         try:
-            if use_parallel:
+            if has_deps:
+                console.print(f"[cyan]Executing {len(pending_tasks)} tasks in dependency waves...[/]")
+                result = asyncio.run(
+                    _execute_waves(
+                        pending_tasks,
+                        verbose,
+                        completed_outputs=completed_outputs,
+                        store=store,
+                        run_dir=run_dir,
+                        max_concurrent=max_concurrent,
+                        stagger_delay=stagger_delay,
+                        policy_name=policy,
+                        fallback_to_llm=not no_fallback,
+                    ),
+                )
+            elif use_parallel:
                 console.print(
-                    f"[cyan]Executing {len(tasks)} tasks in parallel "
+                    f"[cyan]Executing {len(pending_tasks)} tasks in parallel "
                     f"(max_concurrent={max_concurrent}, policy={policy}, stagger={stagger_delay}s)...[/]",
                 )
                 result = asyncio.run(
                     _execute_parallel(
-                        tasks,
+                        pending_tasks,
                         verbose,
+                        store=store,
+                        run_dir=run_dir,
                         max_concurrent=max_concurrent,
                         stagger_delay=stagger_delay,
                         policy_name=policy,
@@ -220,8 +239,10 @@ def spawn_command(
                 console.print("[cyan]Executing tasks sequentially...[/]")
                 result = asyncio.run(
                     _execute_sequential(
-                        tasks,
+                        pending_tasks,
                         verbose,
+                        store=store,
+                        run_dir=run_dir,
                         policy_name=policy,
                         fallback_to_llm=not no_fallback,
                     ),
@@ -230,10 +251,19 @@ def spawn_command(
             console.print("\n[yellow]Execution interrupted by user.[/]")
             raise click.Abort()
 
+        # Finalize persistence
+        store.finalize_run(
+            run_dir,
+            total=result["total"],
+            completed=result["completed"],
+            failed=result["failed"],
+        )
+
         # Display summary
         console.print(f"\n[bold green]Completed:[/] {result['completed']}/{result['total']}")
         if result["failed"] > 0:
             console.print(f"[bold red]Failed:[/] {result['failed']}")
+        console.print(f"[dim]Run saved to: {run_dir}[/]")
 
     except click.Abort:
         raise
@@ -241,6 +271,118 @@ def spawn_command(
         logger.error(f"Spawn command failed: {e}", exc_info=True)
         console.print(f"\n[bold red]Error:[/] {e}", style="red")
         raise click.Abort()
+
+
+def _load_from_file(file_path: Path) -> tuple[list[ParsedTask], str]:
+    """Load tasks from a markdown file.
+
+    Returns:
+        Tuple of (parsed tasks, raw file content)
+
+    """
+    content = file_path.read_text()
+    tasks = load_tasks(file_path)
+    return tasks, content
+
+
+def _load_from_prompt(prompt: str) -> tuple[list[ParsedTask], str]:
+    """Decompose a prompt into tasks via LLM.
+
+    Returns:
+        Tuple of (parsed tasks, generated tasks.md content)
+
+    """
+    from aurora_cli.llm.cli_pipe_client import CLIPipeLLMClient
+    from implement.decompose import decompose_prompt_to_tasks_md
+
+    console.print("[cyan]Decomposing prompt into tasks...[/]")
+
+    # Discover available agents
+    available_agents = _discover_agents()
+
+    llm_client = CLIPipeLLMClient()
+    tasks_md = decompose_prompt_to_tasks_md(llm_client, prompt, available_agents)
+
+    console.print("[dim]Generated tasks.md:[/]")
+    console.print(tasks_md)
+
+    # Parse the generated markdown
+    parser = TaskParser()
+    tasks = parser.parse(tasks_md)
+    return tasks, tasks_md
+
+
+def _discover_agents() -> list[str]:
+    """Discover available agent names from agent files."""
+    try:
+        from aurora_cli.agent_discovery.parser import AgentParser
+        from aurora_cli.agent_discovery.scanner import AgentScanner
+
+        scanner = AgentScanner()
+        parser = AgentParser()
+        agents = []
+        for agent_path in scanner.scan_all_sources():
+            try:
+                agent = parser.parse_file(agent_path)
+                if agent and agent.name:
+                    agents.append(agent.name)
+            except Exception:
+                continue
+        return agents
+    except Exception:
+        return []
+
+
+def _display_dry_run(tasks: list[ParsedTask], has_deps: bool) -> None:
+    """Display dry-run output with optional dependency wave info."""
+    console.print("[yellow]Dry-run mode: tasks validated but not executed.[/]")
+
+    if has_deps:
+        try:
+            waves = topological_sort_tasks(tasks)
+            for i, wave in enumerate(waves):
+                console.print(f"\n  [bold]Wave {i + 1}:[/]")
+                for task in wave:
+                    status = "[x]" if task.completed else "[ ]"
+                    deps = f" (depends: {', '.join(task.depends_on)})" if task.depends_on else ""
+                    console.print(f"    {status} {task.id}. {task.description} (agent: {task.agent}){deps}")
+        except ValueError as e:
+            console.print(f"  [red]Dependency error: {e}[/]")
+    else:
+        for task in tasks:
+            status = "[x]" if task.completed else "[ ]"
+            console.print(f"  {status} {task.id}. {task.description} (agent: {task.agent})")
+
+
+def _check_policies(tasks: list[ParsedTask], yes: bool) -> None:
+    """Check policies for potentially destructive operations."""
+    from aurora_cli.policies import Operation, OperationType, PoliciesEngine, PolicyAction
+
+    try:
+        policies = PoliciesEngine()
+
+        for task in tasks:
+            desc_lower = task.description.lower()
+
+            if any(kw in desc_lower for kw in ["delete", "remove", "rm ", "del "]):
+                op = Operation(type=OperationType.FILE_DELETE, target=task.description, count=1)
+                result = policies.check_operation(op)
+
+                if result.action == PolicyAction.DENY:
+                    console.print(f"[red]Policy violation:[/] {result.reason}")
+                    console.print(f"[red]Task blocked:[/] {task.description}")
+                    raise click.Abort()
+                if result.action == PolicyAction.PROMPT and not yes:
+                    console.print(f"[yellow]Warning:[/] {result.reason}")
+                    console.print(f"[yellow]Task:[/] {task.description}")
+                    if not click.confirm("Proceed with this task?"):
+                        console.print("[yellow]Execution cancelled by user.[/]")
+                        raise click.Abort()
+
+    except click.Abort:
+        raise
+    except Exception as e:
+        logger.warning(f"Policy check failed: {e}, proceeding without policy enforcement")
 
 
 def load_tasks(file_path: Path) -> list[ParsedTask]:
@@ -277,9 +419,111 @@ def load_tasks(file_path: Path) -> list[ParsedTask]:
     return tasks
 
 
+async def _execute_waves(
+    tasks: list[ParsedTask],
+    verbose: bool,
+    completed_outputs: dict[str, str],
+    store: SpawnRunStore,
+    run_dir: Path,
+    max_concurrent: int = 4,
+    stagger_delay: float = 5.0,
+    policy_name: str = "patient",
+    fallback_to_llm: bool = True,
+) -> dict[str, int]:
+    """Execute tasks in dependency-ordered waves.
+
+    Uses topological sort to group tasks into waves. Within each wave,
+    tasks run in parallel. Between waves, completed outputs are forwarded
+    as context to dependent tasks.
+
+    """
+    waves = topological_sort_tasks(tasks)
+
+    total = len(tasks)
+    completed = 0
+    failed = 0
+
+    for wave_idx, wave in enumerate(waves):
+        if verbose:
+            wave_ids = ", ".join(t.id for t in wave)
+            console.print(f"\n[cyan]Wave {wave_idx + 1}/{len(waves)}: tasks [{wave_ids}][/]")
+
+        # Inject dependency context into task prompts
+        wave_tasks = []
+        for task in wave:
+            prompt = task.description
+            dep_context = _build_dependency_context(task, completed_outputs)
+            if dep_context:
+                prompt = f"{dep_context}\n\n{prompt}"
+
+            wave_tasks.append(
+                SpawnTask(
+                    prompt=prompt,
+                    agent=task.agent if task.agent != "self" else None,
+                    policy_name=policy_name,
+                )
+            )
+
+        # Progress callback
+        def on_progress(msg: str):
+            if verbose:
+                console.print(f"[dim]{msg}[/]")
+
+        # Execute wave
+        results, metadata = await spawn_parallel_tracked(
+            tasks=wave_tasks,
+            max_concurrent=max_concurrent,
+            stagger_delay=stagger_delay,
+            policy_name=policy_name,
+            on_progress=on_progress if verbose else None,
+            fallback_to_llm=fallback_to_llm,
+        )
+
+        # Process results
+        for i, result in enumerate(results):
+            task = wave[i]
+            output = getattr(result, "output", "") or ""
+
+            if result.success:
+                completed += 1
+                completed_outputs[task.id] = output
+                store.save_task_result(run_dir, task.id, success=True, output=output)
+                if verbose:
+                    fallback_note = " (fallback)" if getattr(result, "fallback", False) else ""
+                    console.print(f"[green]✓[/] Task {task.id}: Success{fallback_note}")
+            else:
+                failed += 1
+                error = getattr(result, "error", "Unknown error") or "Unknown error"
+                store.save_task_result(run_dir, task.id, success=False, error=error)
+                if verbose:
+                    console.print(f"[red]✗[/] Task {task.id}: Failed - {error}")
+
+    return {"total": total, "completed": completed, "failed": failed}
+
+
+def _build_dependency_context(task: ParsedTask, completed_outputs: dict[str, str]) -> str:
+    """Build context string from completed dependency outputs."""
+    if not task.depends_on:
+        return ""
+
+    parts = []
+    for dep_id in task.depends_on:
+        if dep_id in completed_outputs:
+            output = completed_outputs[dep_id]
+            if output:
+                parts.append(f"[Task {dep_id}] output:\n{output}")
+
+    if not parts:
+        return ""
+
+    return "Context from completed dependencies:\n" + "\n\n".join(parts)
+
+
 async def _execute_parallel(
     tasks: list[ParsedTask],
     verbose: bool,
+    store: SpawnRunStore,
+    run_dir: Path,
     max_concurrent: int = 4,
     stagger_delay: float = 5.0,
     policy_name: str = "patient",
@@ -293,17 +537,6 @@ async def _execute_parallel(
     - Global timeout calculation
     - Circuit breaker pre-checks
     - Retry with fallback to LLM
-
-    Args:
-        tasks: List of tasks to execute
-        verbose: Show detailed output
-        max_concurrent: Maximum concurrent tasks (default: 4)
-        stagger_delay: Delay between task starts in seconds (default: 5.0)
-        policy_name: Spawn policy preset (default: "patient")
-        fallback_to_llm: Fall back to LLM on agent failure (default: True)
-
-    Returns:
-        Execution summary with total, completed, failed counts
 
     """
     if not tasks:
@@ -334,18 +567,25 @@ async def _execute_parallel(
         fallback_to_llm=fallback_to_llm,
     )
 
-    # Display verbose results
+    # Display verbose results and persist
     if verbose:
         console.print("")
-        for i, result in enumerate(results):
-            task_id = tasks[i].id
-            if result.success:
+    for i, result in enumerate(results):
+        task_id = tasks[i].id
+        output = getattr(result, "output", "") or ""
+        if result.success:
+            store.save_task_result(run_dir, task_id, success=True, output=output)
+            if verbose:
                 fallback_note = " (fallback)" if getattr(result, "fallback", False) else ""
                 console.print(f"[green]✓[/] Task {task_id}: Success{fallback_note}")
-            else:
-                console.print(f"[red]✗[/] Task {task_id}: Failed - {result.error}")
+        else:
+            error = getattr(result, "error", "Unknown error") or "Unknown error"
+            store.save_task_result(run_dir, task_id, success=False, error=error)
+            if verbose:
+                console.print(f"[red]✗[/] Task {task_id}: Failed - {error}")
 
-        # Show metadata summary
+    # Show metadata summary
+    if verbose:
         if metadata.get("fallback_count", 0) > 0:
             console.print(f"[yellow]Fallbacks used: {metadata['fallback_count']}[/]")
         if metadata.get("circuit_blocked"):
@@ -361,6 +601,8 @@ async def _execute_parallel(
 async def _execute_sequential(
     tasks: list[ParsedTask],
     verbose: bool,
+    store: SpawnRunStore,
+    run_dir: Path,
     policy_name: str = "patient",
     fallback_to_llm: bool = True,
 ) -> dict[str, int]:
@@ -368,15 +610,6 @@ async def _execute_sequential(
 
     Uses the same infrastructure as parallel execution but with max_concurrent=1
     and no stagger delay.
-
-    Args:
-        tasks: List of tasks to execute
-        verbose: Show detailed output
-        policy_name: Spawn policy preset (default: "patient")
-        fallback_to_llm: Fall back to LLM on agent failure (default: True)
-
-    Returns:
-        Execution summary with total, completed, failed counts
 
     """
     if not tasks:
@@ -407,16 +640,22 @@ async def _execute_sequential(
         fallback_to_llm=fallback_to_llm,
     )
 
-    # Display verbose results
+    # Display verbose results and persist
     if verbose:
         console.print("")
-        for i, result in enumerate(results):
-            task_id = tasks[i].id
-            if result.success:
+    for i, result in enumerate(results):
+        task_id = tasks[i].id
+        output = getattr(result, "output", "") or ""
+        if result.success:
+            store.save_task_result(run_dir, task_id, success=True, output=output)
+            if verbose:
                 fallback_note = " (fallback)" if getattr(result, "fallback", False) else ""
                 console.print(f"[green]✓[/] Task {task_id}: Success{fallback_note}")
-            else:
-                console.print(f"[red]✗[/] Task {task_id}: Failed - {result.error}")
+        else:
+            error = getattr(result, "error", "Unknown error") or "Unknown error"
+            store.save_task_result(run_dir, task_id, success=False, error=error)
+            if verbose:
+                console.print(f"[red]✗[/] Task {task_id}: Failed - {error}")
 
     return {
         "total": metadata["total_tasks"],
@@ -435,4 +674,4 @@ def execute_tasks_parallel(tasks: list[ParsedTask]) -> dict[str, int]:
         Execution summary with total, completed, failed counts
 
     """
-    return asyncio.run(_execute_parallel(tasks, verbose=False))
+    return asyncio.run(_execute_parallel(tasks, verbose=False, store=SpawnRunStore(), run_dir=Path(".")))

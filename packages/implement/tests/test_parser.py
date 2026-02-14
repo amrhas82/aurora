@@ -291,3 +291,67 @@ def test_parse_agent_case_insensitive():
 
     assert tasks[0].agent == "code-developer"
     assert tasks[1].agent == "quality-assurance"
+
+
+def test_parse_depends_single():
+    """Parse single dependency from Depends: sub-bullet."""
+    content = """- [ ] 1. First task
+- [ ] 2. Second task
+  - Depends: 1"""
+    parser = TaskParser()
+    tasks = parser.parse(content)
+
+    assert tasks[0].depends_on == []
+    assert tasks[1].depends_on == ["1"]
+
+
+def test_parse_depends_multiple():
+    """Parse multiple dependencies from Depends: sub-bullet."""
+    content = """- [ ] 1.0 First task
+- [ ] 2.0 Second task
+- [ ] 3.0 Third task
+  - Depends: 1.0, 2.0"""
+    parser = TaskParser()
+    tasks = parser.parse(content)
+
+    assert tasks[2].depends_on == ["1.0", "2.0"]
+
+
+def test_parse_depends_case_insensitive():
+    """Depends: label is case-insensitive."""
+    content = """- [ ] 1. First
+- [ ] 2. Second
+  - depends: 1
+- [ ] 3. Third
+  - DEPENDS: 1, 2"""
+    parser = TaskParser()
+    tasks = parser.parse(content)
+
+    assert tasks[1].depends_on == ["1"]
+    assert tasks[2].depends_on == ["1", "2"]
+
+
+def test_parse_depends_with_agent_and_model():
+    """Parse depends alongside agent and model metadata."""
+    content = """- [ ] 1.0 Setup
+  - Agent: @code-developer
+- [ ] 2.0 Build
+  - Agent: @code-developer
+  - Model: opus
+  - Depends: 1.0"""
+    parser = TaskParser()
+    tasks = parser.parse(content)
+
+    assert tasks[1].agent == "code-developer"
+    assert tasks[1].model == "opus"
+    assert tasks[1].depends_on == ["1.0"]
+
+
+def test_parse_no_depends_defaults_empty():
+    """Tasks without Depends: sub-bullet have empty depends_on."""
+    content = """- [ ] 1. Task one
+- [ ] 2. Task two"""
+    parser = TaskParser()
+    tasks = parser.parse(content)
+
+    assert all(task.depends_on == [] for task in tasks)

@@ -94,3 +94,30 @@ def test_parsed_task_from_dict_with_defaults():
     assert task.agent == "self"
     assert task.model is None
     assert task.completed is False
+    assert task.depends_on == []
+
+
+def test_parsed_task_depends_on_default():
+    """ParsedTask depends_on defaults to empty list."""
+    task = ParsedTask(id="1", description="Test")
+    assert task.depends_on == []
+
+
+def test_parsed_task_depends_on_custom():
+    """ParsedTask accepts custom depends_on list."""
+    task = ParsedTask(id="2", description="Test", depends_on=["1.0", "1.1"])
+    assert task.depends_on == ["1.0", "1.1"]
+
+
+def test_parsed_task_to_dict_includes_depends_on():
+    """to_dict() includes depends_on field."""
+    task = ParsedTask(id="2", description="Test", depends_on=["1.0"])
+    d = task.to_dict()
+    assert d["depends_on"] == ["1.0"]
+
+
+def test_parsed_task_from_dict_with_depends_on():
+    """from_dict() restores depends_on list."""
+    data = {"id": "3", "description": "Test", "depends_on": ["1.0", "2.0"]}
+    task = ParsedTask.from_dict(data)
+    assert task.depends_on == ["1.0", "2.0"]

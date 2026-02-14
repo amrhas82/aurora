@@ -13,6 +13,7 @@ import re
 
 from implement.models import ParsedTask
 
+
 # Regex patterns for task checkboxes (ported from task_progress.py)
 TASK_PATTERN = re.compile(r"^[-*]\s+\[[\sx]\]", re.IGNORECASE)
 COMPLETED_TASK_PATTERN = re.compile(r"^[-*]\s+\[x\]", re.IGNORECASE)
@@ -29,6 +30,7 @@ TASK_LINE_PATTERN = re.compile(
 # "- Agent: @code-developer" or "- Agent: code-developer"
 AGENT_PATTERN = re.compile(r"^\s*[-*]\s+Agent:\s*@?([\w-]+)", re.IGNORECASE)
 MODEL_PATTERN = re.compile(r"^\s*[-*]\s+Model:\s*([\w-]+)", re.IGNORECASE)
+DEPENDS_PATTERN = re.compile(r"^\s*[-*]\s+Depends:\s*([\d.,\s]+)", re.IGNORECASE)
 
 
 class TaskParser:
@@ -91,5 +93,11 @@ class TaskParser:
             model_match = MODEL_PATTERN.match(line)
             if model_match and current_task_idx >= 0:
                 tasks[current_task_idx].model = model_match.group(1)
+
+            # Try to extract depends metadata from sub-bullet
+            depends_match = DEPENDS_PATTERN.match(line)
+            if depends_match and current_task_idx >= 0:
+                dep_ids = [d.strip() for d in depends_match.group(1).split(",") if d.strip()]
+                tasks[current_task_idx].depends_on = dep_ids
 
         return tasks

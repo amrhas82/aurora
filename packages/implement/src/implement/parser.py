@@ -1,7 +1,12 @@
 """TaskParser for parsing tasks.md files with agent metadata.
 
 Ports and extends regex patterns from openspec-source task_progress.py
-to support agent and model metadata extraction from HTML comments.
+to support agent and model metadata extraction from visible markdown sub-bullets.
+
+Supported formats:
+  - Agent: @code-developer       (with @ prefix)
+  - Agent: code-developer        (without @ prefix)
+  - Model: opus
 """
 
 import re
@@ -20,9 +25,10 @@ TASK_LINE_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
-# Regex for metadata extraction from HTML comments
-AGENT_METADATA_PATTERN = re.compile(r"<!--\s*agent:\s*([\w-]+)\s*-->", re.IGNORECASE)
-MODEL_METADATA_PATTERN = re.compile(r"<!--\s*model:\s*([\w-]+)\s*-->", re.IGNORECASE)
+# Visible markdown metadata sub-bullets
+# "- Agent: @code-developer" or "- Agent: code-developer"
+AGENT_PATTERN = re.compile(r"^\s*[-*]\s+Agent:\s*@?([\w-]+)", re.IGNORECASE)
+MODEL_PATTERN = re.compile(r"^\s*[-*]\s+Model:\s*([\w-]+)", re.IGNORECASE)
 
 
 class TaskParser:
@@ -31,10 +37,10 @@ class TaskParser:
     Parses markdown task lists with:
     - Checkbox syntax: - [ ] or - [x]
     - Task IDs: 1, 1.1, 2.3, etc.
-    - Agent metadata: <!-- agent: agent-name -->
-    - Model metadata: <!-- model: model-name -->
+    - Agent metadata: - Agent: @agent-name (sub-bullet)
+    - Model metadata: - Model: model-name (sub-bullet)
 
-    Metadata comments apply to the task immediately preceding them.
+    Metadata sub-bullets apply to the task immediately preceding them.
     """
 
     def parse(self, content: str) -> list[ParsedTask]:
@@ -76,13 +82,13 @@ class TaskParser:
                 current_task_idx = len(tasks) - 1
                 continue
 
-            # Try to extract agent metadata
-            agent_match = AGENT_METADATA_PATTERN.search(line)
+            # Try to extract agent metadata from sub-bullet
+            agent_match = AGENT_PATTERN.match(line)
             if agent_match and current_task_idx >= 0:
                 tasks[current_task_idx].agent = agent_match.group(1)
 
-            # Try to extract model metadata
-            model_match = MODEL_METADATA_PATTERN.search(line)
+            # Try to extract model metadata from sub-bullet
+            model_match = MODEL_PATTERN.match(line)
             if model_match and current_task_idx >= 0:
                 tasks[current_task_idx].model = model_match.group(1)
 

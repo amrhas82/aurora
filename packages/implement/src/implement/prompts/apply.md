@@ -9,15 +9,15 @@ Tasks follow this format:
 ```markdown
 - [ ] 1.0 Task description
   - [ ] 1.1 Subtask description
-<!-- agent: agent-name -->
-<!-- model: model-name -->
+  - Agent: @agent-name
+  - Model: model-name
 ```
 
 ## Agent Metadata
 
-Tasks may include HTML comment metadata:
-- `<!-- agent: AGENT_NAME -->` - Specifies which agent should execute the task
-- `<!-- model: MODEL_NAME -->` - Specifies which model to use (optional)
+Tasks may include metadata as visible markdown sub-bullets:
+- `- Agent: @AGENT_NAME` - Specifies which agent should execute the task
+- `- Model: MODEL_NAME` - Specifies which model to use (optional)
 
 If no agent is specified, the task defaults to `agent: self` for direct execution.
 
@@ -79,10 +79,10 @@ Given this tasks.md:
 - [ ] 1.0 Setup infrastructure
   - [ ] 1.1 Create database schema
   - [ ] 1.2 Setup API endpoints
-<!-- agent: code-developer -->
+  - Agent: @code-developer
 
 - [ ] 2.0 Design UI wireframes
-<!-- agent: ui-designer -->
+  - Agent: @ui-designer
 ```
 
 Execution:

@@ -102,7 +102,7 @@ async def test_execute_agent_task():
     ]
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
-        f.write("- [ ] 1. Agent task\n<!-- agent: code-developer -->\n")
+        f.write("- [ ] 1. Agent task\n  - Agent: @code-developer\n")
         tasks_file = Path(f.name)
 
     try:
@@ -157,7 +157,7 @@ async def test_execute_handles_failure():
     ]
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
-        f.write("- [ ] 1. Failing task\n<!-- agent: failing-agent -->\n")
+        f.write("- [ ] 1. Failing task\n  - Agent: @failing-agent\n")
         tasks_file = Path(f.name)
 
     try:

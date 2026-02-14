@@ -40,9 +40,9 @@ def test_parse_completed_task():
 
 
 def test_parse_agent_metadata():
-    """Extract agent from HTML comment metadata."""
+    """Extract agent from markdown sub-bullet."""
     content = """- [ ] 1. Implement feature X
-<!-- agent: code-developer -->"""
+  - Agent: @code-developer"""
     parser = TaskParser()
     tasks = parser.parse(content)
 
@@ -51,9 +51,9 @@ def test_parse_agent_metadata():
 
 
 def test_parse_model_metadata():
-    """Extract model from HTML comment metadata."""
+    """Extract model from markdown sub-bullet."""
     content = """- [ ] 1. Implement feature X
-<!-- model: sonnet -->"""
+  - Model: sonnet"""
     parser = TaskParser()
     tasks = parser.parse(content)
 
@@ -97,11 +97,11 @@ def test_parse_nested_subtasks():
     assert tasks[3].id == "2"
 
 
-def test_parse_task_with_multiline_metadata():
-    """Agent comment on separate line below task."""
+def test_parse_task_with_agent_after_blank_line():
+    """Agent sub-bullet on separate line below task still applies."""
     content = """- [ ] 1. Implement feature X
 
-<!-- agent: quality-assurance -->
+  - Agent: @quality-assurance
 
 - [ ] 2. Another task"""
     parser = TaskParser()
@@ -159,7 +159,7 @@ Some more notes here.
 
 
 def test_parse_tasks_md_format():
-    """Full example from PRD section 5.4."""
+    """Full example matching production tasks.md format."""
     content = """# Task List: Feature Implementation
 
 ## Tasks
@@ -167,17 +167,17 @@ def test_parse_tasks_md_format():
 - [ ] 1.0 Setup infrastructure
   - [x] 1.1 Create database schema
   - [ ] 1.2 Setup API endpoints
-<!-- agent: code-developer -->
-<!-- model: sonnet -->
+  - Agent: @code-developer
+  - Model: sonnet
 
 - [ ] 2.0 Implement UI
   - [ ] 2.1 Design wireframes
-<!-- agent: ui-designer -->
+  - Agent: @ui-designer
   - [ ] 2.2 Build components
-<!-- agent: code-developer -->
+  - Agent: @code-developer
 
 - [x] 3.0 Write tests
-<!-- agent: quality-assurance -->"""
+  - Agent: @quality-assurance"""
     parser = TaskParser()
     tasks = parser.parse(content)
 
@@ -210,10 +210,10 @@ def test_parse_tasks_md_format():
 
 
 def test_parse_agent_and_model_together():
-    """Parse both agent and model metadata for same task."""
+    """Parse both agent and model from markdown sub-bullets."""
     content = """- [ ] 1. Complex task
-<!-- agent: system-architect -->
-<!-- model: opus -->"""
+  - Agent: @system-architect
+  - Model: opus"""
     parser = TaskParser()
     tasks = parser.parse(content)
 
@@ -223,11 +223,11 @@ def test_parse_agent_and_model_together():
 
 
 def test_parse_metadata_applies_to_preceding_task():
-    """Metadata comments apply to the task immediately above them."""
+    """Agent sub-bullets apply to the task immediately above them."""
     content = """- [ ] 1. First task
-<!-- agent: agent-one -->
+  - Agent: @agent-one
 - [ ] 2. Second task
-<!-- agent: agent-two -->
+  - Agent: @agent-two
 - [ ] 3. Third task"""
     parser = TaskParser()
     tasks = parser.parse(content)
@@ -249,3 +249,45 @@ def test_parse_handles_varied_whitespace():
     assert tasks[0].id == "1"
     assert tasks[1].id == "2"
     assert tasks[2].id == "3"
+
+
+def test_parse_agent_without_at_prefix():
+    """Extract agent from sub-bullet without @ prefix."""
+    content = """- [ ] 1. Implement feature X
+  - Agent: code-developer"""
+    parser = TaskParser()
+    tasks = parser.parse(content)
+
+    assert len(tasks) == 1
+    assert tasks[0].agent == "code-developer"
+
+
+def test_parse_multiple_tasks_with_agents():
+    """Parse multiple tasks with visible markdown agent assignments."""
+    content = """- [ ] 1.0 Create calculator module
+  - Agent: @code-developer
+
+- [ ] 2.0 Write unit tests
+  - Agent: @quality-assurance
+
+- [ ] 3.0 Task without agent"""
+    parser = TaskParser()
+    tasks = parser.parse(content)
+
+    assert len(tasks) == 3
+    assert tasks[0].agent == "code-developer"
+    assert tasks[1].agent == "quality-assurance"
+    assert tasks[2].agent == "self"
+
+
+def test_parse_agent_case_insensitive():
+    """Agent: label is case-insensitive."""
+    content = """- [ ] 1. Task one
+  - agent: @code-developer
+- [ ] 2. Task two
+  - AGENT: @quality-assurance"""
+    parser = TaskParser()
+    tasks = parser.parse(content)
+
+    assert tasks[0].agent == "code-developer"
+    assert tasks[1].agent == "quality-assurance"

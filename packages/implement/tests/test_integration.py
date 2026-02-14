@@ -18,7 +18,6 @@ def test_parser_executor_integration():
 
 - [ ] 1. First task
 - [ ] 2. Second task
-<!-- agent: self -->
 - [x] 3. Already completed"""
 
     # Parse
@@ -46,7 +45,6 @@ async def test_full_tasks_md_processing():
   - [ ] 1.2 Initialize services
 
 - [ ] 2.0 Execute phase
-<!-- agent: self -->
   - [ ] 2.1 Process data
   - [x] 2.2 Already done
 
@@ -103,8 +101,8 @@ async def test_parser_executor_with_agent_dispatch():
     from aurora_spawner.models import SpawnResult
 
     content = """- [ ] 1. Task for agent
-<!-- agent: code-developer -->
-<!-- model: sonnet -->
+  - Agent: @code-developer
+  - Model: sonnet
 
 - [ ] 2. Self task
 """
@@ -157,25 +155,25 @@ def test_parse_complex_real_world_example():
 - [ ] 1.0 Setup Kubernetes cluster
   - [x] 1.1 Configure ingress controller
   - [ ] 1.2 Setup monitoring
-<!-- agent: system-architect -->
-<!-- model: opus -->
+  - Agent: @system-architect
+  - Model: opus
   - [ ] 1.3 Deploy logging stack
 
 ## Phase 2: Service Migration
 
 - [ ] 2.0 Migrate authentication service
-<!-- agent: code-developer -->
+  - Agent: @code-developer
   - [ ] 2.1 Containerize service
   - [ ] 2.2 Write Helm charts
   - [ ] 2.3 Deploy to staging
 
 - [ ] 3.0 Migrate API gateway
-<!-- agent: code-developer -->
+  - Agent: @code-developer
 
 ## Phase 3: Testing
 
 - [ ] 4.0 Integration testing
-<!-- agent: quality-assurance -->
+  - Agent: @quality-assurance
   - [ ] 4.1 Write test scenarios
   - [ ] 4.2 Execute test suite
   - [ ] 4.3 Performance testing

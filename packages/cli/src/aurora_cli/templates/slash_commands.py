@@ -73,7 +73,7 @@ PLAN_STEPS = """**Steps**
 3. Map the change into concrete capabilities or requirements, breaking multi-scope efforts into distinct spec deltas with clear relationships and sequencing.
 4. Capture architectural reasoning in `design.md` when the solution spans multiple systems, introduces new patterns, or demands trade-off discussion before committing to specs.
 5. Draft spec deltas in `.aurora/plans/active/<id>/specs/<capability>/spec.md` (one folder per capability) using `## ADDED|MODIFIED|REMOVED Requirements` with at least one `#### Scenario:` per requirement and cross-reference related capabilities when relevant.
-6. Draft `tasks.md` with `<!-- @agent: @name -->` comment after each parent task. Agent assignment priority: goals.json > agent registry match > LLM inference.
+6. Draft `tasks.md` with `- Agent: @name` sub-bullet after each parent task. Agent assignment priority: goals.json > agent registry match > LLM inference.
 7. Review plan with `aur plan view <id>` and ensure all tasks are well-defined before sharing the plan."""
 
 PLAN_REFERENCES = """**Reference**
@@ -135,7 +135,7 @@ PLAN_REFERENCES = """**Reference**
 ```markdown
 ## Phase N: [Name]
 - [ ] N.1 Task description
-  <!-- @agent: @code-developer -->
+  - Agent: @code-developer
   - tdd: yes|no
   - verify: `command to verify`
   - Details
@@ -196,7 +196,7 @@ TASKS_STEPS = """**Steps**
 3. Read `.aurora/plans/active/<plan-id>/goals.json` (if exists) for source_file mappings
 4. Generate tasks.md with:
    - Task breakdown matching PRD requirements
-   - Agent assignments from agents.json (use `<!-- @agent: @name -->` comment after each parent task)
+   - Agent assignments from agents.json (use `- Agent: @name` sub-bullet after each parent task)
    - TDD hints (tdd: yes|no, verify: command) matching format below
    - Validation steps per task
 5. Save updated tasks.md (replaces existing)"""
@@ -205,7 +205,7 @@ TASKS_REFERENCES = """**tasks.md Template** (with @agent per task and TDD hints)
 ```markdown
 ## Phase N: [Name]
 - [ ] N.1 Task description
-  <!-- @agent: @code-developer -->
+  - Agent: @code-developer
   - tdd: yes|no
   - verify: `command to verify`
   - Details

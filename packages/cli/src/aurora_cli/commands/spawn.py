@@ -112,10 +112,10 @@ def spawn_command(
     """Execute tasks from a markdown task file.
 
     Loads tasks from TASK_FILE (default: tasks.md) and executes them using
-    the aurora-spawner package. Tasks can specify agents via HTML comments:
+    the aurora-spawner package. Tasks can specify agents via sub-bullets:
 
         - [ ] 1. My task description
-        <!-- agent: agent-name -->
+          - Agent: @agent-name
 
     By default, tasks are executed in parallel with max_concurrent=4.
     Use --sequential to force one-at-a-time execution.

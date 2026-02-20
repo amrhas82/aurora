@@ -145,7 +145,9 @@ async def _run_soar2(
         elif event.type == "step:start":
             step_id = event.data.get("id", "?")
             action = event.data.get("action", "")
-            console.print(f"  [dim]→ {step_id}: {action}[/]")
+            # Truncate to first sentence or 80 chars — full action is the LLM prompt, not a UI label
+            short = action.split(".")[0].split(",")[0][:80]
+            console.print(f"  [dim]→ {step_id}: {short}[/]")
 
         elif event.type == "step:done":
             step_id = event.data.get("id", "?")

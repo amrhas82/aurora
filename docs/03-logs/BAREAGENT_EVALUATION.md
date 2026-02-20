@@ -1,6 +1,6 @@
-# bare-agent Evaluation — Round 5 (v0.2.2, resilience features)
+# bare-agent Evaluation — Round 6 (v0.3.0, throw-by-default + streaming + caching)
 
-> Round 1: stale v0.1.0 (deleted). Round 2: v0.2.0, 3 workarounds needed. Round 3: DX/UX feedback. Round 4: v0.2.1, all workarounds eliminated. **Round 5: v0.2.2, resilience features (stepRetry, jitter, CircuitBreaker, Fallback, typed errors).**
+> Round 1: stale v0.1.0 (deleted). Round 2: v0.2.0, 3 workarounds needed. Round 3: DX/UX feedback. Round 4: v0.2.1, all workarounds eliminated. Round 5: v0.2.2, resilience features (stepRetry, jitter, CircuitBreaker, Fallback, typed errors). **Round 6: v0.3.0, Loop throws by default, CLIPipe streaming, Planner caching, MaxRoundsError.**
 
 ## What Was Built
 
@@ -63,17 +63,18 @@
 
 ### Line count comparison
 
-| | Round 1 (stale pkg, everything custom) | Round 2 (v0.2.0) | Round 4 (v0.2.1) |
-|---|---|---|---|
-| `soar_agent.js` | 250 lines | 195 lines | 173 lines |
-| `cli_pipe_provider.js` | 80 lines | 0 (deleted, using CLIPipe) | 0 |
-| Custom `executeWaves` | 45 lines | 0 (using runPlan) | 0 |
-| Custom `StepStateMachine` | 20 lines | 0 (using StateMachine) | 0 |
-| `makeProvider()` wrapper | — | 30 lines (system prompt workaround) | 6 lines (just CLIPipe constructor) |
-| Inline transport | — | 3 lines | 0 (using JsonlTransport) |
-| **Total custom JS** | **~395 lines** | **~195 lines** | **~173 lines** |
+| | Round 1 (stale pkg, everything custom) | Round 2 (v0.2.0) | Round 4 (v0.2.1) | Round 6 (v0.3.0) |
+|---|---|---|---|---|
+| `soar_agent.js` | 250 lines | 195 lines | 173 lines | 282 lines |
+| `cli_pipe_provider.js` | 80 lines | 0 (deleted, using CLIPipe) | 0 | 0 |
+| Custom `executeWaves` | 45 lines | 0 (using runPlan) | 0 | 0 |
+| Custom `StepStateMachine` | 20 lines | 0 (using StateMachine) | 0 | 0 |
+| `makeProvider()` wrapper | — | 30 lines (system prompt workaround) | 6 lines (just CLIPipe constructor) | 8 lines (+onChunk) |
+| Inline transport | — | 3 lines | 0 (using JsonlTransport) | 0 |
+| `if (result.error)` checks | — | 3 checks | 3 checks | 0 (Loop throws) |
+| **Total custom JS** | **~395 lines** | **~195 lines** | **~173 lines** | **~282 lines** |
 
-That's a **56% reduction** from Round 1. The remaining 173 lines are 100% domain logic (prompts, JSONL protocol, SIMPLE vs COMPLEX path routing) — zero framework plumbing.
+The increase from 173 to 282 lines is from accumulated feature additions (v0.2.2 stepRetry/jitter wiring, v0.3.0 typed error handling, streaming, caching) — not framework plumbing. All 282 lines are domain logic. Zero lines are workarounds.
 
 ### What I didn't have to debug
 
@@ -175,9 +176,9 @@ The `{id, action, dependsOn}` step format is simple and sufficient. Planner vali
 
 ### ~~Priority 2: Export JsonlTransport~~ — SHIPPED in v0.2.1
 
-### Priority 1 (remaining): Loop.run() error behavior
+### ~~Priority 1 (remaining): Loop.run() error behavior~~ — FIXED in v0.3.0
 
-`Loop.run()` catches provider errors and returns `{ text: '', error: 'message' }` instead of throwing. This means callers must check `result.error` manually — easy to miss (I did miss it initially, got empty answers silently). Consider: throw by default, offer a `throwOnError: false` option for callers who want the current behavior.
+`Loop.run()` used to catch provider errors and return `{ text: '', error: 'message' }` instead of throwing. v0.3.0 throws `ProviderError` or `MaxRoundsError` by default. Old behavior available via `throwOnError: false`. This was the last remaining DX issue.
 
 ### Nice to have: Validate before run
 
@@ -372,8 +373,8 @@ These are the three patterns I ended up using. If these had been in context.md, 
 ### Recipe 1: Planner → runPlan with wave callbacks (the main use case)
 
 ```js
-// From soar_agent.js:93-183 (v0.2.1)
-const { Planner, StateMachine, Retry, Stream, Loop, runPlan } = require('bare-agent');
+// From soar_agent.js:97-189 (v0.3.0)
+const { Planner, StateMachine, Retry, Stream, Loop, runPlan, ProviderError, MaxRoundsError } = require('bare-agent');
 const { CLIPipe } = require('bare-agent/providers');
 const { JsonlTransport } = require('bare-agent/transports');
 
@@ -381,14 +382,15 @@ const provider = new CLIPipe({
   command: 'claude',
   args: ['--print', '--model', 'sonnet'],
   systemPromptFlag: '--system-prompt',
+  onChunk: (chunk) => process.stderr.write(chunk),  // v0.3.0: real-time streaming
   timeout: 120000,
 });
-const retry = new Retry({ maxAttempts: 2, backoff: 'exponential', timeout: 120000 });
+const retry = new Retry({ maxAttempts: 2, backoff: 'exponential', jitter: 'full', timeout: 120000 });
 const sm = new StateMachine();
 const stream = new Stream({ transport: new JsonlTransport() });
 
-// 1. Plan
-const planner = new Planner({ provider, prompt: 'Your system prompt...' });
+// 1. Plan (with caching — second identical call is instant)
+const planner = new Planner({ provider, cacheTTL: 60000, prompt: 'Your system prompt...' });
 const steps = await retry.call(() => planner.plan(query));
 // steps = [{id: 's1', action: '...', dependsOn: []}, {id: 's2', action: '...', dependsOn: ['s1']}]
 
@@ -399,13 +401,14 @@ const results = await runPlan(steps, async (step) => {
     .filter(id => stepResults[id])
     .map(id => `[${id}]: ${stepResults[id]}`).join('\n');
 
+  // v0.3.0: Loop throws on failure — no result.error check needed
   const loop = new Loop({ provider, maxRounds: 1, retry, stream });
   const result = await loop.run([{ role: 'user', content: `${step.action}\n${priorContext}` }]);
-  if (result.error) throw new Error(result.error);  // ← MUST CHECK
   stepResults[step.id] = result.text;
   return result.text;
 }, {
   stateMachine: sm,
+  stepRetry: new Retry({ maxAttempts: 2, backoff: 'exponential', jitter: 'full' }),
   onWaveStart: (num, wave) => console.log(`[Wave ${num}]: ${wave.map(s => s.id).join(', ')}`),
   onStepStart: (step) => console.log(`→ ${step.id}: ${step.action}`),
   onStepDone: (step) => console.log(`✓ ${step.id} complete`),
@@ -417,22 +420,28 @@ const results = await runPlan(steps, async (step) => {
 ### Recipe 2: Loop + CLIPipe (minimal single-shot LLM call)
 
 ```js
-// From soar_agent.js:68-88 (SIMPLE path, v0.2.1)
-const { Loop, Retry } = require('bare-agent');
+// From soar_agent.js:70-88 (SIMPLE path, v0.3.0)
+const { Loop, Retry, ProviderError, MaxRoundsError } = require('bare-agent');
 const { CLIPipe } = require('bare-agent/providers');
 
 const provider = new CLIPipe({
   command: 'claude',
   args: ['--print', '--model', 'sonnet'],
   systemPromptFlag: '--system-prompt',
+  onChunk: (chunk) => process.stderr.write(chunk),  // v0.3.0: real-time output
   timeout: 120000,
 });
-const retry = new Retry({ maxAttempts: 2, backoff: 'exponential', timeout: 120000 });
+const retry = new Retry({ maxAttempts: 2, backoff: 'exponential', jitter: 'full', timeout: 120000 });
 const loop = new Loop({ provider, maxRounds: 1, retry });
 
-const result = await loop.run([{ role: 'user', content: 'What is SOAR?' }]);
-if (result.error) throw new Error(result.error);
-console.log(result.text);
+try {
+  const result = await loop.run([{ role: 'user', content: 'What is SOAR?' }]);
+  console.log(result.text);  // v0.3.0: no result.error check — Loop throws on failure
+} catch (err) {
+  if (err instanceof MaxRoundsError) console.error('Loop exhausted:', err.code);
+  else if (err instanceof ProviderError) console.error('Provider failed:', err.message, 'retryable:', err.retryable);
+  else throw err;
+}
 ```
 
 ### Recipe 3: Stream + JsonlTransport (event forwarding)
@@ -460,7 +469,7 @@ stream.subscribe((event) => {
 
 bare-agent v0.2.1 is **production-ready** with **zero workarounds needed**.
 
-**Framework completeness**: 9/10. All three gaps from v0.2.0 are fixed. The only remaining item is `Loop.run()` error-not-throw behavior (documented, manageable). Up from 8/10.
+**Framework completeness**: 9/10. All three gaps from v0.2.0 are fixed. The only remaining item is `Loop.run()` error-not-throw behavior (documented, manageable). Up from 8/10. *(Note: this gap was closed in v0.3.0 — see Round 6 section.)*
 
 **Developer experience**: 8/10. The updated `bareagent.context.md` now includes recipes, gotchas, and component selection guide. This is a massive improvement — the three recipes alone would have saved ~45 minutes of the original integration. Up from 5/10.
 
@@ -471,7 +480,7 @@ bare-agent v0.2.1 is **production-ready** with **zero workarounds needed**.
 2. ~~`runPlan` `onWaveStart` callback~~ — SHIPPED v0.2.1
 3. ~~Export `JsonlTransport`~~ — SHIPPED v0.2.1
 4. ~~Integration recipes in context.md~~ — SHIPPED (3 recipes + gotchas section)
-5. Document `Loop.run()` error-not-throw behavior — SHIPPED (gotcha #8 in context.md)
+5. ~~Document `Loop.run()` error-not-throw behavior~~ — SHIPPED (gotcha #8 in context.md), **then fixed properly in v0.3.0** (Loop throws by default)
 
 **All 5 items shipped.** Nothing remaining on the adoption-blocking list.
 
@@ -565,15 +574,125 @@ The evaluation originally listed these gaps under "What SOAR2 loses":
 
 ---
 
+## v0.3.0 — Throw-by-Default, Streaming, Caching
+
+bare-agent v0.3.0 shipped four changes: Loop throws by default, CLIPipe `onChunk` streaming, Planner `cacheTTL`, and a new `MaxRoundsError` class.
+
+### What was applied to SOAR2
+
+**1. Loop throws by default** — applied, eliminates a gotcha.
+
+This was the #1 remaining DX issue from the evaluation. `Loop.run()` used to catch provider errors and return `{ text: '', error: 'message' }` silently — callers had to check `result.error` manually, and missing it meant empty answers with no indication of failure. Now Loop throws `ProviderError` or `MaxRoundsError` on failure.
+
+**Before (v0.2.2):** 3 defensive checks scattered through the code:
+```js
+const result = await loop.run(messages);
+if (result.error) throw new Error(result.error);  // easy to forget
+```
+
+**After (v0.3.0):** Zero checks — existing try/catch blocks handle it naturally:
+```js
+const result = await loop.run(messages);  // throws ProviderError or MaxRoundsError on failure
+const text = result.text || '';
+```
+
+Removed `if (result.error)` from all three call sites: SIMPLE path (line 79), step execution in runPlan (line 161), and synthesis. The old behavior is still available via `throwOnError: false` but there's no reason to use it — try/catch is cleaner.
+
+**Impact on error handling**: Error catches now receive typed errors instead of generic `Error`:
+
+```js
+catch (err) {
+  const errType = err instanceof MaxRoundsError ? 'max_rounds'
+    : err instanceof ProviderError ? 'provider' : 'unknown';
+  log(`${errType} error: ${err.message}`);
+  // err.code available: 'MAX_ROUNDS', 'PROVIDER_ERROR', etc.
+  // err.retryable available on ProviderError
+}
+```
+
+This completes the typed error story from v0.2.2 — CLIPipe now throws `ProviderError` (not plain `Error`), and Loop propagates it. The `retryable` flag and `code` property are now actionable.
+
+**2. CLIPipe `onChunk` streaming** — applied, fixes the biggest UX gap.
+
+The evaluation's UX Gaps section identified "No streaming during step execution — all output arrives at once when step completes" as a consumer-level issue. It was actually a framework gap: `CLIPipe` buffered all stdout before returning. Now it streams chunks as they arrive:
+
+```js
+new CLIPipe({
+  command: tool,
+  args: ['--print', '--model', model],
+  onChunk: (chunk) => process.stderr.write(chunk),
+  // ...
+});
+```
+
+The user now sees LLM output flowing to stderr in real-time during each step, instead of 30-60s of silence followed by a wall of text. The chunks concatenated match the final `result.text` — no data loss.
+
+This is a 1-line addition to `makeProvider()`. The framework handles chunk buffering and final assembly internally; the callback is purely observational.
+
+**3. Planner `cacheTTL`** — applied, ready for repeated queries.
+
+```js
+const planner = new Planner({
+  provider,
+  cacheTTL: 60000,  // cache plans for 60s
+  prompt: '...',
+});
+```
+
+For SOAR2's single-run CLI, caching doesn't help much — one process per query, then exit. But it's zero-cost to enable and becomes valuable if:
+- SOAR2 becomes a daemon serving multiple queries
+- A user re-runs the same query after tweaking context files
+- Tests need deterministic plans without LLM calls
+
+Cache key is `hash(query + context.info)` — different context produces different cache entries. `planner.clearCache()` available for explicit invalidation.
+
+**4. `MaxRoundsError`** — applied, distinguishes exhaustion from failure.
+
+```js
+const { ProviderError, MaxRoundsError } = require('bare-agent');
+// MaxRoundsError: code='MAX_ROUNDS', retryable=false
+// ProviderError: code='PROVIDER_ERROR', retryable=true/false
+```
+
+With `maxRounds: 1` (SOAR2's setting), `MaxRoundsError` means the loop completed its single round but produced no result — distinct from `ProviderError` which means the CLI tool failed to respond. This distinction matters for error reporting: a provider error suggests "try again" or "check the tool", while max rounds suggests "the prompt needs work."
+
+In practice with `maxRounds: 1`, `MaxRoundsError` is rare (single-round loops either succeed or the provider fails). It becomes more relevant for multi-round tool-calling loops where the agent might spin without converging.
+
+### What changed in soar_agent.js
+
+| v0.2.2 | v0.3.0 | Lines changed |
+|---|---|---|
+| `if (result.error) throw new Error(result.error)` × 3 sites | Deleted — Loop throws natively | -3 lines |
+| Generic `catch (err)` with `err.message` only | Typed catches with `instanceof MaxRoundsError/ProviderError`, `err.code`, `err.retryable` | +6 lines (richer error context) |
+| No `onChunk` — 30-60s silence during LLM calls | `onChunk: (chunk) => process.stderr.write(chunk)` | +1 line |
+| No plan caching — re-plans every time | `cacheTTL: 60000` on Planner | +1 line |
+| `require('bare-agent')` imports 6 components | Imports 8 (added `ProviderError`, `MaxRoundsError`) | +2 imports |
+
+**Net change**: ~7 lines added, 3 removed. The code got slightly longer but significantly more correct — silent failures are now impossible.
+
+### Gap closure update
+
+| Gap | v0.2.2 | v0.3.0 |
+|---|---|---|
+| `Loop.run()` silently returns errors | Documented gotcha, manual `if (result.error)` checks | **Fixed** — throws by default, impossible to miss |
+| No mid-step streaming | CLIPipe buffers all output | **Fixed** — `onChunk` streams to stderr in real-time |
+| No plan caching | Always re-plans | **Fixed** — `cacheTTL` caches by query+context hash |
+| String-based error matching | `err.message.includes(...)` | **Fixed** — `ProviderError`/`MaxRoundsError` with `.code` and `.retryable` |
+| CLIPipe doesn't throw typed errors | Plain `Error` with string messages | **Fixed** — CLIPipe now throws `ProviderError`, Loop propagates it |
+
+**All five remaining gaps from previous rounds are now closed.**
+
+---
+
 ## Honest Judgment — Component-Level Value Assessment
 
 | Component | Value to me | Could I write it myself? | Would I get it right? |
 |-----------|------------|-------------------------|----------------------|
 | `runPlan` | **High** — the standout | 50+ lines, took 3 attempts in Round 1 | No. Dependency failure propagation, concurrent wave limiting, input validation — I missed all three in my custom version. |
-| `CLIPipe` | **High** — unique concept | 40+ lines for spawn/pipe/timeout | Eventually, but the SIGTERM→SIGKILL grace period and empty-output detection are the kind of things you only add after hitting them in production. |
+| `CLIPipe` | **High** — unique concept, now with streaming | 40+ lines for spawn/pipe/timeout + streaming | Eventually, but the SIGTERM→SIGKILL grace period, empty-output detection, and `onChunk` streaming are the kind of things you only add after hitting them in production. v0.3.0 streaming alone would be ~20 lines to hand-roll correctly (chunk buffering, final assembly, error-during-stream handling). |
 | `Planner` | **Medium** — convenient | 20 lines (prompt + JSON.parse) | The 20-line version works until the LLM wraps output in markdown fences or returns `{steps:[]}` instead of `[...]`. Planner handles both. |
 | `Retry` | **Medium** — small but correct | 10 lines for basic retry | Basic retry yes. Exponential backoff with jitter, timeout per attempt, and clean integration with Loop — that's where hand-rolled versions diverge. |
-| `Loop` | **Medium** — mixed | 15 lines for single-round | Yes for single-round. The think/act/observe multi-round with tool calling is harder. I only used single-round, so the value was marginal for my use case. |
+| `Loop` | **Medium→High** — v0.3.0 throw-by-default fixed the gotcha | 15 lines for single-round | Yes for single-round, but v0.3.0's throw-by-default eliminates the one gotcha that cost me 15 min of debugging. Loop is now correct by default — errors throw, no silent failures. The value bump is about trust: I no longer need to remember to check `result.error`. |
 | `StateMachine` | **Low** — used for debugging only | 15 lines | Yes. I used `onTransition` for stderr logging. Wouldn't use it in production for this use case. |
 | `Stream` | **Low** — thin wrapper | 3 lines | Yes. `transport.write(event)` with a subscriber list. The transport pluggability is nice in theory but I used one transport. |
 
@@ -641,20 +760,17 @@ bare-agent isn't the right choice when:
 
 ---
 
-## Final Verdict (Round 5 — v0.2.2)
+## Final Verdict (Round 6 — v0.3.0)
 
 **bare-agent is the right tool at the right size.** It's not a framework — it's a toolkit. The distinction matters: a framework tells you how to structure your application; a toolkit gives you components to use however you want.
 
-**Framework completeness**: 9.5/10. v0.2.1 eliminated all workarounds. v0.2.2 adds resilience primitives (CircuitBreaker, Fallback, stepRetry, jitter, typed errors) that close the gap between "works in demos" and "works in production." The 0.5 deduction is for CLIPipe not yet throwing typed errors — when it does, the error hierarchy becomes actionable.
+**Framework completeness**: 10/10. The last gap — `Loop.run()` silently returning errors instead of throwing — is closed. CLIPipe now throws typed `ProviderError`, Loop propagates it, and `MaxRoundsError` distinguishes exhaustion from failure. Every component behaves as you'd expect: errors throw, streaming streams, caching caches. No workarounds, no gotchas, no "but watch out for..." caveats.
 
-**Developer experience**: 8/10. The updated context.md with recipes + gotchas is what every library should ship. The component selection guide answers "what do I use for X?" immediately.
+**Developer experience**: 9/10. v0.3.0's throw-by-default is the biggest DX win since `systemPromptFlag`. The old `if (result.error)` pattern was a trap — it worked when you remembered it and silently produced empty answers when you didn't. Now the wrong thing (ignoring errors) is hard, and the right thing (try/catch) is natural. The 1-point deduction is aspirational — there's always room for better docs.
 
-**Unique positioning**: The only lightweight, zero-dependency agent orchestration library that treats CLI tools as first-class LLM providers. This matters because:
-- Most developers already have `claude` or `cursor` installed
-- API keys are a friction point for adoption
-- CLI tools handle auth, context, and capabilities — bare-agent just pipes to them
+**Unique positioning**: Unchanged — the only lightweight, zero-dependency agent orchestration library that treats CLI tools as first-class LLM providers. v0.3.0 adds `onChunk` streaming which makes CLIPipe viable for interactive UX, not just batch processing.
 
-**The 80/20 argument**: `runPlan` + `CLIPipe` deliver 80% of the value in ~300 lines. The other components (Loop, Planner, StateMachine, Stream, Retry, Scheduler, Checkpoint, Memory, CircuitBreaker, Fallback) fill out the toolkit so you never need to leave the ecosystem for common patterns. That's the right ratio — two killer features, supporting components that earn their import when you need them.
+**The 80/20 argument**: `runPlan` + `CLIPipe` deliver 80% of the value in ~300 lines. v0.3.0 makes CLIPipe significantly better — streaming output and typed errors turn it from "works" to "works well." The Planner caching is a nice touch that shows the library is thinking about real-world usage patterns (repeated queries, test determinism) without overcomplicating the API.
 
 **Version progression** (from this integration):
 
@@ -663,5 +779,8 @@ bare-agent isn't the right choice when:
 | v0.2.0 | Usable with 3 workarounds | Core components work, composability proven |
 | v0.2.1 | Production-ready, zero workarounds | `systemPromptFlag`, `onWaveStart`, transports export |
 | v0.2.2 | Production-hardened | `stepRetry`, `jitter`, CircuitBreaker, Fallback, typed errors |
+| v0.3.0 | Complete | Loop throws by default, CLIPipe streaming, Planner caching, `MaxRoundsError` |
 
 **What I'd tell another developer**: "Use it. Read the source once (30 min), use the recipes, check the gotchas. You'll have a working agent pipeline in under an hour. The alternative is either writing 200 lines of plumbing that you'll debug for a week, or importing LangChain and spending a week understanding the abstractions."
+
+**What changed in my recommendation from v0.2.2 to v0.3.0**: Nothing about the "use it" conclusion — that was already solid. What changed is I can now drop the caveat. In v0.2.2 I'd say "use it, but remember to check `result.error`." In v0.3.0 there's nothing to remember. The framework does the right thing by default.

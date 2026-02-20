@@ -18,7 +18,7 @@
 
 'use strict';
 
-const { Planner, StateMachine, Retry, Stream, Loop, runPlan } = require('bare-agent');
+const { Planner, StateMachine, Retry, Stream, Loop, runPlan, ProviderError, MaxRoundsError } = require('bare-agent');
 const { CLIPipe } = require('bare-agent/providers');
 const { JsonlTransport } = require('bare-agent/transports');
 const readline = require('readline');
@@ -28,8 +28,9 @@ function log(msg) {
 }
 
 /**
- * Build a CLIPipe provider with systemPromptFlag support.
+ * Build a CLIPipe provider with systemPromptFlag and streaming support.
  * v0.2.1: CLIPipe natively separates system messages via --system-prompt flag.
+ * v0.3.0: onChunk streams output to stderr in real-time instead of buffering.
  */
 function makeProvider(tool, model) {
   const env = { ...process.env };
@@ -39,6 +40,7 @@ function makeProvider(tool, model) {
     command: tool,
     args: ['--print', '--model', model],
     systemPromptFlag: '--system-prompt',
+    onChunk: (chunk) => process.stderr.write(chunk),
     env,
     timeout: 120000,
   });
@@ -75,13 +77,15 @@ async function orchestrate(params) {
     const memContext = contextInfo ? `\n\n${contextInfo}` : '';
     const loop = new Loop({ provider, maxRounds: 1, retry, stream });
     try {
+      // v0.3.0: Loop throws by default — no need to check result.error
       const result = await loop.run([{ role: 'user', content: `${query}${memContext}\n\nProvide a thorough answer. Use markdown formatting.` }]);
-      if (result.error) throw new Error(result.error);
       const answer = result.text || '';
       stream.emit({ type: 'step:done', taskId: 's1', data: { id: 's1', result: answer.slice(0, 500) } });
       stream.emit({ type: 'synthesis:done', data: { answer, confidence: 0.85, traceability: [] } });
     } catch (err) {
-      stream.emit({ type: 'step:fail', taskId: 's1', data: { id: 's1', error: err.message } });
+      const errType = err instanceof MaxRoundsError ? 'max_rounds' : err instanceof ProviderError ? 'provider' : 'unknown';
+      log(`Simple path ${errType} error: ${err.message}`);
+      stream.emit({ type: 'step:fail', taskId: 's1', data: { id: 's1', error: err.message, code: err.code } });
       stream.emit({ type: 'error', data: { message: `Simple path failed: ${err.message}` } });
     }
     return;
@@ -90,8 +94,10 @@ async function orchestrate(params) {
   // MEDIUM/COMPLEX/CRITICAL path: Planner → runPlan → Synthesize
   log(`Planning for: ${query.slice(0, 80)}...`);
 
+  // v0.3.0: cacheTTL avoids re-planning identical queries within 60s
   const planner = new Planner({
     provider,
+    cacheTTL: 60000,
     prompt: `You are a task planner. You MUST NOT answer the query. You MUST decompose it into research steps.
 
 CRITICAL: Your ONLY output must be a JSON array of steps. No prose, no explanation, no markdown.
@@ -155,10 +161,9 @@ Your task for this step: ${step.action}${priorContext}${memContext}
 
 Provide a thorough, focused answer for this specific step. Be concrete and specific.`;
 
+    // v0.3.0: Loop throws by default — no need to check result.error
     const loop = new Loop({ provider, maxRounds: 1, retry, stream });
     const result = await loop.run([{ role: 'user', content: prompt }]);
-
-    if (result.error) throw new Error(result.error);
     const text = result.text || '';
     stepResults[step.id] = text;
     return text;
@@ -216,6 +221,7 @@ Instructions:
 Write the answer directly in markdown. Do NOT wrap it in JSON.`;
 
   try {
+    // v0.3.0: Loop throws ProviderError/MaxRoundsError on failure
     const synthesisLoop = new Loop({ provider, maxRounds: 1, retry, stream });
     const synthResult = await synthesisLoop.run([{ role: 'user', content: synthesisPrompt }]);
     const text = synthResult.text || '';
@@ -234,7 +240,9 @@ Write the answer directly in markdown. Do NOT wrap it in JSON.`;
       data: { answer, confidence, traceability: [] },
     });
   } catch (err) {
-    stream.emit({ type: 'error', data: { message: `Synthesis failed: ${err.message}` } });
+    const retryable = err instanceof ProviderError ? err.retryable : false;
+    log(`Synthesis ${err.constructor.name} (retryable=${retryable}): ${err.message}`);
+    stream.emit({ type: 'error', data: { message: `Synthesis failed: ${err.message}`, code: err.code } });
   }
 }
 

@@ -4,6 +4,6 @@
   "private": true,
   "description": "Aurora SOAR bareagent orchestration",
   "dependencies": {
-    "bare-agent": "^0.2.2"
+    "bare-agent": "^0.3.0"
   }
 }

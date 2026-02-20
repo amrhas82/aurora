@@ -23,6 +23,7 @@ from aurora_cli.commands.init import init_command
 from aurora_cli.commands.memory import memory_group
 from aurora_cli.commands.plan import plan_group
 from aurora_cli.commands.soar import soar_command
+from aurora_cli.commands.soar2 import soar2_command
 from aurora_cli.commands.spawn import spawn_command
 
 __all__ = ["cli"]
@@ -156,6 +157,7 @@ cli.add_command(init_command)
 cli.add_command(memory_group)
 cli.add_command(plan_group)
 cli.add_command(soar_command)
+cli.add_command(soar2_command)
 cli.add_command(spawn_command)
 
 

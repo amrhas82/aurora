@@ -7,11 +7,7 @@
   ██╔══██║██║   ██║██╔══██╗██║   ██║██╔══██╗██╔══██║
   ██║  ██║╚██████╔╝██║  ██║╚██████╔╝██║  ██║██║  ██║
   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝
- ┳┳┓┏┓┳┳┓┏┓┳┓┓┏  ┏┓┓ ┏┏┓┳┓┏┓  ┏┓┳┓┏┓┳┳┓┏┓┓ ┏┏┓┳┓┓┏
- ┃┃┃┣ ┃┃┃┃┃┣┫┗┫━━┣┫┃┃┃┣┫┣┫┣ ━━┣ ┣┫┣┫┃┃┃┣ ┃┃┃┃┃┣┫┃┫
- ┛ ┗┗┛┛ ┗┗┛┛┗┗┛  ┛┗┗┻┛┛┗┛┗┗┛  ┻ ┛┗┛┗┛ ┗┗┛┗┻┛┗┛┛┗┛┗
-Lightweight, private memory and code intelligence for AI coding assistants.
-Multi-agent orchestration that runs locally.
+Code-aware memory and intelligence for AI coding assistants.
 </pre>
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
@@ -22,52 +18,42 @@ Multi-agent orchestration that runs locally.
 
 ---
 
-## Summary
+## What Aurora Does
 
-### Aurora - Lightweight Private Memory & Multi-Agent Orchestration
+Aurora indexes your codebase, tracks what's hot (recently/frequently used), warm, or cool (decaying), and gives you LSP-powered code intelligence — dead code detection, impact analysis, usage tracking — as MCP tools your AI assistant can call.
 
-- **Private & local** - No API keys, no data leaves your machine. Works with Claude Code, Cursor, 20+ tools
-- **Smart Memory** - Indexes code and docs locally. Ranks by recency, relevance, and access patterns
-- **Code Intelligence** - LSP-powered: find unused code, check impact before refactoring, semantic search
-- **Multi-Agent Orchestration** - Decompose goals, spawn agents, coordinate with recovery and state
-- **Execution** - Run task lists with guardrails against dangerous commands and scope creep
-- **Friction Analysis** - Extract learned rules from stuck patterns in past sessions
+It's not an orchestration framework. It's the memory and code intelligence layer that makes any AI coding assistant smarter about your specific codebase.
+
+- **Code-aware memory** — Indexes code as structured chunks (classes, methods, functions). Ranks by recency, frequency, and relevance using ACT-R activation decay. What you use stays hot. What you don't fades.
+- **LSP intelligence** — Dead code detection, impact analysis, usage tracking, import mapping. Exposed as MCP tools — your AI assistant calls them directly.
+- **Private and local** — No API keys for core features. No data leaves your machine. SQLite storage.
+- **Works with any AI tool** — Claude Code, Cursor, or anything that supports MCP.
 
 ```bash
-# New installation
 pip install aurora-actr
-
-# Upgrading?
-pip install --upgrade aurora-actr
-aur --version  # Should show 0.13.2
-
-# Uninstall
-pip uninstall aurora-actr
-
-# From source (development)
-git clone https://github.com/hamr0/aurora.git
-cd aurora && ./install.sh
 ```
 
 ---
 
-## Core Features
+## Memory
 
-### Smart Memory
+`aur mem` — Index your codebase and search it with activation-based ranking.
 
-`aur mem search` - Memory with activation decay. Indexes your code using:
-
-- **BM25** - Keyword search
-- **Git signals** - Recent changes rank higher
-- **Tree-sitter/cAST** - Code stored as class/method (Python, JS/TS, Go, Java)
-- **LSP enrichment** - Risk level, usage count, complexity (see Code Intelligence below)
-- **Markdown indexing** - Search docs, save tokens
+**What gets indexed:**
+- **Code** — Tree-sitter parses Python, JS/TS, Go, Java into class/method/function chunks
+- **Git signals** — Recent changes rank higher
+- **LSP enrichment** — Usage count, complexity, risk level per symbol
+- **Docs** — Markdown files indexed for semantic search
 
 ```bash
-# Terminal
+# Index your project
 aur mem index .
+
+# Search with activation-based ranking
 aur mem search "soar reasoning" --show-scores
-Searching memory from /project/.aurora/memory.db...
+```
+
+```
 Found 5 results for 'soar reasoning'
 
 ┏━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━┳━━━━━┳━━━━━━━━━┓
@@ -80,17 +66,11 @@ Found 5 results for 'soar reasoning'
 │ code   │ goals.py               │ <chunk>              │ 437-544    │ -      │ 7d  │   0.486 │
 └────────┴────────────────────────┴──────────────────────┴────────────┴────────┴─────┴─────────┘
 Avg scores: Activation 0.916 | Semantic 0.867 | Hybrid 0.801
-Risk: LOW (0-2 refs) | MED (3-10) | HIGH (11+) · MCP: lsp check/impact/related
+```
 
-Refine your search:
-  --show-scores    Detailed score breakdown (BM25, semantic, activation)
-  --show-content   Preview code snippets
-  --limit N        More results (e.g., --limit 20)
-  --type TYPE      Filter: function, class, method, kb, code
-  --min-score 0.5  Higher relevance threshold
+**Score breakdown** — each result shows exactly why it ranked where it did:
 
-Detailed Score Breakdown:
-
+```
 ┌─ core.py | code | generate_goals_json (Lines 1091-1175) ─────────────────────────────────────┐
 │ Final Score: 0.619                                                                           │
 │  ├─ BM25:       0.895 * (exact keyword match on 'goals')                                     │
@@ -104,278 +84,143 @@ Detailed Score Breakdown:
 
 ---
 
-### Code Intelligence (MCP)
+## Code Intelligence (MCP)
 
-Aurora provides fast code intelligence via MCP tools - many operations use ripgrep instead of LSP for 100x speed.
+Aurora exposes code intelligence as MCP tools. Your AI assistant calls these directly — no terminal needed.
 
-| Tool | Action | Speed | Purpose |
-|------|--------|-------|---------|
-| `lsp` | `check` | ~1s | Quick usage count before editing |
-| `lsp` | `impact` | ~2s | Full impact analysis with top callers |
-| `lsp` | `deadcode` | 2-20s | Find all unused symbols in directory |
-| `lsp` | `imports` | <1s | Find all files that import a module |
-| `lsp` | `related` | ~50ms | Find outgoing calls (dependencies) |
+| Tool | Action | Speed | What it does |
+|------|--------|-------|-------------|
+| `lsp` | `check` | ~1s | How many things depend on this symbol? Check before editing. |
+| `lsp` | `impact` | ~2s | Full impact analysis — who calls it, from where, risk level |
+| `lsp` | `deadcode` | 2-20s | Find unused symbols in a directory |
+| `lsp` | `imports` | <1s | What files import this module? |
+| `lsp` | `related` | ~50ms | What does this function call? (outgoing dependencies) |
 | `mem_search` | - | <1s | Semantic search with LSP enrichment |
 
-**Risk levels:** LOW (0-2 refs) → MED (3-10) → HIGH (11+)
+**Risk levels:** LOW (0-2 refs) | MED (3-10) | HIGH (11+)
 
 **When to use:**
 - Before editing: `lsp check` to see what depends on it
-- Before refactoring: `lsp impact` to assess risk
-- Understanding dependencies: `lsp related` to see what a function calls
-- Finding importers: `lsp imports` to see who imports a module
-- Finding code: `mem_search` instead of grep for semantic results
+- Before refactoring: `lsp impact` to assess blast radius
 - After changes: `lsp deadcode` to clean up orphaned code
+- Finding code: `mem_search` for semantic results instead of grep
 
-**Language support:**
-- **Python:** Full (LSP + tree-sitter complexity + import filtering + indexing)
-- **JavaScript/TypeScript:** LSP refs + tree-sitter indexing + import filtering
-- **Go:** LSP refs + tree-sitter indexing + import filtering
-- **Java:** LSP refs + tree-sitter indexing + import filtering
+**Language support:** Python (full), JavaScript/TypeScript, Go, Java (LSP refs + tree-sitter indexing).
 
-See [Code Intelligence Guide](docs/02-features/lsp/CODE_INTELLIGENCE_STATUS.md) for all 16 features and implementation details.
+See [Code Intelligence Guide](docs/02-features/lsp/CODE_INTELLIGENCE_STATUS.md) for details.
 
 ---
 
-### Memory-Aware Planning (Terminal)
+## Friction Analysis
 
-`aur goals` - Decomposes any goal into subgoals:
-
-1. Looks up existing memory for matches
-2. Breaks down into subgoals
-3. Assigns your existing subagents to each subgoal
-4. Detects capability gaps - tells you what agents to create
-
-Works across any domain (code, writing, research).
-
-```bash
-$ aur goals "how can i improve the speed of aur mem search that takes 30 seconds loading when
-it starts" -t claude
-╭──────────────────────────────────────── Aurora Goals ───────────────────────────────────────╮
-│ how can i improve the speed of aur mem search that takes 30 seconds loading when it starts  │
-╰─────────────────────────────────────── Tool: claude ────────────────────────────────────────╯
-╭──────────────────────────────── Plan Decomposition Summary ─────────────────────────────────╮
-│ Subgoals: 5                                                                                 │
-│                                                                                             │
-│   [++] Locate and identify the 'aur mem search' code in the codebase: @code-developer       │
-│   [+] Analyze the startup/initialization logic to identify performance bottlenecks:         │
-│ @code-developer (ideal: @performance-engineer)                                              │
-│   [++] Review system architecture for potential design improvements (lazy loading, caching, │
-│ indexing): @system-architect                                                                │
-│   [++] Implement optimization strategies (lazy loading, caching, indexing, parallel         │
-│ processing): @code-developer                                                                │
-│   [++] Measure and validate performance improvements with benchmarks: @quality-assurance    │
-╰─────────────────────────────────────────────────────────────────────────────────────────────╯
-
-╭────────────────────────────────────────── Summary ──────────────────────────────────────────╮
-│ Agent Matching: 4 excellent, 1 acceptable                                                   │
-│ Gaps Detected: 1 subgoals need attention                                                    │
-│ Context: 1 files (avg relevance: 0.60)                                                      │
-│ Complexity: COMPLEX                                                                         │
-│ Source: soar                                                                                │
-│                                                                                             │
-│ Warnings:                                                                                   │
-│   ! Agent gaps detected: 1 subgoals need attention                                          │
-│                                                                                             │
-│ Legend: [++] excellent | [+] acceptable | [-] insufficient                                  │
-╰─────────────────────────────────────────────────────────────────────────────────────────────╯
-
-```
-
----
-
-### Memory-Aware Research (Terminal)
-
-`aur soar` - Research questions using your codebase:
-
-1. Looks up existing memory for matches
-2. Decomposes question into sub-questions
-3. Utilizes existing subagents
-4. Spawns agents on the fly
-5. Simple multi-orchestration with agent recovery (stateful)
-
-```bash
-aur soar "write a 3 paragraph sci-fi story about a bug the gained llm conscsiousness" -t claude
-╭──────────────────────────────────────── Aurora SOAR ────────────────────────────────────────╮
-│ write a 3 paragraph sci-fi story about a bug the gained llm conscsiousness                  │
-╰─────────────────────────────────────── Tool: claude ────────────────────────────────────────╯
-Initializing...
-
-
-[ORCHESTRATOR] Phase 1: Assess
-  Analyzing query complexity...
-  Complexity: MEDIUM
-
-[ORCHESTRATOR] Phase 2: Retrieve
-  Looking up memory index...
-  Matched: 10 chunks from memory
-
-[LLM → claude] Phase 3: Decompose
-  Breaking query into subgoals...
-  ✓ 1 subgoals identified
-
-[LLM → claude] Phase 4: Verify
-  Validating decomposition and assigning agents...
-  ✓ PASS (1 subgoals routed)
-
-                                      Plan Decomposition
-┏━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┓
-┃ #    ┃ Subgoal                                       ┃ Agent                ┃ Match        ┃
-┡━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━┩
-│ 1    │ Write a 3-paragraph sci-fi short story about  │ @creative-writer*    │ ✗ Spawned    │
-└──────┴───────────────────────────────────────────────┴──────────────────────┴──────────────┘
-╭────────────────────────────────────────── Summary ──────────────────────────────────────────╮
-│ 1 subgoal • 0 assigned • 1 spawned                                                          │
-│                                                                                             │
-│ Spawned (no matching agent): @creative-writer                                               │
-╰─────────────────────────────────────────────────────────────────────────────────────────────
-```
-
----
-
-### Task Execution (Terminal)
-
-`aur spawn` - Takes predefined task list and executes with:
-
-- Stop gates for feature creep
-- Dangerous command detection (rm -rf, etc.)
-- Budget limits
-
-```bash
-aur spawn tasks.md --verbose
-```
-
----
-
-### Friction Analysis (Terminal)
-
-`aur friction` - Analyze stuck patterns across your coding sessions:
+`aur friction` — Analyze your coding sessions to find where you get stuck.
 
 ```bash
 aur friction ~/.claude/projects
 Per-Project:
-my-app         56% BAD (40/72)  median: 16.0  🔴
-api-service    40% BAD (2/5)    median: 0.5   🟡
-web-client      0% BAD (0/1)    median: 0.0   ✅
+my-app         56% BAD (40/72)  median: 16.0
+api-service    40% BAD (2/5)    median: 0.5
+web-client      0% BAD (0/1)    median: 0.0
 
 Session Extremes:
 WORST: aurora/0203-1630-11eb903a  peak=225  turns=127
 BEST:  liteagents/0202-2121-8d8608e1  peak=0  turns=4
 
-Last 2 Weeks:
-2026-02-02  15 sessions  10 BAD  ██████░░░░  67%
-2026-02-03  29 sessions  12 BAD  ████░░░░░░  41%
-2026-02-04   6 sessions   2 BAD  ███░░░░░░░  33%
-
-Verdict: ✓ USEFUL
+Verdict: USEFUL
 Intervention predictability: 93%
 ```
 
-Identifies sessions where you got stuck and extracts learned rules ("antigens") to add to CLAUDE.md or your AI tool's instructions - preventing the same mistakes.
+Identifies sessions where you got stuck and extracts learned rules to add to CLAUDE.md or your AI tool's instructions — preventing the same mistakes.
 
 ---
 
-## Planning Workflow
+## Goal Decomposition
 
+`aur goals` — Break a goal into subgoals, matched to agents:
+
+```bash
+$ aur goals "improve the speed of aur mem search" -t claude
+╭──────────────────────────────── Plan Decomposition Summary ─────────────────────────────────╮
+│ Subgoals: 5                                                                                 │
+│                                                                                             │
+│   [++] Locate and identify the 'aur mem search' code: @code-developer                      │
+│   [+] Analyze startup logic for bottlenecks: @code-developer (ideal: @performance-engineer) │
+│   [++] Review architecture for lazy loading, caching: @system-architect                     │
+│   [++] Implement optimizations: @code-developer                                             │
+│   [++] Measure and validate with benchmarks: @quality-assurance                             │
+╰─────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
-Terminal                    In your AI tool (Claude Code, Cursor, etc.)
-────────                    ─────────────────────────────────────────────
-aur init
-aur goals "Add auth"  →     /aur:plan add-auth  →  /aur:implement add-auth
-     ↓                           ↓                        ↓
- goals.json               PRD + tasks.md              Code changes
- (subgoals, agents)       (ready to execute)          (validated)
-```
-
-| Step | Command | Output |
-|------|---------|--------|
-| Setup (once) | `aur init` + complete `project.md` | `.aurora/` directory, indexed codebase |
-| Decompose | `aur goals "goal"` | Subgoals mapped to agents + source files |
-| Plan | `/aur:plan [id]` | PRD, design doc, tasks.md |
-| Implement | `/aur:implement [id]` | Code changes with validation |
-| Regen tasks | `/aur:tasks [id]` | Regenerate tasks after PRD edits (optional) |
-
-> **Quick prototype?** Skip `aur goals` and run `/aur:plan` directly.
-
-See [3 Simple Steps Guide](docs/04-process/getting-started/3-SIMPLE-STEPS.md) for detailed walkthrough.
 
 ---
 
 ## Quick Start
 
 ```bash
-# Install (or upgrade with --upgrade flag)
+# Install
 pip install aurora-actr
 
-# Initialize project (once per project)
+# Initialize project (once)
 cd your-project/
-aur init                        # Creates .aurora/project.md
+aur init
 
-# IMPORTANT: Complete .aurora/project.md manually
-# Ask your agent: "Please complete the project.md with our architecture and conventions"
-# This context improves planning accuracy
-
-# Index codebase for memory
+# Index codebase
 aur mem index .
 
-# Plan with memory context
-aur goals "Add user authentication"
+# Search your code
+aur mem search "authentication flow"
 
-# In your CLI tool (Claude Code, Cursor, etc.):
-/aur:plan add-user-authentication
-/aur:implement add-user-authentication
+# Check usage before editing
+# (via MCP in Claude Code / Cursor — aurora auto-registers as MCP server)
+```
+
+**MCP setup:** Aurora registers as an MCP server during `aur init`. Your AI tool can call `lsp` and `mem_search` directly.
+
+---
+
+## Orchestration
+
+Memory and code intelligence feed into Aurora's orchestration layer. Goals get decomposed into subgoals, routed to agents, and executed with circuit breakers and recovery. The SOAR pipeline runs eight phases — assess, retrieve, decompose, verify, collect, synthesize, record, respond — using your indexed codebase as context for every decision.
+
+```bash
+# Research with memory-aware orchestration
+aur soar "what would break if I removed the retry module?" -t claude
+
+# Execute task lists with guardrails
+aur spawn tasks.md --verbose
+```
+
+Works with Claude Code, Cursor, Aider, Cline, Windsurf, Gemini CLI, and 20+ other AI coding tools. Configuration is per-project:
+
+```bash
+aur init --tools=claude,cursor
 ```
 
 ---
 
-## Commands Reference
+## Commands
 
-### Terminal
-
-| Command | Description |
+| Command | What it does |
 |---------|-------------|
 | `aur init` | Initialize Aurora in project |
 | `aur doctor` | Check installation and dependencies |
 | `aur mem index .` | Index code and docs |
-| `aur mem search "query"` | Search memory from terminal |
-| `aur goals "goal"` | Decompose goal, match agents, find gaps |
-| `aur soar "question"` | Multi-agent research with memory |
+| `aur mem search "query"` | Search memory with activation ranking |
+| `aur goals "goal"` | Decompose goal, match agents |
+| `aur soar "question"` | Multi-agent research with memory context |
 | `aur spawn tasks.md` | Execute task list with guardrails |
 | `aur friction <dir>` | Analyze session friction patterns |
-
-### Slash Commands (in AI tools)
-
-| Command | Description |
-|---------|-------------|
-| `/aur:plan [id]` | Generate PRD, design, tasks from goal |
-| `/aur:tasks [id]` | Regenerate tasks after PRD edits |
-| `/aur:implement [id]` | Execute plan tasks sequentially |
-| `/aur:archive [id]` | Archive completed plan |
-
----
-
-## Supported Tools
-
-Works with 20+ CLI tools: Claude Code, Cursor, Aider, Cline, Windsurf, Gemini CLI, and more.
-
-Configuration is per-project (not global) to keep your CLI clean:
-
-```bash
-cd /path/to/project
-aur init --tools=claude,cursor
-```
 
 ---
 
 ## Documentation
 
 - [Commands Reference](docs/02-features/cli/COMMANDS.md)
+- [Code Intelligence Guide](docs/02-features/lsp/CODE_INTELLIGENCE_STATUS.md)
 - [Tools Guide](docs/02-features/agents/TOOLS_GUIDE.md)
-- [Flows Guide](docs/02-features/FLOWS.md)
-- [Troubleshooting](docs/04-process/troubleshooting/TROUBLESHOOTING.md)
+- [Previous README (full feature reference)](docs/01-product/README-v0.17.md)
 
 ---
 
 ## License
 
-MIT License - See [LICENSE](LICENSE)
+MIT License — See [LICENSE](LICENSE)

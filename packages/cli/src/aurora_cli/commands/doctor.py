@@ -17,6 +17,7 @@ from aurora_cli.health_checks import (
     CoreSystemChecks,
     InstallationChecks,
     SearchRetrievalChecks,
+    StoreIntegrityChecks,
     ToolIntegrationChecks,
 )
 
@@ -83,6 +84,7 @@ def doctor_command(fix: bool, fix_ml: bool) -> None:
         search_checks = SearchRetrievalChecks(config)
         config_checks = ConfigurationChecks(config)
         tool_checks = ToolIntegrationChecks(config)
+        store_checks = StoreIntegrityChecks(config)
 
         # Run all checks
         console.print("\n[bold cyan] █████╗ ██╗   ██╗██████╗  ██████╗ ██████╗  █████╗[/]")
@@ -102,6 +104,7 @@ def doctor_command(fix: bool, fix_ml: bool) -> None:
         search_results = search_checks.run_checks()
         config_results = config_checks.run_checks()
         tool_results = tool_checks.run_checks()
+        store_results = store_checks.run_checks()
 
         all_results.extend(install_results)
         all_results.extend(core_results)
@@ -109,6 +112,7 @@ def doctor_command(fix: bool, fix_ml: bool) -> None:
         all_results.extend(search_results)
         all_results.extend(config_results)
         all_results.extend(tool_results)
+        all_results.extend(store_results)
 
         # Check if project is initialized
         from pathlib import Path
@@ -187,6 +191,10 @@ def doctor_command(fix: bool, fix_ml: bool) -> None:
             if cfg_results:
                 _display_compact_line("Config:", cfg_results)
 
+            # Integrity: ACT-R store consistency
+            if store_results:
+                _display_compact_line("Integrity:", store_results)
+
         else:
             # Project not initialized
             console.print(f"[bold yellow]PROJECT[/] [dim]{project_path}[/]")
@@ -215,6 +223,7 @@ def doctor_command(fix: bool, fix_ml: bool) -> None:
                 search_checks,
                 config_checks,
                 tool_checks,
+                store_checks,
             )
 
         # Determine exit code
@@ -449,6 +458,7 @@ def _handle_auto_fix(
     search_checks: SearchRetrievalChecks,
     config_checks: ConfigurationChecks,
     tool_checks: ToolIntegrationChecks,
+    store_checks: StoreIntegrityChecks,
 ) -> None:
     """Handle auto-fix functionality.
 
@@ -462,6 +472,7 @@ def _handle_auto_fix(
         search_checks: Search & retrieval health checks instance
         config_checks: Configuration health checks instance
         tool_checks: Tool integration health checks instance
+        store_checks: Store integrity health checks instance
 
     """
     console.print()
@@ -476,6 +487,7 @@ def _handle_auto_fix(
         search_checks,
         config_checks,
         tool_checks,
+        store_checks,
     ]
     fixable_issues, manual_issues = _collect_issues(checks_list)
 

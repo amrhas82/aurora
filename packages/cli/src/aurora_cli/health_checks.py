@@ -954,3 +954,476 @@ class InstallationChecks:
                 )
 
         return issues
+
+
+# Threshold above which reasoning-chunk count is flagged as a growth warning.
+# The Record phase caches every successful SOAR query; without retention logic,
+# this table grows unboundedly. See docs/02-features/memory/STORE_HARDENING.md.
+_REASONING_CHUNK_WARN_THRESHOLD = 10_000
+
+
+class StoreIntegrityChecks:
+    """ACT-R store integrity checks.
+
+    Detects silent-failure classes in the SQLite store:
+    - FTS5 desync (stale or missing chunks_fts rows)
+    - Orphan code chunks (file_path no longer in file_index)
+    - Activation orphans (activations whose chunk_id no longer exists)
+    - Reasoning-chunk runaway growth (informational)
+    - Retrieval roundtrip (end-to-end sanity check via FTS)
+
+    Follows the same interface as the other *Checks classes in this module,
+    so `aur doctor` composes it with zero special-casing.
+    """
+
+    def __init__(self, config: Config | None = None):
+        """Initialize store integrity checks.
+
+        Args:
+            config: Optional Config object. If None, loads from default location.
+
+        """
+        self.config = config or Config()
+
+    def run_checks(self) -> list[HealthCheckResult]:
+        """Run all store integrity checks.
+
+        Returns:
+            List of health check results.
+
+        """
+        results: list[HealthCheckResult] = []
+
+        db_path = Path(self.config.get_db_path())
+        if not db_path.exists():
+            # No store yet — every downstream check would be vacuously true.
+            # Emit a single informational pass and skip the rest.
+            results.append(
+                ("pass", "Store integrity: no database (skipped)", {"path": str(db_path)}),
+            )
+            return results
+
+        import sqlite3
+
+        try:
+            conn = sqlite3.connect(str(db_path))
+            conn.row_factory = sqlite3.Row
+        except sqlite3.Error as e:
+            results.append(("fail", f"Store integrity: cannot open DB: {e}", {}))
+            return results
+
+        try:
+            results.append(self._check_fts_consistency(conn))
+            results.append(self._check_orphan_chunks(conn))
+            results.append(self._check_activation_orphans(conn))
+            results.append(self._check_reasoning_chunk_count(conn))
+            results.append(self._check_retrieval_roundtrip(conn))
+        finally:
+            conn.close()
+
+        return results
+
+    def _fts_table_exists(self, conn: "sqlite3.Connection") -> bool:
+        row = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='chunks_fts'",
+        ).fetchone()
+        return row is not None
+
+    def _check_fts_consistency(self, conn: "sqlite3.Connection") -> HealthCheckResult:
+        """Verify chunks_fts mirror is in sync with chunks table.
+
+        Two failure modes:
+        - Missing: a chunk exists but has no chunks_fts row (silent INSERT failure)
+        - Stale: a chunks_fts row exists for a chunk_id no longer in chunks
+          (e.g., DELETE FROM chunks in memory_manager._cleanup_deleted_files
+          doesn't touch chunks_fts)
+        """
+        try:
+            if not self._fts_table_exists(conn):
+                return (
+                    "warning",
+                    "FTS: table not present",
+                    {"note": "pre-migration DB"},
+                )
+
+            missing = conn.execute(
+                """
+                SELECT COUNT(*) FROM chunks c
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM chunks_fts f WHERE f.chunk_id = c.id
+                )
+                """,
+            ).fetchone()[0]
+
+            stale = conn.execute(
+                """
+                SELECT COUNT(*) FROM chunks_fts f
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM chunks c WHERE c.id = f.chunk_id
+                )
+                """,
+            ).fetchone()[0]
+
+            details = {"missing_fts_rows": missing, "stale_fts_rows": stale}
+            if missing == 0 and stale == 0:
+                return ("pass", "FTS: in sync", details)
+            return (
+                "fail",
+                f"FTS: desync ({missing} missing, {stale} stale)",
+                details,
+            )
+        except Exception as e:
+            return ("fail", f"FTS: check failed: {e}", {})
+
+    def _check_orphan_chunks(self, conn: "sqlite3.Connection") -> HealthCheckResult:
+        """Count code chunks whose file_path is not in file_index.
+
+        Indicates a partial failure in _cleanup_deleted_files where chunks
+        survived but file_index was updated, or vice-versa.
+        """
+        try:
+            orphans = conn.execute(
+                """
+                SELECT COUNT(*) FROM chunks
+                WHERE type = 'code'
+                  AND json_extract(content, '$.file') IS NOT NULL
+                  AND json_extract(content, '$.file') NOT IN (
+                      SELECT file_path FROM file_index
+                  )
+                """,
+            ).fetchone()[0]
+
+            if orphans == 0:
+                return ("pass", "Orphan chunks: none", {"count": 0})
+            return (
+                "fail",
+                f"Orphan chunks: {orphans} code chunks reference deleted files",
+                {"count": orphans},
+            )
+        except Exception as e:
+            return ("fail", f"Orphan chunks: check failed: {e}", {})
+
+    def _check_activation_orphans(self, conn: "sqlite3.Connection") -> HealthCheckResult:
+        """Count activations whose chunk_id no longer exists.
+
+        Should be zero due to ON DELETE CASCADE. A non-zero count indicates
+        the FK was bypassed (e.g., during a migration with FKs disabled).
+        """
+        try:
+            orphans = conn.execute(
+                """
+                SELECT COUNT(*) FROM activations a
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM chunks c WHERE c.id = a.chunk_id
+                )
+                """,
+            ).fetchone()[0]
+
+            if orphans == 0:
+                return ("pass", "Activations: no orphans", {"count": 0})
+            return (
+                "fail",
+                f"Activations: {orphans} orphaned rows",
+                {"count": orphans},
+            )
+        except Exception as e:
+            return ("fail", f"Activations: check failed: {e}", {})
+
+    def _check_reasoning_chunk_count(
+        self,
+        conn: "sqlite3.Connection",
+    ) -> HealthCheckResult:
+        """Flag runaway growth of reasoning chunks.
+
+        SOAR's Record phase caches every query with confidence >= 0.5 and has
+        no retention logic. This check is informational until a retention
+        policy lands. See STORE_HARDENING.md.
+        """
+        try:
+            count = conn.execute(
+                "SELECT COUNT(*) FROM chunks WHERE type = 'reasoning'",
+            ).fetchone()[0]
+
+            if count < _REASONING_CHUNK_WARN_THRESHOLD:
+                return (
+                    "pass",
+                    f"Reasoning chunks: {count}",
+                    {"count": count, "threshold": _REASONING_CHUNK_WARN_THRESHOLD},
+                )
+            return (
+                "warning",
+                f"Reasoning chunks: {count} (>{_REASONING_CHUNK_WARN_THRESHOLD})",
+                {"count": count, "threshold": _REASONING_CHUNK_WARN_THRESHOLD},
+            )
+        except Exception as e:
+            return ("fail", f"Reasoning chunks: check failed: {e}", {})
+
+    def _check_retrieval_roundtrip(
+        self,
+        conn: "sqlite3.Connection",
+    ) -> HealthCheckResult:
+        """End-to-end sanity check: pick a seed chunk, query FTS, assert return.
+
+        Validates that the full FTS5 retrieval path (tokenizer, index,
+        chunks_fts rows) can return a known-good chunk. Catches regressions
+        that COUNT-based checks miss (e.g., tokenizer misconfiguration).
+        """
+        try:
+            if not self._fts_table_exists(conn):
+                return ("pass", "Retrieval roundtrip: FTS absent (skipped)", {})
+
+            row = conn.execute("SELECT COUNT(*) FROM chunks").fetchone()
+            chunk_count = row[0] if row else 0
+            if chunk_count == 0:
+                return (
+                    "pass",
+                    "Retrieval roundtrip: empty store (skipped)",
+                    {"chunk_count": 0},
+                )
+
+            # Pick a seed: highest-access-count code chunk with a non-empty
+            # FTS `name` field. Highest-access ensures we exercise the hot path
+            # and that the chunk has real content.
+            seed = conn.execute(
+                """
+                SELECT f.chunk_id, f.name
+                FROM chunks_fts f
+                JOIN chunks c ON c.id = f.chunk_id
+                LEFT JOIN activations a ON a.chunk_id = c.id
+                WHERE c.type = 'code' AND f.name != ''
+                ORDER BY COALESCE(a.access_count, 0) DESC, c.created_at DESC
+                LIMIT 1
+                """,
+            ).fetchone()
+
+            if seed is None:
+                return (
+                    "pass",
+                    "Retrieval roundtrip: no code chunks to probe (skipped)",
+                    {"chunk_count": chunk_count},
+                )
+
+            seed_id, seed_name = seed["chunk_id"], seed["name"]
+
+            # FTS5 identifier tokens can contain special characters; wrap in
+            # quotes and query by the name field directly.
+            safe = seed_name.replace('"', '""')
+            hit = conn.execute(
+                """
+                SELECT chunk_id FROM chunks_fts
+                WHERE name MATCH ?
+                  AND chunk_id = ?
+                LIMIT 1
+                """,
+                (f'"{safe}"', seed_id),
+            ).fetchone()
+
+            if hit is None:
+                return (
+                    "fail",
+                    f"Retrieval roundtrip: seed chunk {seed_id} not retrievable via FTS",
+                    {"seed_id": seed_id, "seed_name": seed_name},
+                )
+            return (
+                "pass",
+                "Retrieval roundtrip: ok",
+                {"seed_id": seed_id},
+            )
+        except Exception as e:
+            return ("fail", f"Retrieval roundtrip: check failed: {e}", {})
+
+    def get_fixable_issues(self) -> list[dict[str, Any]]:
+        """Get list of automatically fixable store integrity issues.
+
+        Returns:
+            List of dicts with 'name' and 'fix_func' keys.
+
+        """
+        issues: list[dict[str, Any]] = []
+
+        db_path = Path(self.config.get_db_path())
+        if not db_path.exists():
+            return issues
+
+        import sqlite3
+
+        try:
+            conn = sqlite3.connect(str(db_path))
+        except sqlite3.Error:
+            return issues
+
+        try:
+            # FTS desync — either direction is mechanically repairable
+            if self._fts_table_exists(conn):
+                stale = conn.execute(
+                    """
+                    SELECT COUNT(*) FROM chunks_fts f
+                    WHERE NOT EXISTS (SELECT 1 FROM chunks c WHERE c.id = f.chunk_id)
+                    """,
+                ).fetchone()[0]
+                missing = conn.execute(
+                    """
+                    SELECT COUNT(*) FROM chunks c
+                    WHERE NOT EXISTS (SELECT 1 FROM chunks_fts f WHERE f.chunk_id = c.id)
+                    """,
+                ).fetchone()[0]
+                if stale > 0 or missing > 0:
+                    issues.append(
+                        {
+                            "name": f"FTS desync ({missing} missing, {stale} stale)",
+                            "fix_func": self._fix_fts_desync,
+                        },
+                    )
+
+            # Orphan chunks
+            orphans = conn.execute(
+                """
+                SELECT COUNT(*) FROM chunks
+                WHERE type = 'code'
+                  AND json_extract(content, '$.file') IS NOT NULL
+                  AND json_extract(content, '$.file') NOT IN (
+                      SELECT file_path FROM file_index
+                  )
+                """,
+            ).fetchone()[0]
+            if orphans > 0:
+                issues.append(
+                    {
+                        "name": f"Orphan code chunks ({orphans})",
+                        "fix_func": self._fix_orphan_chunks,
+                    },
+                )
+
+            # Activation orphans
+            act_orphans = conn.execute(
+                """
+                SELECT COUNT(*) FROM activations a
+                WHERE NOT EXISTS (SELECT 1 FROM chunks c WHERE c.id = a.chunk_id)
+                """,
+            ).fetchone()[0]
+            if act_orphans > 0:
+                issues.append(
+                    {
+                        "name": f"Activation orphans ({act_orphans})",
+                        "fix_func": self._fix_activation_orphans,
+                    },
+                )
+        finally:
+            conn.close()
+
+        return issues
+
+    def _fix_fts_desync(self) -> None:
+        """Rebuild FTS5 rows for chunks missing them and drop stale rows.
+
+        Uses the same `(name, body, file_path)` extraction as sqlite._upsert_fts
+        so repaired rows are indistinguishable from normally-written ones.
+        """
+        import sqlite3
+
+        db_path = Path(self.config.get_db_path())
+        conn = sqlite3.connect(str(db_path))
+        try:
+            # Drop stale FTS rows (chunks no longer in chunks table)
+            conn.execute(
+                """
+                DELETE FROM chunks_fts
+                WHERE chunk_id NOT IN (SELECT id FROM chunks)
+                """,
+            )
+
+            # Rebuild missing FTS rows from the chunks table
+            missing_chunks = conn.execute(
+                """
+                SELECT id, type, content FROM chunks
+                WHERE id NOT IN (SELECT chunk_id FROM chunks_fts)
+                """,
+            ).fetchall()
+
+            import json
+
+            for chunk_id, chunk_type, content_raw in missing_chunks:
+                try:
+                    content = json.loads(content_raw) if isinstance(content_raw, str) else content_raw
+                except (json.JSONDecodeError, TypeError):
+                    continue
+                if not isinstance(content, dict):
+                    continue
+                name = content.get("function", "") or ""
+                sig = content.get("signature", "") or ""
+                doc = content.get("docstring", "") or ""
+                body = f"{sig} {doc}".strip()
+                file_path = content.get("file", "") or ""
+                conn.execute(
+                    "INSERT INTO chunks_fts (chunk_id, chunk_type, name, body, file_path) "
+                    "VALUES (?, ?, ?, ?, ?)",
+                    (chunk_id, chunk_type, name, body, file_path),
+                )
+
+            conn.commit()
+        finally:
+            conn.close()
+
+    def _fix_orphan_chunks(self) -> None:
+        """Delete code chunks whose file_path is not in file_index.
+
+        Also removes matching FTS5 rows so a subsequent FTS consistency check
+        doesn't immediately re-flag them as stale.
+        """
+        import sqlite3
+
+        db_path = Path(self.config.get_db_path())
+        conn = sqlite3.connect(str(db_path))
+        try:
+            # Collect orphan ids so we can also clean FTS5 explicitly.
+            orphan_ids = [
+                row[0]
+                for row in conn.execute(
+                    """
+                    SELECT id FROM chunks
+                    WHERE type = 'code'
+                      AND json_extract(content, '$.file') IS NOT NULL
+                      AND json_extract(content, '$.file') NOT IN (
+                          SELECT file_path FROM file_index
+                      )
+                    """,
+                ).fetchall()
+            ]
+
+            for chunk_id in orphan_ids:
+                conn.execute("DELETE FROM chunks_fts WHERE chunk_id = ?", (chunk_id,))
+                conn.execute("DELETE FROM chunks WHERE id = ?", (chunk_id,))
+
+            conn.commit()
+        finally:
+            conn.close()
+
+    def _fix_activation_orphans(self) -> None:
+        """Delete activation rows whose chunk_id no longer exists."""
+        import sqlite3
+
+        db_path = Path(self.config.get_db_path())
+        conn = sqlite3.connect(str(db_path))
+        try:
+            conn.execute(
+                """
+                DELETE FROM activations
+                WHERE chunk_id NOT IN (SELECT id FROM chunks)
+                """,
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+    def get_manual_issues(self) -> list[dict[str, Any]]:
+        """Get list of issues requiring manual intervention.
+
+        Dangling reasoning chunks (ReasoningChunks that reference code chunks
+        which have since been deleted) are detection-deferred until SOAR
+        defines a formal reference schema. Tracked in STORE_HARDENING.md.
+
+        Returns:
+            List of dicts with 'name' and 'solution' keys.
+
+        """
+        return []

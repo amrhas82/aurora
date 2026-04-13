@@ -62,6 +62,7 @@ Understanding Aurora's purpose and architecture.
 | [ACT-R Activation](02-features/memory/ACTR_ACTIVATION.md) | Cognitive memory model |
 | [Caching Guide](02-features/memory/CACHING_GUIDE.md) | Cache configuration |
 | [ML Models](02-features/memory/ML_MODELS.md) | Embedding models |
+| [Store Hardening](02-features/memory/STORE_HARDENING.md) | **Proposed** — integrity checks in `aur doctor` + tiered access-history compaction |
 
 ### SOAR Pipeline
 

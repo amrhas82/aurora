@@ -1,8 +1,8 @@
 # Store Hardening: Health Probes & Tiered Access-History Compaction
 
-**Version**: 0.1
-**Date**: 2026-04-13
-**Status**: Change 1 implemented on `feat/store-integrity-checks` branch (pending verification & merge); Change 2 not yet started
+**Version**: 0.2
+**Date**: 2026-04-14
+**Status**: Change 1 merged to main (commit c5dd2ec). Change 2 implemented on `feat/access-history-compaction` branch (pending verification & merge).
 **Scope**: `packages/core` (SQLite store, ACT-R activation) and `packages/cli` (memory_manager)
 **Non-goals**: SOAR pipeline changes, retrieval-quality changes, schema migration beyond additive columns
 

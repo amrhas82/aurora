@@ -28,11 +28,20 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class AccessHistoryEntry(BaseModel):
-    """Represents a single access to a chunk in memory.
+    """Represents one or more accesses to a chunk in memory.
+
+    A single raw access has count=1. When access history is compacted into
+    time buckets (see aurora_core.store.access_history.compact_access_history),
+    one entry represents `count` accesses collapsed at the bucket's midpoint
+    timestamp. BLA calculation treats the bucket as `count` accesses placed at
+    that midpoint — see base_level.BaseLevelActivation.calculate.
 
     Attributes:
-        timestamp: UTC timestamp when the chunk was accessed
-        context: Optional context information (e.g., query terms)
+        timestamp: UTC timestamp of the access (bucket midpoint if count > 1)
+        context: Optional context information (e.g., query terms). Null for
+            buckets, since individual contexts are discarded during compaction.
+        count: Number of accesses this entry represents. Defaults to 1 for
+            raw/uncompacted entries; >1 for compacted bucket entries.
 
     """
 
@@ -40,6 +49,11 @@ class AccessHistoryEntry(BaseModel):
     context: str | None = Field(
         default=None,
         description="Optional context information for this access",
+    )
+    count: int = Field(
+        default=1,
+        ge=1,
+        description="Number of accesses represented by this entry (>1 for buckets)",
     )
 
     @field_validator("timestamp")
@@ -142,8 +156,12 @@ class BaseLevelActivation:
             if time_delta <= 0:
                 time_delta = 1.0  # Treat as just accessed (1 second ago)
 
-            # Add power law term: t^(-d)
-            power_law_sum += math.pow(time_delta, -decay_rate)
+            # Add power law term: count * t^(-d).
+            # For raw entries count=1 (identical to pre-compaction behavior).
+            # For compacted bucket entries, count>1 represents that many
+            # accesses collapsed at the bucket midpoint timestamp — see
+            # aurora_core.store.access_history.compact_access_history.
+            power_law_sum += entry.count * math.pow(time_delta, -decay_rate)
 
         # Calculate BLA as natural log of sum
         bla = math.log(power_law_sum) if power_law_sum > 0 else self.config.default_activation

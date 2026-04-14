@@ -8,6 +8,7 @@ This module provides a production-ready storage backend using SQLite with:
 """
 
 import json
+import os
 import shutil
 import sqlite3
 import threading
@@ -1022,12 +1023,31 @@ class SQLiteStore(Store):
                 access_history = json.loads(row["access_history"]) if row["access_history"] else []
                 access_history.append({"timestamp": access_time.isoformat(), "context": context})
 
-                # Recalculate BLA based on updated access history
+                # Lazy tiered compaction: when the raw array outgrows
+                # COMPACTION_TRIGGER_LENGTH, collapse older records into time
+                # buckets. Gated on an env var so Change 2 can be rolled out
+                # independently of Change 1 per STORE_HARDENING.md.
+                if os.environ.get("AURORA_COMPACT_ACCESS_HISTORY") == "1":
+                    from aurora_core.store.access_history import (
+                        compact_access_history,
+                        should_compact,
+                    )
+
+                    if should_compact(access_history):
+                        access_history = compact_access_history(
+                            access_history,
+                            now=access_time,
+                        )
+
+                # Recalculate BLA based on updated access history. The `count`
+                # field is preserved through the conversion so bucketed entries
+                # (count>1) contribute correctly via count * t^(-d).
                 history_entries = [
                     AccessHistoryEntry(
                         timestamp=datetime.fromisoformat(
                             str(entry["timestamp"]).replace("Z", "+00:00"),
                         ),
+                        count=int(entry.get("count", 1)),
                     )
                     for entry in access_history
                     if entry.get("timestamp")
@@ -1078,7 +1098,15 @@ class SQLiteStore(Store):
             limit: Maximum number of records to return (None = all)
 
         Returns:
-            List of access records with 'timestamp' and optional 'context' keys
+            List of access records. Each entry has a 'timestamp' key, an
+            optional 'context' key, and an optional 'count' key (>=1). Entries
+            without a 'count' key represent a single access. Entries with
+            count > 1 are compacted bucket entries whose timestamp is the
+            bucket midpoint — these only appear when AURORA_COMPACT_ACCESS_HISTORY=1
+            and the per-chunk history has crossed the compaction trigger
+            length (~200). See aurora_core.store.access_history for the
+            bucket scheme and docs/02-features/memory/STORE_HARDENING.md
+            for rationale.
 
         Raises:
             StorageError: If storage operation fails

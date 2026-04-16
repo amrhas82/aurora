@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-04-14
+
+### Added
+
+- **`aur doctor` store integrity checks** — new `StoreIntegrityChecks` category runs alongside the existing six health-check categories. Detects silent corruption in the ACT-R store:
+  - FTS5 desync (missing/stale `chunks_fts` rows vs. `chunks`)
+  - Orphan code chunks (file_path no longer in `file_index`)
+  - Activation orphans (rows referencing deleted chunks, FK-bypass insurance)
+  - Reasoning-chunk growth warning above 10K (Record-phase unbounded caching signal)
+  - Retrieval roundtrip (end-to-end FTS sanity via highest-access seed chunk)
+  - Three mechanical failures (FTS desync, orphans, activation orphans) are auto-repaired under the existing `aur doctor --fix` flag.
+- **Tiered access-history compaction** behind `AURORA_COMPACT_ACCESS_HISTORY=1` flag (default off). Bounds the unbounded-growth path in `activations.access_history` by collapsing older access records into time buckets for storage only. BLA ranking preserved to <0.001 because the decay formula (ln Σ t_j^(-d)) already treats old records as negligible.
+  - Four tiers: 0–7d verbatim, 7–30d hourly buckets, 30–180d daily buckets, 180d+ aggregate.
+  - `AccessHistoryEntry` gains an optional `count: int = 1` field; BLA loop becomes `count * t^(-d)`. Fully backward compatible — pre-change callers unchanged.
+  - Lazy trigger at length > 200; common-path `record_access` unaffected.
+- Design doc: `docs/02-features/memory/STORE_HARDENING.md` covering both changes, rationale, math, and rollout plan.
+
+### Changed
+
+- `get_access_history()` docstring documents the new optional `count` key and the compaction flag.
+
 ## [0.17.6] - 2026-02-14
 
 ### Added

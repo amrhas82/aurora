@@ -64,9 +64,7 @@ class TestInvariants:
     def test_output_length_bounded(self):
         """10K entries spanning 2 years must compact to a small bounded size."""
         random.seed(42)
-        entries = [
-            _entry(random.uniform(0, 720 * 86400)) for _ in range(10_000)
-        ]
+        entries = [_entry(random.uniform(0, 720 * 86400)) for _ in range(10_000)]
         out = compact_access_history(entries, now=NOW)
         # Tier 2 can have at most 23 * (30-7) ≈ 552 hourly buckets if every
         # hour in tiers 2 was hit. Tier 3 has at most (180-30) = 150 daily
@@ -78,9 +76,7 @@ class TestInvariants:
     def test_total_count_preserved(self):
         """Compaction must not lose any access count — it's a reshape only."""
         random.seed(7)
-        entries = [
-            _entry(random.uniform(0, 365 * 86400)) for _ in range(500)
-        ]
+        entries = [_entry(random.uniform(0, 365 * 86400)) for _ in range(500)]
         expected = _total_count(entries)
         out = compact_access_history(entries, now=NOW)
         assert _total_count(out) == expected
@@ -161,10 +157,10 @@ class TestTierBoundaries:
 
     def test_mixed_tiers_all_represented(self):
         entries = [
-            _entry(3600),              # tier 1
-            _entry(10 * 86400),        # tier 2
-            _entry(100 * 86400),       # tier 3
-            _entry(200 * 86400),       # tier 4
+            _entry(3600),  # tier 1
+            _entry(10 * 86400),  # tier 2
+            _entry(100 * 86400),  # tier 3
+            _entry(200 * 86400),  # tier 4
         ]
         out = compact_access_history(entries, now=NOW)
         assert len(out) == 4
@@ -187,9 +183,7 @@ class TestBLAPreservation:
     def test_hot_chunk_365_day_history(self):
         """A chunk accessed 1000 times over a year: BLA must barely change."""
         random.seed(1)
-        entries = [
-            _entry(random.uniform(0, 365 * 86400)) for _ in range(1000)
-        ]
+        entries = [_entry(random.uniform(0, 365 * 86400)) for _ in range(1000)]
         bla_before = _bla_from_raw(entries)
         out = compact_access_history(entries, now=NOW)
         bla_after = _bla_from_raw(out)
@@ -201,9 +195,7 @@ class TestBLAPreservation:
         for seed in range(50):
             random.seed(seed)
             size = random.randint(50, 1500)
-            entries = [
-                _entry(random.uniform(0, 720 * 86400)) for _ in range(size)
-            ]
+            entries = [_entry(random.uniform(0, 720 * 86400)) for _ in range(size)]
             bla_before = _bla_from_raw(entries)
             out = compact_access_history(entries, now=NOW)
             bla_after = _bla_from_raw(out)
@@ -219,9 +211,7 @@ class TestBLAPreservation:
         chunks: list[tuple[str, list[dict]]] = []
         for i in range(20):
             size = random.randint(10, 500)
-            entries = [
-                _entry(random.uniform(0, 300 * 86400)) for _ in range(size)
-            ]
+            entries = [_entry(random.uniform(0, 300 * 86400)) for _ in range(size)]
             chunks.append((f"chunk-{i}", entries))
 
         # Rank before compaction.
@@ -229,10 +219,7 @@ class TestBLAPreservation:
         before_ids = [c[0] for c in before]
 
         # Compact each chunk, re-rank.
-        after = [
-            (cid, compact_access_history(entries, now=NOW))
-            for cid, entries in chunks
-        ]
+        after = [(cid, compact_access_history(entries, now=NOW)) for cid, entries in chunks]
         after.sort(key=lambda c: _bla_from_raw(c[1]), reverse=True)
         after_ids = [c[0] for c in after]
 

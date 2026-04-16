@@ -43,9 +43,9 @@ COMPACTION_TRIGGER_LENGTH = 200
 
 # Tier boundaries in seconds. Kept as module constants so tests can reference
 # them without re-deriving.
-_TIER1_MAX_SECONDS = 7 * 24 * 3600          # 7 days
-_TIER2_MAX_SECONDS = 30 * 24 * 3600         # 30 days
-_TIER3_MAX_SECONDS = 180 * 24 * 3600        # 180 days
+_TIER1_MAX_SECONDS = 7 * 24 * 3600  # 7 days
+_TIER2_MAX_SECONDS = 30 * 24 * 3600  # 30 days
+_TIER3_MAX_SECONDS = 180 * 24 * 3600  # 180 days
 
 
 def _parse_timestamp(raw: Any) -> datetime | None:
@@ -113,9 +113,9 @@ def compact_access_history(
         now = now.replace(tzinfo=timezone.utc)
 
     # Split entries into tiers by age.
-    tier1: list[dict[str, Any]] = []       # kept verbatim
-    tier2_by_hour: dict[int, int] = {}     # hour_epoch -> total count
-    tier3_by_day: dict[int, int] = {}      # day_epoch -> total count
+    tier1: list[dict[str, Any]] = []  # kept verbatim
+    tier2_by_hour: dict[int, int] = {}  # hour_epoch -> total count
+    tier3_by_day: dict[int, int] = {}  # day_epoch -> total count
     tier4_count = 0
     tier4_earliest: datetime | None = None
 
@@ -187,9 +187,7 @@ def compact_access_history(
     # access and the tier 3/4 boundary, which is where tier 4 begins.
     if tier4_count > 0 and tier4_earliest is not None:
         tier4_boundary = now - timedelta(seconds=_TIER3_MAX_SECONDS)
-        midpoint_epoch = (
-            int(tier4_earliest.timestamp()) + int(tier4_boundary.timestamp())
-        ) // 2
+        midpoint_epoch = (int(tier4_earliest.timestamp()) + int(tier4_boundary.timestamp())) // 2
         midpoint = datetime.fromtimestamp(midpoint_epoch, tz=timezone.utc)
         output.append(
             {

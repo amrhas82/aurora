@@ -15,11 +15,8 @@ feature flag, to verify:
 from __future__ import annotations
 
 import json
-import os
 import sqlite3
 from datetime import datetime, timedelta, timezone
-
-import pytest
 
 from aurora_core.chunks.code_chunk import CodeChunk
 from aurora_core.store.access_history import COMPACTION_TRIGGER_LENGTH

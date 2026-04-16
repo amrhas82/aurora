@@ -11,8 +11,6 @@ import json
 import sqlite3
 from pathlib import Path
 
-import pytest
-
 from aurora_cli.config import Config
 from aurora_cli.health_checks import StoreIntegrityChecks
 from aurora_core.store.schema import get_init_statements

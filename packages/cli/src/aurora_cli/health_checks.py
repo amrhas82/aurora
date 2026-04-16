@@ -13,6 +13,7 @@ from __future__ import annotations
 import importlib
 import importlib.metadata
 import os
+import sqlite3
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -1003,8 +1004,6 @@ class StoreIntegrityChecks:
             )
             return results
 
-        import sqlite3
-
         try:
             conn = sqlite3.connect(str(db_path))
             conn.row_factory = sqlite3.Row
@@ -1245,8 +1244,6 @@ class StoreIntegrityChecks:
         if not db_path.exists():
             return issues
 
-        import sqlite3
-
         try:
             conn = sqlite3.connect(str(db_path))
         except sqlite3.Error:
@@ -1319,8 +1316,6 @@ class StoreIntegrityChecks:
         Uses the same `(name, body, file_path)` extraction as sqlite._upsert_fts
         so repaired rows are indistinguishable from normally-written ones.
         """
-        import sqlite3
-
         db_path = Path(self.config.get_db_path())
         conn = sqlite3.connect(str(db_path))
         try:
@@ -1344,7 +1339,9 @@ class StoreIntegrityChecks:
 
             for chunk_id, chunk_type, content_raw in missing_chunks:
                 try:
-                    content = json.loads(content_raw) if isinstance(content_raw, str) else content_raw
+                    content = (
+                        json.loads(content_raw) if isinstance(content_raw, str) else content_raw
+                    )
                 except (json.JSONDecodeError, TypeError):
                     continue
                 if not isinstance(content, dict):
@@ -1370,8 +1367,6 @@ class StoreIntegrityChecks:
         Also removes matching FTS5 rows so a subsequent FTS consistency check
         doesn't immediately re-flag them as stale.
         """
-        import sqlite3
-
         db_path = Path(self.config.get_db_path())
         conn = sqlite3.connect(str(db_path))
         try:
@@ -1400,8 +1395,6 @@ class StoreIntegrityChecks:
 
     def _fix_activation_orphans(self) -> None:
         """Delete activation rows whose chunk_id no longer exists."""
-        import sqlite3
-
         db_path = Path(self.config.get_db_path())
         conn = sqlite3.connect(str(db_path))
         try:

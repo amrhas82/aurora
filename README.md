@@ -10,9 +10,11 @@
 Code-aware memory and intelligence for AI coding assistants.
 </pre>
 
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PyPI version](https://img.shields.io/pypi/v/aurora-actr.svg)](https://pypi.org/project/aurora-actr/)
+<p align="center">
+  <a href="https://pypi.org/project/aurora-actr/"><img src="https://img.shields.io/pypi/v/aurora-actr?label=version&color=2a4f8c" alt="version (auto from pypi)"></a>
+  <img src="https://img.shields.io/badge/python-3.10+-2a4f8c" alt="python 3.10+">
+  <img src="https://img.shields.io/badge/license-Apache%202.0-2a4f8c" alt="license: Apache 2.0">
+</p>
 
 </div>
 
